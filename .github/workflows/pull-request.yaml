@@ -1,0 +1,157 @@
+name: Lint, Build and Deploy
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permission:
+  packages: write
+  contents: read
+
+jobs:
+  Lint:
+    name: Lint with ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: npx eslint .
+
+  Format:
+    name: Check formatting with Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Run Prettier
+        run: npx prettier . --check
+
+  Build:
+    name: Build Vite production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Build Vite production
+        run: pnpm build
+
+  Push-Image:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    needs: Build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node1+-version: 23
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: |
+            ghcr.io/nycu-sdc/sciedu-frontend:pr-${{ github.event.number }}
+            ghcr.io/nycu-sdc/sciedu-frontend:${{ github.sha }}
+          context: .
+          build-args: |
+            VITE_BUILD_MODE=development
+
+  Deploy:
+    name: Deploy
+    needs: Push-Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract PR body for webhook
+        uses: NYCU-SDC/Extract-PRbody@V1.0
+        id: extract
+        with:
+          pr_body: ${{ github.event.pull_request.body }}
+
+      - name: Process PR body for webhook
+        run: |
+          PR_TYPE=$(echo "${{ steps.extract.outputs.type_block }}" | jq -R -s @json)
+          PR_PURPOSE=$(echo "${{ steps.extract.outputs.purpose_block }}" | jq -R -s @json)
+          echo "PR_TYPE=$PR_TYPE" >> $GITHUB_ENV
+          echo "PR_PURPOSE=$PR_PURPOSE" >> $GITHUB_ENV
+
+      - name: Trigger n8n Snapshot Webhook
+        run: |
+          curl --location --request POST 'https://webhook.sdc.nycu.club/webhook/deploy' \
+            --header 'Content-Type: application/json' \
+            --header 'x-deploy-token: ${{ secrets.N8N_DEPLOY_TOKEN }}' \
+              --data-raw '{
+            "source": {
+              "title": "Clustron",
+              "repo": "${{ github.repository }}",
+              "branch": "${{ github.head_ref || github.ref_name }}",
+              "commit": "${{ github.sha }}",
+              "pr_number": "${{ github.event.pull_request.number }}",
+              "pr_title": "${{ github.event.pull_request.title }}",
+              "pr_type": ${{ env.PR_TYPE }},
+              "pr_purpose": ${{ env.PR_PURPOSE }}
+            },
+            "method": "deploy",
+            "metadata": {
+              "environment": "snapshot",
+                "component": "frontend"
+            },
+            "post": {
+              "notify_discord": {
+                "enable": true,
+                "channel": "sciedu-activity"
+              },
+              "setup_domain": {
+                "enable": true,
+                "title": "Endpoint",
+                "name": "pr-${{ github.event.pull_request.number }}.sciedu.sdc.nycu.club",
+                "value": "default-eng-deploy:internal"
+              }
+            }
+          }'

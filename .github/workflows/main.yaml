@@ -1,0 +1,117 @@
+name: Lint, Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Lint:
+    name: Lint with ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install
+
+      - name: Run ESLint
+        run: npx eslint .
+
+  Format:
+    name: Check formatting with Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install
+
+      - name: Run Prettier
+
+        run: npx prettier . --check
+
+  Build-Push-Image:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: |
+            ghcr.io/nycu-sdc/sciedu-frontend:dev
+            ghcr.io/nycu-sdc/sciedu-frontend:${{ github.sha }}
+          context: .
+          build-args: |
+            VITE_BUILD_MODE=development
+
+  Deploy:
+    name: Deploy
+    needs: Build-Push-Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger n8n Snapshot Webhook
+        run: |
+          curl --location --request POST 'https://webhook.sdc.nycu.club/webhook/deploy' \
+            --header 'Content-Type: application/json' \
+            --header 'x-deploy-token: ${{ secrets.N8N_DEPLOY_TOKEN }}' \
+              --data-raw '{
+            "source": {
+              "title": "Sciedu",
+              "repo": "${{ github.repository }}",
+              "branch": "${{ github.head_ref || github.ref_name }}",
+              "commit": "${{ github.sha }}"
+            },
+            "method": "deploy",
+            "metadata": {
+              "environment": "dev",
+              "component": "frontend"
+            },
+            "post": {
+              "notify_discord": {
+                "enable": true,
+                "channel": "sciedu-activity"
+              },
+              "setup_domain": {
+                "enable": true,
+                "title": "Endpoint",
+                "name": "dev.sciedu.sdc.nycu.club",
+                "value": "default-eng-deploy:internal"
+              }
+            }
+          }'

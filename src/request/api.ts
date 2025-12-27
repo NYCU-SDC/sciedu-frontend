@@ -1,22 +1,13 @@
-import { getAccessToken } from "../token";
-
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
-// import.meta.env.VITE_BACKEND_BASE_URL. read env variable
 
 export async function api<T>(
     path: string,
     options: RequestInit = {}
 ): Promise<T> {
-    const token = getAccessToken();
-
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
     };
-
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
 
     const res = await fetch(`${BASE_URL}${path}`, {
         ...options,
@@ -27,16 +18,16 @@ export async function api<T>(
         let errorStatus = res.status;
         let errorMessage = `API Error (${res.status})`;
 
+        let error: { status?: number; detail?: string } = {};
         try {
-            const error = await res.json();
-            errorStatus = error.status || errorStatus;
-            errorMessage = error.detail || errorMessage;
+            error = await res.json();
         } catch {
-            // ignore
+            error = {};
         }
-        console.error("❌ [api] Error:", errorMessage);
+
+        errorMessage = error.detail || errorMessage;
+        console.error("API Error:", errorMessage);
         const err = new Error(errorMessage);
-        err.name = errorStatus.toString();
         throw err;
     }
 

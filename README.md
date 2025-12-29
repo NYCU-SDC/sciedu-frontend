@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Node.js 23 or higher
+- Node.js 24 or higher
 - npm (comes with Node.js)
 
 ### Installation

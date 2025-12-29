@@ -15,20 +15,14 @@ export async function api<T>(
     });
 
     if (!res.ok) {
-        let errorStatus = res.status;
-        let errorMessage = `API Error (${res.status})`;
-
-        let error: { status?: number; detail?: string } = {};
+        let errorMessage = "";
         try {
-            error = await res.json();
+            const parsedError = await res.json();
+            errorMessage = parsedError.detail || errorMessage;
         } catch {
-            error = {};
+            errorMessage = `API Error (${res.status})`;
         }
-
-        errorMessage = error.detail || errorMessage;
-        console.error("API Error:", errorMessage);
-        const err = new Error(errorMessage);
-        throw err;
+        throw new Error(errorMessage);
     }
 
     // 204 means no content, so it will cause error when return res.json()

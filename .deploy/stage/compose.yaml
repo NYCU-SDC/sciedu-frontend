@@ -1,19 +1,19 @@
 services:
-  frontend:
-    image: ghcr.io/nycu-sdc/sciedu-frontend:stage
-    container_name: sciedu-frontend-stage
-    networks:
-      - traefik
-    environment:
-      HOST: 0.0.0.0
-    labels:
-      - "vector.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.sciedu-frontend-stage.rule=Host(`stage.sciedu.sdc.nycu.club`)"
-      - "traefik.http.routers.sciedu-frontend-stage.entrypoints=websecure"
-      - "traefik.http.routers.sciedu-frontend-stage.tls=true"
-      - "traefik.http.routers.sciedu-frontend-stage.tls.certresolver=cloudflare"
+    frontend:
+        image: ghcr.io/nycu-sdc/sciedu-frontend:stage
+        container_name: sciedu-frontend-stage
+        networks:
+            - traefik
+        environment:
+            HOST: 0.0.0.0
+        labels:
+            - "vector.enable=true"
+            - "traefik.enable=true"
+            - "traefik.http.routers.sciedu-frontend-stage.rule=Host(`stage.sciedu.sdc.nycu.club`)"
+            - "traefik.http.routers.sciedu-frontend-stage.entrypoints=websecure"
+            - "traefik.http.routers.sciedu-frontend-stage.tls=true"
+            - "traefik.http.routers.sciedu-frontend-stage.tls.certresolver=cloudflare"
 
 networks:
-  traefik:
-    external: true
+    traefik:
+        external: true

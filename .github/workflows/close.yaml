@@ -16,7 +16,7 @@ jobs:
             -H "x-deploy-token: ${{ secrets.N8N_DEPLOY_TOKEN }}" \
             -d '{
               "source": {
-                "title": "Sciedu",
+                "title": "SciEdu",
                 "repo": "${{ github.repository }}",
                 "branch": "${{ github.head_ref || github.ref_name }}",
                 "commit": "${{ github.sha }}",

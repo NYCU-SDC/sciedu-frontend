@@ -1,0 +1,19 @@
+services:
+    frontend:
+        image: ghcr.io/nycu-sdc/sciedu-frontend:dev
+        container_name: sciedu-frontend-dev
+        networks:
+            - traefik
+        environment:
+            HOST: 0.0.0.0
+        labels:
+            - "vector.enable=true"
+            - "traefik.enable=true"
+            - "traefik.http.routers.sciedu-frontend-dev.rule=Host(`dev.sciedu.sdc.nycu.club`)"
+            - "traefik.http.routers.sciedu-frontend-dev.entrypoints=websecure"
+            - "traefik.http.routers.sciedu-frontend-dev.tls=true"
+            - "traefik.http.routers.sciedu-frontend-dev.tls.certresolver=cloudflare"
+
+networks:
+    traefik:
+        external: true

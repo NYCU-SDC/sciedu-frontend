@@ -5,7 +5,7 @@
 ### Prerequisites
 
 - Node.js 24 or higher
-- npm (comes with Node.js)
+- pnpm (comes with Node.js)
 
 ### Installation
 
@@ -15,19 +15,19 @@ git clone https://github.com/NYCU-SDC/sciedu-frontend.git
 cd sciedu-frontend
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
 The application will be available at `http://localhost:5173`.
 
 ### Development Scripts
 
-| Command           | Description                                       |
-| ----------------- | ------------------------------------------------- |
-| `npm run dev`     | Start Vite dev server with hot module replacement |
-| `npm run build`   | TypeScript compilation + production build         |
-| `npm run lint`    | Run ESLint code analysis                          |
-| `npm run preview` | Preview production build locally                  |
+| Command        | Description                                       |
+| -------------- | ------------------------------------------------- |
+| `pnpm dev`     | Start Vite dev server with hot module replacement |
+| `pnpm build`   | TypeScript compilation + production build         |
+| `pnpm lint`    | Run ESLint code analysis                          |
+| `pnpm preview` | Preview production build locally                  |

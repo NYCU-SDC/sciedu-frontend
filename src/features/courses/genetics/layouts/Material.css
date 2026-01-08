@@ -1,0 +1,136 @@
+.overview-content {
+    display: flex;
+    padding: 5px 10px;
+    gap: 20px;
+    background-color: #f8fcfb;
+    flex: 1;
+}
+
+/* 左側佈局 */
+.mechanism-section {
+    flex: 3;
+    min-width: 0;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.image-container {
+    width: 100%;
+    background: white;
+    border: 2px solid #7dc8b7;
+    border-radius: 10px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pea-main-image {
+    /* 將寬度設為 100% 強制填滿容器寬度 */
+    width: 100%;
+    max-width: none;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.pea-image-placeholder {
+    font-size: 2rem; /* 之後可用 <img> 替換 */
+}
+
+.mechanism-description {
+    background: #fdfdfd;
+    padding: 15px;
+    border-top: 1px solid #7dc8b7;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #555;
+}
+
+/* 右側側欄 */
+.question-sidebar {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    padding: 15px;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sidebar-header {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.quiz-card {
+    background: white;
+    border: 1px solid #7dc8b7;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.quiz-label {
+    display: inline-block;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 2px;
+}
+
+.quiz-card p {
+    font-size: 0.9rem;
+    margin: 5px 0 12px 0;
+}
+
+.quiz-card-2 {
+    padding-bottom: 150px;
+}
+
+.quiz-card-3 {
+    padding-bottom: 100px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.textarea-mock {
+    height: 80px;
+    background: #fafafa;
+    border: 1px inset #eee;
+}
+
+.sidebar-footer {
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shadow-button {
+    /* 使用多層陰影：第一層較深且集中，第二層較淡但擴散較廣 */
+    box-shadow:
+        0 8px 15px rgba(0, 0, 0, 0.3),
+        0 4px 6px rgba(0, 0, 0, 0.2);
+
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+.shadow-button:hover {
+    /* 懸停時增加偏移和模糊，並降低透明度一點點，模擬離地更高 */
+    box-shadow:
+        0 15px 25px rgba(0, 0, 0, 0.35),
+        0 10px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px); /* 向上浮動明顯一點 */
+}
+
+.shadow-button:active {
+    /* 按下時陰影縮回，模擬貼地 */
+    transform: translateY(1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}

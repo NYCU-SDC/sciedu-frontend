@@ -1,0 +1,80 @@
+.course-wrapper {
+    display: none;
+
+    margin-top: 60px;
+    margin-bottom: 60px;
+    margin-left: auto;
+    margin-right: auto;
+
+    font-family: "GenYoGothic2 TW", sans-serif;
+}
+
+.copyright-footer {
+    padding: 15px 30px;
+    font-size: 12px;
+    color: #888;
+    text-align: left;
+    background-color: #fff;
+}
+
+.mobile-blocker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #fafafa;
+    text-align: center;
+
+    padding: 0 40px;
+}
+
+/* 繪製禁止手機圖示 */
+.blocker-icon {
+    position: relative;
+    width: 120px;
+    height: 200px;
+    margin-bottom: 40px;
+}
+
+.phone-shape {
+    width: 80px;
+    height: 140px;
+    border: 6px solid black;
+    border-radius: 12px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.phone-line {
+    width: 160px;
+    height: 6px;
+    background-color: black;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.mobile-blocker h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.mobile-blocker p {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* 當螢幕寬度大於 1024px 時切換 */
+@media (min-width: 1024px) {
+    .mobile-blocker {
+        display: none; /* 隱藏手機阻擋 */
+    }
+    .course-wrapper {
+        display: block; /* 顯示教材內容 */
+    }
+}

@@ -1,0 +1,95 @@
+/* 容器 */
+.page-container {
+    background-color: #ffffff;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 內容區佈局 */
+.content-wrapper {
+    display: flex;
+    gap: 25px;
+    padding: 5px 20px;
+    flex: 1;
+}
+
+.column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* 標題區 */
+.column-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.column-header h2 {
+    font-size: 1.1rem;
+    color: #333;
+    margin: 0;
+}
+
+/* 卡片樣式 */
+.question-card {
+    background: white;
+    border: 1.5px solid #7dc8b7;
+    border-radius: 12px;
+    padding: 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.question-title {
+    font-size: 1rem;
+    color: #666;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.question-text {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* 按鈕區 */
+.footer-actions {
+    padding: 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.fixed-btn {
+    width: 300px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+}
+
+.shadow-button {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+.shadow-button:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.shadow-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

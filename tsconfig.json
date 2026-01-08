@@ -3,5 +3,15 @@
     "references": [
         { "path": "./tsconfig.app.json" },
         { "path": "./tsconfig.node.json" }
+<<<<<<< HEAD
     ]
+=======
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        }
+    }
+>>>>>>> 4b28030 (feat: create pages initialize chat and chat content)
 }

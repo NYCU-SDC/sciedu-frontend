@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { Box, TextField, IconButton } from "@radix-ui/themes";
+import { useLayoutEffect, useRef, useState } from "react";
+import { IconButton } from "@radix-ui/themes";
 import { PaperPlaneIcon } from "@radix-ui/react-icons";
 import "./ChatInput.css";
+
+const MAX_HEIGHT = 160; // px
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -14,19 +16,34 @@ export function ChatInput({
     disabled,
     placeholder = "想問什麼問題？",
 }: ChatInputProps) {
-    const [input, setInput] = useState("");
+    const [input, setInput] = useState<string>("");
+    const ref = useRef<HTMLTextAreaElement>(null);
 
-    const handleSend = () => {
-        if (input.trim()) {
-            onSend(input.trim());
-            setInput("");
-        }
+    const resize = () => {
+        const el = ref.current;
+        if (!el) return;
+
+        el.style.height = "auto";
+        const next = Math.min(el.scrollHeight, MAX_HEIGHT);
+        el.style.height = `${next}px`;
+        el.style.overflowY = el.scrollHeight > MAX_HEIGHT ? "auto" : "hidden";
     };
 
+    const handleSend = () => {
+        if (!input.trim()) return;
+        onSend(input.trim());
+        setInput("");
+    };
+
+    useLayoutEffect(() => {
+        resize();
+    }, [input]);
+
     return (
-        <Box className="chat-input-wrapper">
-            <TextField.Root
+        <div className="chat-input-wrapper">
+            <textarea
                 className="chat-input-field"
+                ref={ref}
                 placeholder={placeholder}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -42,6 +59,6 @@ export function ChatInput({
             >
                 <PaperPlaneIcon />
             </IconButton>
-        </Box>
+        </div>
     );
 }

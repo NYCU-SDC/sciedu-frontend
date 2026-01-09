@@ -8,7 +8,7 @@ import "./ChatPage.css";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
-    const userName = "慕天"; // TODO
+    const userName = "您好"; // TODO
 
     const handleSend = (content: string) => {
         // Add user message
@@ -27,14 +27,26 @@ export default function ChatPage() {
             conversationID: "temp",
             role: "assistant",
             content: `# Header 1
-Regular Text Lorem ipsum dolor sit amet.
-**Bold Text** and *Italic Text*.
+## Header 2
+### Header 3
+#### Header 4
+##### Header 5
+###### Header 6
+
+Regular Text Lorem ipsum dolor sit amet consectetur.
+
+**Bold Text** Lorem ipsum dolor sit amet consectetur.
+
+*Italic Text* Lorem ipsum dolor sit amet consectetur.
 
 - Bullet Point 1
 - Bullet Point 2
+- Bullet Point 3
 
 1. Numbered Point 1
-2. Numbered Point 2`,
+2. Numbered Point 2
+3. Numbered Point 3
+`,
             createdAt: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);

@@ -1,12 +1,12 @@
 .chat-message-list-scroll {
     flex: 1;
-    padding: 16px;
+    padding: 1rem;
 }
 
 .chat-message-list-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    max-width: 800px;
+    gap: 1rem;
+    max-width: 50rem;
     margin: 0 auto;
 }

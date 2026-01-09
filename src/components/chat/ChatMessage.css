@@ -1,19 +1,20 @@
 .chat-message {
-    max-width: 80%;
+    max-width: none;
 }
 
 .chat-message-user {
-    align-self: flex-end;
-    background-color: var(--color-gray-200);
-    padding: 12px 16px;
-    border-radius: 16px;
+    align-self: stretch;
+    background-color: var(--color-neutral-200);
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
 }
 
 .chat-message-assistant {
     align-self: flex-start;
     background-color: transparent;
-    padding: 12px 0;
+    padding: 0.75rem 0;
     border-radius: 0;
+    color: var(--color-netural-950);
 }
 
 .markdown-content h1 {

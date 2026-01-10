@@ -3,7 +3,7 @@ import { IconButton } from "@radix-ui/themes";
 import { PaperPlaneIcon } from "@radix-ui/react-icons";
 import "./ChatInput.css";
 
-const MAX_HEIGHT = 160; // px
+const MAX_HEIGHT_REM = 10; // rem
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -23,10 +23,17 @@ export function ChatInput({
         const el = ref.current;
         if (!el) return;
 
-        el.style.height = "auto";
-        const next = Math.min(el.scrollHeight, MAX_HEIGHT);
-        el.style.height = `${next}px`;
-        el.style.overflowY = el.scrollHeight > MAX_HEIGHT ? "auto" : "hidden";
+        const baseFontSize = parseFloat(
+            getComputedStyle(document.documentElement).fontSize
+        );
+
+        el.style.removeProperty("--textarea-height");
+        const next = Math.min(el.scrollHeight, MAX_HEIGHT_REM * baseFontSize);
+        el.style.setProperty("--textarea-height", `${next / baseFontSize}rem`);
+        el.style.setProperty(
+            "--textarea-overflow",
+            el.scrollHeight > MAX_HEIGHT_REM * baseFontSize ? "auto" : "hidden"
+        );
     };
 
     const handleSend = () => {
@@ -42,8 +49,8 @@ export function ChatInput({
     return (
         <div className="chat-input-wrapper">
             <textarea
-                className="chat-input-field"
                 ref={ref}
+                className="chat-input-field"
                 placeholder={placeholder}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

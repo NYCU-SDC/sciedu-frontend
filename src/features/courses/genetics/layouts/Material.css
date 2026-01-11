@@ -23,7 +23,7 @@
     gap: 0.75rem;
     padding: 0.5rem;
     overflow: hidden; /* 確保內容不溢出 */
-    min-height: 0; /* 重要 */
+    min-height: 0; /* 允許縮小 */
 }
 
 .image-container {
@@ -36,14 +36,14 @@
     border-radius: 1rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
-    min-height: 0; /* 關鍵：允許 Flex 子元素收縮，才不會撐破父層 */
+    min-height: 0;
 }
 
 .pea-main-image {
     width: 100%;
     height: 100%; /* 強制高度填滿容器 */
-    object-fit: contain; /* 改成 contain 確保圖片完整顯示且不變形 */
-    display: block; /* 去除圖片下方的幽靈間距 */
+    object-fit: contain; /* 保持比例縮放並完整顯示 */
+    display: block;
 }
 
 .pea-image-placeholder {
@@ -139,7 +139,6 @@
 }
 
 .shadow-button {
-    /* 使用多層陰影：第一層較深且集中，第二層較淡但擴散較廣 */
     box-shadow:
         0 0.5rem 0.9375rem rgba(0, 0, 0, 0.3),
         0 0.25rem 0.375rem rgba(0, 0, 0, 0.2);
@@ -150,7 +149,6 @@
 }
 
 .shadow-button:hover {
-    /* 懸停時增加偏移和模糊，並降低透明度一點點，模擬離地更高 */
     box-shadow:
         0 0.9375rem 1.5625rem rgba(0, 0, 0, 0.35),
         0 0.625rem 0.625rem rgba(0, 0, 0, 0.2);
@@ -158,7 +156,6 @@
 }
 
 .shadow-button:active {
-    /* 按下時陰影縮回，模擬貼地 */
     transform: translateY(0.0625rem);
     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3);
 }

@@ -11,8 +11,8 @@
     display: flex;
     gap: 2.5rem; /* 40px */
     padding: 0 2.5rem;
-    flex: 1; /* 核心：佔據導覽列與頁尾之間的所有空間 */
-    min-height: 0; /* 關鍵：允許 Flex 子元素縮小 */
+    flex: 1;
+    min-height: 0; /* 允許縮小 */
     position: relative;
     overflow: hidden;
 }
@@ -21,8 +21,8 @@
     content: "";
     position: absolute;
     left: 50%;
-    top: 3rem; /* 距離上方 header 一段距離 */
-    bottom: 1.2rem; /* 距離下方按鈕區一段距離 */
+    top: 3rem;
+    bottom: 1.2rem;
     width: 0.0625rem; /* 1px -> 0.0625rem */
     background-color: #79c5bc;
     transform: translateX(-50%);
@@ -33,8 +33,8 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    min-height: 0; /* 允許縮小 */
-    padding-bottom: 1rem; /* 給底部留一點空間 */
+    min-height: 0;
+    padding-bottom: 1rem;
 }
 
 /* 標題區 */
@@ -55,8 +55,8 @@
     border: 0.09375rem solid #7dc8b7;
     border-radius: 0.75rem;
     padding: 1.25rem;
-    flex: 1; /* 關鍵：兩張卡片會 1:1 平分高度 */
-    min-height: 0; /* 關鍵：內容過多時不會撐開卡片 */
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background-color: white;
@@ -78,13 +78,13 @@
 
 /* 按鈕區 */
 .footer-actions {
-    flex-shrink: 0; /* 禁止被壓縮 */
+    flex-shrink: 0;
     padding: 1rem 2.5rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 0.5rem;
-    background-color: transparent; /* 確保看得到底層漸層 */
+    background-color: transparent;
 }
 
 .shadow-button {

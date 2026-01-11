@@ -1,13 +1,12 @@
 .genetics-container {
     display: flex;
     flex-direction: column;
-    height: 100vh; /* 固定 100vh，不可超過 */
-    max-width: 100%; /* 修正：寬度通常不使用 vh */
+    height: 100vh; /* 佔滿整個視窗高度 */
+    max-width: 100%; /* 防止水平滾動 */
     margin: 0 auto;
-    overflow: hidden; /* 鎖死外層捲軸 */
-    /* 修正：漸層要用 background */
-    background-color: #ffffff; /* 預設背景色（Case 2, 3 使用） */
-    transition: background 0.3s ease; /* 增加轉場效果，換頁時背景才不會閃爍太快 */
+    overflow: hidden;
+    background-color: #ffffff;
+    transition: background 0.3s ease;
 }
 
 .genetics-container.has-gradient {
@@ -15,24 +14,23 @@
 }
 
 .course-wrapper {
-    /* display: none; <-- 注意：這會讓內容隱藏 */
     display: flex;
     flex-direction: column;
     margin-left: auto;
     margin-right: auto;
-    width: 100%; /* 確保佔滿寬度 */
+    width: 100%;
     flex: 1;
-    min-height: 0; /* 關鍵：允許內容縮小以適應畫面 */
+    min-height: 0;
     font-family: "GenYoGothic2 TW", sans-serif;
 }
 
 .copyright-footer {
     flex-shrink: 0;
     margin-top: auto;
-    padding: 0.625rem 1.875rem; /* 恢復適度留白 */
+    padding: 0.625rem 1.875rem; /* 10px 30px -> 0.625rem 1.875rem */
     font-size: 0.75rem;
     color: #888;
-    background-color: transparent; /* 改為透明，避免遮擋漸層 */
+    background-color: transparent;
     box-sizing: border-box;
     text-align: left;
 }

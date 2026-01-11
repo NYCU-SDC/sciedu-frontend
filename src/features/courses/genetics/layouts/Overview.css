@@ -1,9 +1,9 @@
 .page-container {
-    flex: 1; /* 填滿父層 course-wrapper */
+    flex: 1;
     padding: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 鎖死外層捲軸 */
+    overflow: hidden;
 }
 
 .table-content {
@@ -14,10 +14,9 @@
 }
 
 .comparison-table {
-    table-layout: fixed; /* 強制執行 width: 15% 和 42.5% */
+    table-layout: fixed;
     width: 100%;
     border-collapse: separate; /* 配合 border-radius */
-    /* 其他保持不變 */
     width: 100%;
 
     font-size: 16px;
@@ -82,7 +81,7 @@
 
 /* 下一頁按鈕 */
 .footer-nav {
-    flex-shrink: 0; /* 禁止被壓縮 */
+    flex-shrink: 0;
     padding: 1rem 0;
     display: flex;
     justify-content: flex-end;

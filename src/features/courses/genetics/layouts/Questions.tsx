@@ -11,7 +11,7 @@ const Questions: React.FC<QuestionsProps> = ({ onNext }) => {
         <div className="page-container">
             <Navbar activeStep={2} />
             <main className="content-wrapper">
-                {/* 左側：古典遺傳學 */}
+                {/* 左側 */}
                 <section className="column">
                     <div className="column-header">
                         <span className="icon-edit">📝</span>
@@ -35,7 +35,7 @@ const Questions: React.FC<QuestionsProps> = ({ onNext }) => {
                     </div>
                 </section>
 
-                {/* 右側：分子遺傳學 */}
+                {/* 右側 */}
                 <section className="column">
                     <div className="column-header">
                         <span className="icon-edit">📝</span>

@@ -1,33 +1,45 @@
 .genetics-navbar {
     width: 100%;
-    padding: 15px;
+    padding: 0.9375rem; /* 15px -> 0.9375rem */
     box-sizing: border-box;
 }
 
 .navbar-container {
-    background-color: #7dc8b7; /* 湖水綠背景 */
+    background-color: #7dc8b7;
     border-radius: 12px;
     display: flex;
     padding: 0 0;
     color: white;
 }
 
-/* 左側標題垂直分割 */
 .brand-section {
-    padding: 10px 25px;
+    padding: 0.625rem 1.5625rem; /* 10px 25px -> 0.625rem 1.5625rem */
     font-size: 1.2rem;
-    font-weight: bold;
+    font-weight: 700;
     color: black;
     display: flex;
+    letter-spacing: 0.15rem;
     align-items: center;
-    border-right: 2px solid rgba(255, 255, 255, 0.6); /* 垂直白線 */
+    position: relative;
+}
+
+.brand-section::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    width: 0.125rem; /* 2px -> 0.125rem */
+    height: 60%;
+    top: 50%; /* 定位在中間 */
+    transform: translateY(-50%); /* 修正垂直置中 */
+
+    background-color: rgba(255, 255, 255, 0.6);
 }
 
 .content-section {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 5px 20px;
+    padding: 0.3125rem 1.25rem; /* 5px 20px -> 0.3125rem 1.25rem */
 }
 
 .main-nav-links {
@@ -35,7 +47,8 @@
     justify-content: space-around;
     align-items: center;
     font-size: 1rem;
-    padding-bottom: 0.5px;
+    letter-spacing: 0.1rem;
+    padding-bottom: 0.03125rem; /* 0.5px -> 0.03125rem */
 }
 
 .nav-link {
@@ -55,9 +68,9 @@
 /* 核心橫線設計 */
 .horizontal-line {
     width: 100%;
-    height: 1px;
+    height: 0.0625rem; /* 1px -> 0.0625rem */
     background-color: rgba(255, 255, 255, 0.6);
-    margin: 2px 0;
+    margin: 0.125rem 0; /* 2px 0 -> 0.125rem 0 */
 }
 
 .sub-nav-info {
@@ -65,22 +78,24 @@
     justify-content: space-between;
     align-items: center;
     font-size: 0.85rem;
-    padding-top: 2px;
+    padding-top: 0.125rem; /* 2px -> 0.125rem */
 }
 
 .current-subtitle {
+    font-weight: 700;
     font-size: 1rem;
+    letter-spacing: 0.1rem;
     color: black;
 }
 
 .page-progress {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem; /* 8px -> 0.5rem */
     opacity: 0.8;
 }
 
 .active-num {
-    font-weight: bold;
+    font-weight: 700;
     color: black;
 }
 

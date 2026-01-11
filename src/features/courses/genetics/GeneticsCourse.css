@@ -1,20 +1,40 @@
-.course-wrapper {
-    display: none;
+.genetics-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* 固定 100vh，不可超過 */
+    max-width: 100%; /* 修正：寬度通常不使用 vh */
+    margin: 0 auto;
+    overflow: hidden; /* 鎖死外層捲軸 */
+    /* 修正：漸層要用 background */
+    background-color: #ffffff; /* 預設背景色（Case 2, 3 使用） */
+    transition: background 0.3s ease; /* 增加轉場效果，換頁時背景才不會閃爍太快 */
+}
 
-    margin-top: 60px;
-    margin-bottom: 60px;
+.genetics-container.has-gradient {
+    background: linear-gradient(to bottom, #fdfefe, #d2e1e4);
+}
+
+.course-wrapper {
+    /* display: none; <-- 注意：這會讓內容隱藏 */
+    display: flex;
+    flex-direction: column;
     margin-left: auto;
     margin-right: auto;
-
+    width: 100%; /* 確保佔滿寬度 */
+    flex: 1;
+    min-height: 0; /* 關鍵：允許內容縮小以適應畫面 */
     font-family: "GenYoGothic2 TW", sans-serif;
 }
 
 .copyright-footer {
-    padding: 15px 30px;
-    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 0.625rem 1.875rem; /* 恢復適度留白 */
+    font-size: 0.75rem;
     color: #888;
+    background-color: transparent; /* 改為透明，避免遮擋漸層 */
+    box-sizing: border-box;
     text-align: left;
-    background-color: #fff;
 }
 
 .mobile-blocker {
@@ -26,22 +46,22 @@
     background-color: #fafafa;
     text-align: center;
 
-    padding: 0 40px;
+    padding: 0 2.5rem;
 }
 
 /* 繪製禁止手機圖示 */
 .blocker-icon {
     position: relative;
-    width: 120px;
-    height: 200px;
-    margin-bottom: 40px;
+    width: 7.5rem;
+    height: 12.5rem;
+    margin-bottom: 2.5rem;
 }
 
 .phone-shape {
-    width: 80px;
-    height: 140px;
-    border: 6px solid black;
-    border-radius: 12px;
+    width: 5rem;
+    height: 8.75rem;
+    border: 0.375rem solid black;
+    border-radius: 0.75rem;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -49,8 +69,8 @@
 }
 
 .phone-line {
-    width: 160px;
-    height: 6px;
+    width: 10rem;
+    height: 0.375rem;
     background-color: black;
     position: absolute;
     top: 50%;
@@ -61,7 +81,7 @@
 .mobile-blocker h2 {
     font-size: 1.5rem;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 0.625rem;
 }
 
 .mobile-blocker p {
@@ -69,12 +89,11 @@
     line-height: 1.6;
 }
 
-/* 當螢幕寬度大於 1024px 時切換 */
-@media (min-width: 1024px) {
+@media (min-width: 64rem) {
     .mobile-blocker {
-        display: none; /* 隱藏手機阻擋 */
+        display: none;
     }
     .course-wrapper {
-        display: block; /* 顯示教材內容 */
+        display: flex;
     }
 }

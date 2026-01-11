@@ -21,7 +21,9 @@ const GeneticsCourse: React.FC = () => {
     };
 
     return (
-        <div className="genetics-container">
+        <div
+            className={`genetics-container ${currentStep === 1 ? "has-gradient" : ""}`}
+        >
             {/* 手機版阻擋層 */}
             <div className="mobile-blocker">
                 <div className="blocker-icon">

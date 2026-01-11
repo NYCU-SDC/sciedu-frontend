@@ -9,7 +9,7 @@ interface QuestionsProps {
 const Questions: React.FC<QuestionsProps> = ({ onNext }) => {
     return (
         <div className="page-container">
-            <Navbar activeStep={1} />
+            <Navbar activeStep={2} />
             <main className="content-wrapper">
                 {/* 左側：古典遺傳學 */}
                 <section className="column">

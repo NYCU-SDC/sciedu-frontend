@@ -38,7 +38,7 @@ export function ChatInput({
 
     const handleSend = () => {
         if (!input.trim()) return;
-        onSend(input.trim());
+        onSend(input);
         setInput("");
     };
 

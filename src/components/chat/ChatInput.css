@@ -8,16 +8,23 @@
     width: 100%;
     max-height: none;
     align-items: flex-end;
+
+    --control-height: 2rem;
 }
 
 .chat-input-field {
     flex: 1;
     box-shadow: none;
     background-color: transparent;
+    font-size: 1rem;
     line-height: 1.5;
+    padding: 0.25rem 0.6rem;
     border: none;
     resize: none;
-    height: var(--textarea-height, auto);
+    box-sizing: border-box;
+
+    min-height: 2rem;
+    height: var(--textarea-height, 2rem);
     overflow-y: var(--textarea-overflow, hidden);
 }
 
@@ -26,6 +33,8 @@
 }
 
 .chat-input-button {
+    height: 2rem;
+    width: 2rem;
     background-color: var(--color-orange-500);
 }
 

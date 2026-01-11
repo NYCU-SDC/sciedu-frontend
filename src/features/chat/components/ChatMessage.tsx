@@ -1,4 +1,4 @@
-import type { Message } from "@/types/chat";
+import type { Message } from "../types";
 import ReactMarkdown from "react-markdown";
 import "./ChatMessage.css";
 

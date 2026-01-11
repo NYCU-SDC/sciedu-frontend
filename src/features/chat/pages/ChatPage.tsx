@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Box } from "@radix-ui/themes";
-import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
-import { ChatMessageList } from "@/components/chat/ChatMessageList";
-import { ChatInput } from "@/components/chat/ChatInput";
-import type { Message } from "@/types/chat";
+import { WelcomeScreen, ChatMessageList, ChatInput } from "../components";
+import type { Message } from "../types";
 import "./ChatPage.css";
 
 export default function ChatPage() {

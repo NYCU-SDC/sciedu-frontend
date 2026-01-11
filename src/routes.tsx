@@ -1,15 +1,12 @@
 import { createBrowserRouter } from "react-router";
-import ChatPage from "./pages/ChatPage";
+import { chatRoutes } from "@/features/chat";
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: <div>Hello World</div>,
     },
-    {
-        path: "/chat",
-        element: <ChatPage />,
-    },
+    ...chatRoutes,
     {
         path: "/testing",
         element: <></>,

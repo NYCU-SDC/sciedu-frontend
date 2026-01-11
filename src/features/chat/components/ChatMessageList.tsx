@@ -1,5 +1,5 @@
 import { ChatMessage } from "./ChatMessage";
-import type { Message } from "@/types/chat";
+import type { Message } from "../types";
 import "./ChatMessageList.css";
 
 interface ChatMessageListProps {

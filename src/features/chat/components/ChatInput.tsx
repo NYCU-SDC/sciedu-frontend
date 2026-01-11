@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { IconButton } from "@radix-ui/themes";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import { Send } from "lucide-react";
 import "./ChatInput.css";
 
 const MAX_HEIGHT_REM = 10; // rem
@@ -64,7 +64,7 @@ export function ChatInput({
                 onClick={handleSend}
                 disabled={disabled || !input.trim()}
             >
-                <PaperPlaneIcon />
+                <Send />
             </IconButton>
         </div>
     );

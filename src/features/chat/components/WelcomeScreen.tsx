@@ -3,14 +3,13 @@ import { ChatInput } from "./ChatInput";
 import "./WelcomeScreen.css";
 
 interface WelcomeScreenProps {
-    userName: string;
     onSend: (message: string) => void;
 }
 
-export function WelcomeScreen({ userName, onSend }: WelcomeScreenProps) {
+export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
     return (
         <Box className="welcome-screen-container">
-            <Heading size="7">{userName}，歡迎回來</Heading>
+            <Heading size="7">您好，歡迎回來</Heading>
             <ChatInput onSend={onSend} />
         </Box>
     );

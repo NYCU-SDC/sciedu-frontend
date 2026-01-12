@@ -1,74 +1,102 @@
-import { useState } from "react";
-import { Box } from "@radix-ui/themes";
+import { useState, useRef, useEffect } from "react";
 import { WelcomeScreen, ChatMessageList, ChatInput } from "../components";
-import type { Message } from "../types";
+import type { ApiChatMessage, Message } from "../types/chat";
 import "./ChatPage.css";
+import { streamChatCompletions } from "../services/chatStream";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
-    const userName = "您好"; // TODO
+    const [isStreaming, setIsStreaming] = useState(false);
+
+    const abortRef = useRef<AbortController | null>(null);
+    const messageRef = useRef<Message[]>([]);
+
+    useEffect(() => {
+        messageRef.current = messages;
+    }, [messages]);
+
+    // cleanup
+    useEffect(() => {
+        return () => abortRef.current?.abort();
+    }, []);
+
+    const conversationId = "temp"; // for now
 
     const handleSend = (content: string) => {
+        const trimmed = content.trim();
+        if (!trimmed) return;
+
+        // Safety check: Prevents race conditions. Even if the UI blocks input,
+        // we explicitly abort existing streams to ensure a clean slate.
+        if (isStreaming) abortRef.current?.abort();
+
+        // const now
+
         // Add user message
-        const userMessage: Message = {
+        const userMsg: Message = {
             id: crypto.randomUUID(),
-            conversationID: "temp",
+            conversationId,
             role: "user",
-            content,
-            createdAt: new Date().toISOString(),
+            content: trimmed,
+            // createdAt,
         };
-        setMessages((prev) => [...prev, userMessage]);
 
-        // a mock assistant message (with markdown) for visual testing
-        const assistantMessage: Message = {
-            id: crypto.randomUUID(),
-            conversationID: "temp",
+        // Add assistant message
+        const assistantId = crypto.randomUUID();
+        const assistantMsg: Message = {
+            id: assistantId,
+            conversationId,
             role: "assistant",
-            content: `# Header 1
-## Header 2
-### Header 3
-#### Header 4
-##### Header 5
-###### Header 6
-
-Regular Text Lorem ipsum dolor sit amet consectetur.
-
-**Bold Text** Lorem ipsum dolor sit amet consectetur.
-
-*Italic Text* Lorem ipsum dolor sit amet consectetur.
-
-- Bullet Point 1
-- Bullet Point 2
-- Bullet Point 3
-
-1. Numbered Point 1
-2. Numbered Point 2
-3. Numbered Point 3
-`,
-            createdAt: new Date().toISOString(),
+            content: "",
+            // createdAt,
         };
-        setMessages((prev) => [...prev, assistantMessage]);
 
-        // TODO: Call streamApi() to get assistant response
+        setMessages((prev) => [...prev, userMsg, assistantMsg]);
+        setIsStreaming(true); // disable the chat input for the UI
+
+        const apiMessage: ApiChatMessage[] = [
+            ...messageRef.current,
+            userMsg,
+        ].map((m) => ({ role: m.role, content: m.content }));
+
+        abortRef.current = streamChatCompletions(apiMessage, (chunk) => {
+            if (chunk.delta) {
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id == assistantId
+                            ? { ...m, content: m.content + chunk.delta }
+                            : m
+                    )
+                );
+            }
+
+            if (chunk.isFinished) {
+                setIsStreaming(false);
+                abortRef.current = null;
+            }
+        });
     };
 
     const hasMessages = messages.length > 0;
 
     return (
-        <Box className="chat-page-container">
+        <div className="chat-page-container">
             {/* Content area */}
-            <Box className="chat-page-content">
+            <div className="chat-page-content">
                 {hasMessages ? (
                     <>
                         <ChatMessageList messages={messages} />
-                        <Box className="chat-page-input-wrapper">
-                            <ChatInput onSend={handleSend} />
-                        </Box>
+                        <div className="chat-page-input-wrapper">
+                            <ChatInput
+                                onSend={handleSend}
+                                disabled={isStreaming}
+                            />
+                        </div>
                     </>
                 ) : (
-                    <WelcomeScreen userName={userName} onSend={handleSend} />
+                    <WelcomeScreen onSend={handleSend} />
                 )}
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 }

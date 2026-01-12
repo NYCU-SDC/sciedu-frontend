@@ -1,4 +1,3 @@
-import { Box, Heading } from "@radix-ui/themes";
 import { ChatInput } from "./ChatInput";
 import "./WelcomeScreen.css";
 
@@ -8,9 +7,14 @@ interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
     return (
-        <Box className="welcome-screen-container">
-            <Heading size="7">您好，歡迎回來</Heading>
-            <ChatInput onSend={onSend} />
-        </Box>
+        <div className="welcome-screen-container">
+            <div className="welcome-screen-content">
+                <h1 className="welcome-heading">您好，歡迎回來</h1>
+            </div>
+
+            <div className="welcome-screen-input">
+                <ChatInput onSend={onSend} />
+            </div>
+        </div>
     );
 }

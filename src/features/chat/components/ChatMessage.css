@@ -5,7 +5,7 @@
 .chat-message-user {
     align-self: stretch;
     background-color: var(--color-neutral-200);
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     border-radius: 1rem;
     white-space: pre;
 }

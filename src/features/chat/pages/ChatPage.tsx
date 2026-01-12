@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { WelcomeScreen, ChatMessageList, ChatInput } from "../components";
 import type { ApiChatMessage, Message } from "../types/chat";
 import "./ChatPage.css";
-import { streamChatCompletions } from "../services/chatStream";
+import { mockStreamChatCompletions } from "../services/chatStream";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -59,7 +59,8 @@ export default function ChatPage() {
             userMsg,
         ].map((m) => ({ role: m.role, content: m.content }));
 
-        abortRef.current = streamChatCompletions(apiMessage, (chunk) => {
+        // Using mock for UI testing - switch to streamChatCompletions when backend is ready
+        abortRef.current = mockStreamChatCompletions(apiMessage, (chunk) => {
             if (chunk.delta) {
                 setMessages((prev) =>
                     prev.map((m) =>

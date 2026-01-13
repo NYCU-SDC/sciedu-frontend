@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { WelcomeScreen, ChatMessageList, ChatInput } from "../components";
 import type { ApiChatMessage, Message } from "../types/chat";
 import "./ChatPage.css";
-import { mockStreamChatCompletions } from "../services/chatStream";
+import {
+    mockStreamChatCompletions,
+    streamChatCompletions,
+} from "../services/chatStream";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);

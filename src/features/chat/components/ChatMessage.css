@@ -13,37 +13,67 @@
 .chat-message-assistant {
     align-self: flex-start;
     background-color: transparent;
-    padding: 0.75rem 0;
+    padding: 0;
     border-radius: 0;
     color: var(--color-netural-950);
+    line-height: 1;
 }
 
-.markdown-content h1 {
-    margin: 0.5em 0;
-    font-size: 1.5em;
+.chat-message-assistant h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 1.5rem 0;
+}
+
+.chat-message-assistant h2 {
+    font-size: 1.625rem;
+    font-weight: 700;
+    margin: 1.5rem 0;
+}
+
+.chat-message-assistant h3 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    margin: 1.5rem 0;
+}
+
+.chat-message-assistant h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 1.5rem 0;
+}
+
+.chat-message-assistant h5 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 1.5rem 0;
+}
+
+.chat-message-assistant h6 {
+    font-size: 1.125rem;
     font-weight: 600;
+    margin: 1.5rem 0;
 }
 
-.markdown-content h2 {
-    margin: 0.4em 0;
-    font-size: 1.25em;
-    font-weight: 600;
+.chat-message-assistant strong {
+    font-weight: 700;
+    margin: 1.5rem 0;
 }
 
-.markdown-content h3 {
-    margin: 0.3em 0;
-    font-size: 1.1em;
-    font-weight: 600;
-}
-
-.markdown-content strong {
-    font-weight: 600;
-}
-
-.markdown-content em {
+.chat-message-assistant em {
     font-style: italic;
+    margin: 1.5rem 0;
 }
 
-.markdown-content li {
+.chat-message-assistant ul {
+    padding-left: 1rem;
+}
+
+.chat-message-assistant ol {
+    padding-left: 1rem;
+}
+
+.chat-message-assistant li {
     margin-left: 1.5em;
+    margin: 1.5rem 0;
 }

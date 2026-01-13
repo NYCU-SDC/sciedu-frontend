@@ -51,7 +51,7 @@ export function ChatInput({
             <textarea
                 ref={ref}
                 className="chat-input-field"
-                placeholder={placeholder}
+                placeholder={disabled ? "正在回覆中，請稍候..." : placeholder}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) =>

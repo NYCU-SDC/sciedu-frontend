@@ -25,7 +25,10 @@
 .chat-page-input-wrapper {
     display: flex;
     justify-content: center;
-    padding: 1rem 1.25rem;
+    width: 100%;
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: 1rem;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
 }
 

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { WelcomeScreen, ChatMessageList, ChatInput } from "../components";
+import { WelcomeScreen } from "../components/WelcomeScreen";
+import { ChatMessageList } from "../components/ChatMessageList";
+import { ChatInput } from "../components/ChatInput";
 import type { ApiChatMessage, Message } from "../types/chat";
 import "./ChatPage.css";
 import { streamChatCompletions } from "../services/chatStream";

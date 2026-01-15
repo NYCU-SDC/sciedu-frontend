@@ -42,8 +42,10 @@ export function streamChatCompletions(
                 const chunk = JSON.parse(data) as ApiChatChunk;
                 onChunk(chunk);
             });
-        } catch (e: any) {
-            if (e.name == "AbortError") return;
+        } catch (e: unknown) {
+            if (e instanceof Error && e.name == "AbortError") return;
+
+            console.error("Stream failed", e);
         }
     })();
 

@@ -32,8 +32,6 @@ export default function ChatPage() {
         // we explicitly abort existing streams to ensure a clean slate.
         if (isStreaming) abortRef.current?.abort();
 
-        // const now
-
         // Add user message
         const userMsg: RichChatMessage = {
             id: crypto.randomUUID(),
@@ -60,7 +58,6 @@ export default function ChatPage() {
             (m) => ({ role: m.role, content: m.content })
         );
 
-        // Using mock for UI testing - switch to streamChatCompletions when backend is ready
         abortRef.current = streamChatCompletions(apiMessage, (chunk) => {
             if (chunk.delta) {
                 setMessages((prev) =>

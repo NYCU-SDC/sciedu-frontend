@@ -60,11 +60,11 @@ export function ChatInput({
                 disabled={disabled}
             />
             <IconButton
-                className="chat-input-button"
+                className="chat-input-button-wrapper"
                 onClick={handleSend}
                 disabled={disabled || !input.trim()}
             >
-                <Send />
+                <Send className="chat-input-button-icon" />
             </IconButton>
         </div>
     );

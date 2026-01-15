@@ -32,16 +32,23 @@
     outline: none;
 }
 
-.chat-input-button {
-    height: 2rem;
-    width: 2rem;
+.chat-input-button-wrapper {
+    height: 1.75rem;
+    width: 1.75rem;
+    padding: 0.375rem;
     background-color: var(--color-orange-500);
 }
 
-.chat-input-button:hover:not(:disabled) {
+.chat-input-button-icon {
+    height: 1rem;
+    width: 1rem;
+    color: var(--color-white);
+}
+
+.chat-input-button-wrapper:hover:not(:disabled) {
     background-color: var(--color-orange-600);
 }
 
-.chat-input-button:disabled {
+.chat-input-button-wrapper:disabled {
     opacity: 0.5;
 }

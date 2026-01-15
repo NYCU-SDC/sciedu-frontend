@@ -2,12 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import { WelcomeScreen } from "../components/WelcomeScreen";
 import { ChatMessageList } from "../components/ChatMessageList";
 import { ChatInput } from "../components/ChatInput";
-import type { ChatMessage, RichChatMessage } from "../types/chat";
+import type { BasicChatMessage, RichChatMessage } from "../types/chat";
 import "./ChatPage.css";
 import { streamChatCompletions } from "../services/chatStream";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<RichChatMessage[]>([]);
+    const [streamingMessage, setStreamingMessage] = useState<string | null>(
+        null
+    );
     const [isStreaming, setIsStreaming] = useState(false);
 
     const abortRef = useRef<AbortController | null>(null);
@@ -41,35 +44,31 @@ export default function ChatPage() {
             // createdAt,
         };
 
-        // Add assistant message
-        const assistantId = crypto.randomUUID();
-        const assistantMsg: RichChatMessage = {
-            id: assistantId,
-            conversationId,
-            role: "assistant",
-            content: "",
-            // createdAt,
-        };
+        setMessages((prev) => [...prev, userMsg]);
 
-        setMessages((prev) => [...prev, userMsg, assistantMsg]);
-        setIsStreaming(true); // disable the chat input for the UI
+        setIsStreaming(true);
+        setStreamingMessage("");
 
-        const apiMessage: ChatMessage[] = [...messageRef.current, userMsg].map(
-            (m) => ({ role: m.role, content: m.content })
-        );
+        const apiMessage: BasicChatMessage[] = [...messageRef.current, userMsg];
+
+        let fullResponse = "";
 
         abortRef.current = streamChatCompletions(apiMessage, (chunk) => {
             if (chunk.delta) {
-                setMessages((prev) =>
-                    prev.map((m) =>
-                        m.id == assistantId
-                            ? { ...m, content: m.content + chunk.delta }
-                            : m
-                    )
-                );
+                fullResponse += chunk.delta;
+                setStreamingMessage((prev) => (prev || "") + chunk.delta);
             }
 
             if (chunk.isFinished) {
+                const assistantMsg: RichChatMessage = {
+                    id: crypto.randomUUID(),
+                    conversationId,
+                    role: "assistant",
+                    content: fullResponse,
+                };
+
+                setMessages((prev) => [...prev, assistantMsg]);
+                setStreamingMessage(null); // which clear the streaming buffer
                 setIsStreaming(false);
                 abortRef.current = null;
             }
@@ -78,13 +77,25 @@ export default function ChatPage() {
 
     const hasMessages = messages.length > 0;
 
+    const messagesToDisplay = streamingMessage
+        ? [
+              ...messages,
+              {
+                  id: "streaming-temp-id",
+                  conversationId,
+                  role: "assistant",
+                  content: streamingMessage,
+              } as RichChatMessage,
+          ]
+        : messages;
+
     return (
         <div className="chat-page-container">
             {/* Content area */}
             <div className="chat-page-content">
                 {hasMessages ? (
                     <>
-                        <ChatMessageList messages={messages} />
+                        <ChatMessageList messages={messagesToDisplay} />
                         <div className="chat-page-input-wrapper">
                             <ChatInput
                                 onSend={handleSend}

@@ -1,11 +1,11 @@
 export type Role = "user" | "assistant" | "system";
 
-export interface RichChatMessage extends ChatMessage {
+export interface RichChatMessage extends BasicChatMessage {
     id: string;
     conversationId: string;
 }
 
-export interface ChatMessage {
+export interface BasicChatMessage {
     role: Role;
     content: string;
 }

@@ -24,7 +24,7 @@
 
 .chat-page-input-wrapper {
     display: flex;
-    justify-content: center;
+    /* justify-content: center; */
     width: 100%;
     max-width: 50rem;
     margin: 0 auto;

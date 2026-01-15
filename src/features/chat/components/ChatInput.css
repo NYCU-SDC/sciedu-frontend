@@ -1,27 +1,58 @@
 .chat-input-wrapper {
     display: flex;
+    align-items: flex-end;
     gap: 0.5rem;
     padding: 1rem 1.25rem;
     border-radius: 1rem;
     border: 1px solid var(--color-neutral-300);
     width: 100%;
-    max-height: none;
 }
 
-.chat-input-field {
+.chat-input-inner {
     flex: 1;
-    box-shadow: none;
-    background-color: transparent;
+    display: grid;
+    max-height: 10rem;
+}
+
+.chat-input-field,
+.chat-input-mirror {
+    /* Stack them on top of each other */
+    grid-area: 1 / 1;
+
+    /* shared typography and padding to match sizes exactly */
     font-size: 1rem;
     line-height: 1.5;
     padding: 0.25rem 0.6rem;
-    border: none;
-    resize: none;
     box-sizing: border-box;
+    width: 100%;
 
     min-height: 2rem;
-    height: var(--textarea-height, 2rem);
-    overflow-y: var(--textarea-overflow, hidden);
+    max-height: 10rem;
+}
+
+.chat-input-mirror {
+    /* Make invisible but present for sizing */
+    visibility: hidden;
+    pointer-events: none;
+
+    /* Ensure text wrapping matches textarea */
+    white-space: pre-wrap;
+    overflow-y: hidden;
+    overflow-wrap: break-word;
+}
+
+.chat-input-field {
+    box-shadow: none;
+    background-color: transparent;
+    border: none;
+    resize: none;
+
+    /* Hide scrollbar until content exceeds container */
+    overflow-y: hidden;
+}
+
+.chat-input-inner:has(.chat-input-mirror) .chat-input-field {
+    overflow-y: auto;
 }
 
 .chat-input-field:focus {

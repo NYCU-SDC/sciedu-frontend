@@ -1,9 +1,9 @@
-import type { Message } from "../types/chat";
+import type { RichChatMessage } from "../types/chat";
 import ReactMarkdown from "react-markdown";
 import "./ChatMessage.css";
 
 interface ChatMessageProps {
-    message: Message;
+    message: RichChatMessage;
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {

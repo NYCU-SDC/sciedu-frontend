@@ -1,6 +1,6 @@
 import { parseSSE } from "./SSEParser";
 import type { ApiChatChunk } from "../types/sse";
-import type { ApiChatMessage } from "../types/chat";
+import type { ChatMessage } from "../types/chat";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -14,7 +14,7 @@ async function safeReadProblemDetail(res: Response) {
 }
 
 export function streamChatCompletions(
-    message: ApiChatMessage[],
+    message: ChatMessage[],
     onChunk: (chunk: ApiChatChunk) => void
 ): AbortController {
     const controller = new AbortController();

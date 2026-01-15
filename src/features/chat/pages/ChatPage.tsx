@@ -2,16 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { WelcomeScreen } from "../components/WelcomeScreen";
 import { ChatMessageList } from "../components/ChatMessageList";
 import { ChatInput } from "../components/ChatInput";
-import type { ApiChatMessage, Message } from "../types/chat";
+import type { ChatMessage, RichChatMessage } from "../types/chat";
 import "./ChatPage.css";
 import { streamChatCompletions } from "../services/chatStream";
 
 export default function ChatPage() {
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<RichChatMessage[]>([]);
     const [isStreaming, setIsStreaming] = useState(false);
 
     const abortRef = useRef<AbortController | null>(null);
-    const messageRef = useRef<Message[]>([]);
+    const messageRef = useRef<RichChatMessage[]>([]);
 
     useEffect(() => {
         messageRef.current = messages;
@@ -35,7 +35,7 @@ export default function ChatPage() {
         // const now
 
         // Add user message
-        const userMsg: Message = {
+        const userMsg: RichChatMessage = {
             id: crypto.randomUUID(),
             conversationId,
             role: "user",
@@ -45,7 +45,7 @@ export default function ChatPage() {
 
         // Add assistant message
         const assistantId = crypto.randomUUID();
-        const assistantMsg: Message = {
+        const assistantMsg: RichChatMessage = {
             id: assistantId,
             conversationId,
             role: "assistant",
@@ -56,10 +56,9 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, userMsg, assistantMsg]);
         setIsStreaming(true); // disable the chat input for the UI
 
-        const apiMessage: ApiChatMessage[] = [
-            ...messageRef.current,
-            userMsg,
-        ].map((m) => ({ role: m.role, content: m.content }));
+        const apiMessage: ChatMessage[] = [...messageRef.current, userMsg].map(
+            (m) => ({ role: m.role, content: m.content })
+        );
 
         // Using mock for UI testing - switch to streamChatCompletions when backend is ready
         abortRef.current = streamChatCompletions(apiMessage, (chunk) => {

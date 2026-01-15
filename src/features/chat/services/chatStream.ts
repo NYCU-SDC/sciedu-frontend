@@ -7,7 +7,7 @@ const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 async function safeReadProblemDetail(res: Response) {
     try {
         const data = await res.json();
-        return data?.detail || data?.title || `HTTP ${res.status}`;
+        return data?.title || data?.detail || `HTTP ${res.status}`;
     } catch {
         return `HTTP ${res.status}`;
     }

@@ -2,27 +2,29 @@ import React, { useState } from "react";
 import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
+import type { PageType } from "./types/types";
 import "./GeneticsCourse.css";
+import Navbar from "./components/Navbar";
 
 const GeneticsCourse: React.FC = () => {
-    const [currentStep, setCurrentStep] = useState(1);
+    const [currentStep, setCurrentStep] = useState<PageType>("material");
 
     const renderStep = () => {
         switch (currentStep) {
-            case 1:
-                return <Material onNext={() => setCurrentStep(2)} />;
-            case 2:
-                return <Questions onNext={() => setCurrentStep(3)} />;
-            case 3:
-                return <Overview onNext={() => setCurrentStep(1)} />;
+            case "material":
+                return <Material onNext={() => setCurrentStep("questions")} />;
+            case "questions":
+                return <Questions onNext={() => setCurrentStep("overview")} />;
+            case "overview":
+                return <Overview onNext={() => setCurrentStep("material")} />;
             default:
-                return <Material onNext={() => setCurrentStep(1)} />;
+                return <Material onNext={() => setCurrentStep("material")} />;
         }
     };
 
     return (
         <div
-            className={`genetics-container ${currentStep === 1 ? "has-gradient" : ""}`}
+            className={`course-container ${currentStep === "material" ? "has-gradient" : ""}`}
         >
             {/* 手機版阻擋層 */}
             <div className="mobile-blocker">
@@ -40,7 +42,10 @@ const GeneticsCourse: React.FC = () => {
             </div>
 
             {/* 電腦版主內容 */}
-            <div className="course-wrapper">{renderStep()}</div>
+            <div className="course-wrapper">
+                <Navbar activeStep={currentStep} />
+                {renderStep()}
+            </div>
             {/* 頁尾版權宣告 */}
             <footer className="copyright-footer">
                 ©2024 Institute of Education, Science Education division, NYCU.

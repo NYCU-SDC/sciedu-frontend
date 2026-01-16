@@ -19,7 +19,7 @@
     border-collapse: separate; /* 配合 border-radius */
     width: 100%;
 
-    font-size: 16px;
+    font-size: 14px;
 
     line-height: 1.6;
 
@@ -45,6 +45,7 @@
 }
 
 .comparison-table td {
+    height: 5rem;
     border: 0.0625rem solid #7dc8b7;
     border-bottom: none;
     padding: 0.25rem 0.75rem;
@@ -63,7 +64,7 @@
 
 /* 標題欄位寬度與樣式 */
 .td-title {
-    width: 15%;
+    width: 10%;
     font-weight: bold;
     background-color: #ffffff;
     color: #444;
@@ -71,7 +72,7 @@
 
 /* 內容欄位寬度 */
 .th-classical,
-.th-molecular {
+.th-material {
     width: 42.5%;
 }
 

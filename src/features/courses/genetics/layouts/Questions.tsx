@@ -1,61 +1,110 @@
 import "./Questions.css";
-import Navbar from "../components/Navbar";
-import { Button } from "@radix-ui/themes";
+import type { CourseContent } from "../types/types";
+import { Button, TextArea } from "@radix-ui/themes";
+import { type JSX } from "react";
 
-interface QuestionsProps {
-    onNext: () => void;
-}
+export function Questions({ onNext }: { onNext: () => void }): JSX.Element {
+    const tableData: CourseContent[] = [
+        {
+            type: "Questions",
+            content: {
+                questions: ["請說明在古典遺傳學，顯性和隱性基因的意義。"],
+            },
+        },
+        {
+            type: "Questions",
+            content: {
+                questions: [
+                    "在古典遺傳學，當同時具有一個顯性基因和一個隱性基因時，其表現型為何，請說明原因？",
+                ],
+            },
+        },
+        {
+            type: "Questions",
+            content: {
+                questions: ["在分子遺傳學，是否強調顯性和隱性基因？理由？"],
+            },
+        },
+        {
+            type: "Questions",
+            content: {
+                questions: [
+                    "在分子遺傳學，當同源染色體上的等位基因不同時，表現型會受什麼因素影響？與古典遺傳學不同點為何？",
+                ],
+            },
+        },
+    ];
 
-const Questions: React.FC<QuestionsProps> = ({ onNext }) => {
     return (
         <div className="page-container">
-            <Navbar activeStep={2} />
             <main className="content-wrapper">
                 {/* 左側 */}
                 <section className="column">
                     <div className="column-header">
-                        <span className="icon-edit">📝</span>
                         <h2>古典遺傳學：</h2>
                     </div>
 
                     <div className="question-card">
                         <h3 className="question-title">問題 1-1</h3>
                         <p className="question-text">
-                            請說明在古典遺傳學，顯性和隱性基因的意義。
+                            {tableData[0].type === "Questions" &&
+                                tableData[0].content.questions[0]}
                         </p>
-                        <div className="answer-space"></div>
+                        <TextArea
+                            className="answer-space"
+                            placeholder="在此輸入答案..."
+                            variant="classic"
+                            style={{ width: "100%", minHeight: "100px" }}
+                        />
                     </div>
 
                     <div className="question-card">
                         <h3 className="question-title">問題 1-2</h3>
                         <p className="question-text">
-                            在古典遺傳學，當同時具有一個顯性基因和一個隱性基因時，其表現型為何，請說明原因？
+                            {tableData[1].type === "Questions" &&
+                                tableData[1].content.questions[0]}
                         </p>
-                        <div className="answer-space"></div>
+                        <TextArea
+                            className="answer-space"
+                            placeholder="在此輸入答案..."
+                            variant="classic"
+                            style={{ width: "100%", minHeight: "100px" }}
+                        />
                     </div>
                 </section>
 
                 {/* 右側 */}
                 <section className="column">
                     <div className="column-header">
-                        <span className="icon-edit">📝</span>
                         <h2>分子遺傳學：</h2>
                     </div>
 
                     <div className="question-card">
                         <h3 className="question-title">問題 2-1</h3>
                         <p className="question-text">
-                            在分子遺傳學，是否強調顯性和隱性基因？理由？
+                            {tableData[2].type === "Questions" &&
+                                tableData[2].content.questions[0]}
                         </p>
-                        <div className="answer-space"></div>
+                        <TextArea
+                            className="answer-space"
+                            placeholder="在此輸入答案..."
+                            variant="classic"
+                            style={{ width: "100%", minHeight: "100px" }}
+                        />
                     </div>
 
                     <div className="question-card">
                         <h3 className="question-title">問題 2-2</h3>
                         <p className="question-text">
-                            在分子遺傳學，當同源染色體上的等位基因不同時，表現型會受什麼因素影響？與古典遺傳學不同點為何？
+                            {tableData[3].type === "Questions" &&
+                                tableData[3].content.questions[0]}
                         </p>
-                        <div className="answer-space"></div>
+                        <TextArea
+                            className="answer-space"
+                            placeholder="在此輸入答案..."
+                            variant="classic"
+                            style={{ width: "100%", minHeight: "100px" }}
+                        />
                     </div>
                 </section>
             </main>
@@ -95,6 +144,6 @@ const Questions: React.FC<QuestionsProps> = ({ onNext }) => {
             </footer>
         </div>
     );
-};
+}
 
 export default Questions;

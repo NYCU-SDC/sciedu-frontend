@@ -1,7 +1,8 @@
-.genetics-navbar {
+.course-navbar {
     width: 100%;
-    padding: 0.9375rem; /* 15px -> 0.9375rem */
+    padding: 0.9375rem 2rem; /* 15px -> 0.9375rem */
     box-sizing: border-box;
+    display: none;
 }
 
 .navbar-container {
@@ -101,4 +102,10 @@
 
 .p-divider {
     opacity: 0.5;
+}
+
+@media (min-width: 64rem) {
+    .course-navbar {
+        display: block;
+    }
 }

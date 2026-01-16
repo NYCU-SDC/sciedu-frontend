@@ -1,21 +1,22 @@
-.genetics-container {
+.course-container {
     display: flex;
     flex-direction: column;
     height: 100vh; /* 佔滿整個視窗高度 */
     max-width: 100%; /* 防止水平滾動 */
-    margin: 0 auto;
+    margin: 0;
     overflow: hidden;
     background-color: #ffffff;
     transition: background 0.3s ease;
 }
 
-.genetics-container.has-gradient {
+.course-container.has-gradient {
     background: linear-gradient(to bottom, #fdfefe, #d2e1e4);
 }
 
 .course-wrapper {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -26,11 +27,11 @@
 
 .copyright-footer {
     flex-shrink: 0;
-    margin-top: auto;
-    padding: 0.625rem 1.875rem; /* 10px 30px -> 0.625rem 1.875rem */
+    margin-top: 0;
+    padding: 0 2rem 0.625rem 2rem; /* 10px 30px -> 0.625rem 1.875rem */
     font-size: 0.75rem;
     color: #888;
-    background-color: transparent;
+    background-color: #ffffff;
     box-sizing: border-box;
     text-align: left;
 }
@@ -43,7 +44,6 @@
     height: 100vh;
     background-color: #fafafa;
     text-align: center;
-
     padding: 0 2.5rem;
 }
 
@@ -93,5 +93,8 @@
     }
     .course-wrapper {
         display: flex;
+    }
+    .copyright-footer {
+        background-color: transparent;
     }
 }

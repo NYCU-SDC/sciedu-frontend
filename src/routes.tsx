@@ -7,7 +7,7 @@ export const router = createBrowserRouter([
         element: <div>Hello World</div>,
     },
     {
-        path: "/courses/Genetic/:id",
+        path: "/courses/:id",
         element: <GeneticsCourse />,
     },
 ]);

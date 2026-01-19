@@ -1,6 +1,9 @@
 import type { RichChatMessage } from "../types/chat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import "./ChatMessage.css";
 
 interface ChatMessageProps {
@@ -21,7 +24,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 <span>{message.content}</span>
             ) : (
                 <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
                     components={{
                         table: ({ node, ...props }) => (
                             <div className="chat-message-table-wrapper">

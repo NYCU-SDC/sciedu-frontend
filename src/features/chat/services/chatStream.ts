@@ -15,7 +15,8 @@ async function safeReadProblemDetail(res: Response) {
 
 export function streamChatCompletions(
     message: BasicChatMessage[],
-    onChunk: (chunk: ApiChatChunk) => void
+    onChunk: (chunk: ApiChatChunk) => void,
+    onError?: (error: Error) => void
 ): AbortController {
     const controller = new AbortController();
 
@@ -46,6 +47,12 @@ export function streamChatCompletions(
             if (e instanceof Error && e.name == "AbortError") return;
 
             console.error("Stream failed", e);
+
+            if (onError && e instanceof Error) {
+                onError(e);
+            } else if (onError) {
+                onError(new Error(String(e)));
+            }
         }
     })();
 

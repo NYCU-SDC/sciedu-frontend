@@ -5,6 +5,7 @@ import { ChatInput } from "../components/ChatInput";
 import type { BasicChatMessage, RichChatMessage } from "../types/chat";
 import "./ChatPage.css";
 import { streamChatCompletions } from "../services/chatStream";
+import { toast } from "sonner";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<RichChatMessage[]>([]);
@@ -53,26 +54,37 @@ export default function ChatPage() {
 
         let fullResponse = "";
 
-        abortRef.current = streamChatCompletions(apiMessage, (chunk) => {
-            if (chunk.delta) {
-                fullResponse += chunk.delta;
-                setStreamingMessage((prev) => (prev || "") + chunk.delta);
-            }
+        abortRef.current = streamChatCompletions(
+            apiMessage,
+            (chunk) => {
+                if (chunk.delta) {
+                    fullResponse += chunk.delta;
+                    setStreamingMessage((prev) => (prev || "") + chunk.delta);
+                }
 
-            if (chunk.isFinished) {
-                const assistantMsg: RichChatMessage = {
-                    id: crypto.randomUUID(),
-                    conversationId,
-                    role: "assistant",
-                    content: fullResponse,
-                };
+                if (chunk.isFinished) {
+                    const assistantMsg: RichChatMessage = {
+                        id: crypto.randomUUID(),
+                        conversationId,
+                        role: "assistant",
+                        content: fullResponse,
+                    };
 
-                setMessages((prev) => [...prev, assistantMsg]);
-                setStreamingMessage(null); // which clear the streaming buffer
+                    setMessages((prev) => [...prev, assistantMsg]);
+                    setStreamingMessage(null); // which clear the streaming buffer
+                    setIsStreaming(false);
+                    abortRef.current = null;
+                }
+            },
+            (error) => {
+                console.error("Chat error", error);
+
+                toast.error(`傳送失敗: ${error.message}`);
+
                 setIsStreaming(false);
-                abortRef.current = null;
+                setStreamingMessage(null);
             }
-        });
+        );
     };
 
     const hasMessages = messages.length > 0;

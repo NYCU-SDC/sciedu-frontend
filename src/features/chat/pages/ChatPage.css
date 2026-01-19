@@ -24,12 +24,16 @@
 
 .chat-page-input-wrapper {
     display: flex;
-    /* justify-content: center; */
+    justify-content: center;
     width: 100%;
-    max-width: 50rem;
-    margin: 0 auto;
     padding: 1rem;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    background-color: var(--color-neutral-50);
+}
+
+.chat-page-input-wrapper > * {
+    width: 100%;
+    max-width: 50rem;
 }
 
 @media (max-width: 40rem) {

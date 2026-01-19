@@ -20,7 +20,16 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {isUser ? (
                 <span>{message.content}</span>
             ) : (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                        table: ({ node, ...props }) => (
+                            <div className="chat-message-table-wrapper">
+                                <table {...props} />
+                            </div>
+                        ),
+                    }}
+                >
                     {message.content}
                 </ReactMarkdown>
             )}

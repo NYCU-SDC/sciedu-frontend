@@ -1,0 +1,25 @@
+{
+  "hash": "b36200a4",
+  "configHash": "bf80633c",
+  "lockfileHash": "32c7ee79",
+  "browserHash": "89f936d0",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/.pnpm/react@19.2.1/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "f8e979fb",
+      "needsInterop": true
+    },
+    "react-router": {
+      "src": "../../node_modules/.pnpm/react-router@7.10.0_react-dom@19.2.1_react@19.2.1__react@19.2.1/node_modules/react-router/dist/development/index.mjs",
+      "file": "react-router.js",
+      "fileHash": "510a33ae",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-44VH5YKR": {
+      "file": "chunk-44VH5YKR.js"
+    }
+  }
+}

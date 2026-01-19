@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import ChatPage from "./pages/ChatPage";
+import ChatPage from "./features/chat/pages/ChatPage";
 
 export const router = createBrowserRouter([
     {

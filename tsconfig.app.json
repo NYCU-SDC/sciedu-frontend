@@ -22,15 +22,7 @@
         "noUnusedParameters": true,
         "erasableSyntaxOnly": true,
         "noFallthroughCasesInSwitch": true,
-<<<<<<< HEAD
         "noUncheckedSideEffectImports": true
-=======
-        "noUncheckedSideEffectImports": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["src/*"]
-        }
->>>>>>> 4b28030 (feat: create pages initialize chat and chat content)
     },
     "include": ["src"]
 }

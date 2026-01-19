@@ -16,7 +16,7 @@
     background-color: transparent;
     padding: 0;
     border-radius: 0;
-    color: var(--color-netural-950);
+    color: var(--color-neutral-950);
     line-height: 1;
 }
 
@@ -77,4 +77,21 @@
 .chat-message-assistant li {
     margin-left: 1.5em;
     margin: 1.5rem 0;
+}
+
+.chat-message-assistant table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.chat-message-assistant th,
+.chat-message-assistant td {
+    padding: 0.75rem;
+    border: 1px solid var(--color-neutral-300);
+}
+
+.chat-message-assistant th {
+    background-color: var(--color-neutral-100);
+    font-weight: 600;
 }

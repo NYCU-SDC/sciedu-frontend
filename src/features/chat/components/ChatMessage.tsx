@@ -1,5 +1,6 @@
 import type { RichChatMessage } from "../types/chat";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./ChatMessage.css";
 
 interface ChatMessageProps {
@@ -19,7 +20,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {isUser ? (
                 <span>{message.content}</span>
             ) : (
-                <ReactMarkdown>{message.content}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.content}
+                </ReactMarkdown>
             )}
         </div>
     );

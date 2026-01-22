@@ -1,32 +1,40 @@
-import React, { useState } from "react";
+import { type JSX } from "react";
+import { useState } from "react";
 import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
-import type { PageType } from "./types/types";
+import { courseContent } from "../../../assets/CourseContent";
 import "./GeneticsCourse.css";
 import Navbar from "./components/Navbar";
 
-const GeneticsCourse: React.FC = () => {
-    const [currentStep, setCurrentStep] = useState<PageType>("material");
+function GeneticsCourse(): JSX.Element {
+    const [currentIndex, setCurrentIndex] = useState(() => 0);
+    const currentData = courseContent[currentIndex];
+
+    const handleNext = () => {
+        if (currentIndex < courseContent.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+        }
+    };
 
     const renderStep = () => {
-        switch (currentStep) {
+        switch (currentData.type) {
             case "material":
-                return <Material onNext={() => setCurrentStep("questions")} />;
+                return <Material data={currentData} onNext={handleNext} />;
             case "questions":
-                return <Questions onNext={() => setCurrentStep("overview")} />;
+                return <Questions data={currentData} onNext={handleNext} />;
             case "overview":
-                return <Overview onNext={() => setCurrentStep("material")} />;
+                return <Overview data={currentData} onNext={handleNext} />;
             default:
-                return <Material onNext={() => setCurrentStep("material")} />;
+                return null;
         }
     };
 
     return (
         <div
-            className={`course-container ${currentStep === "material" ? "has-gradient" : ""}`}
+            className={`course-container ${currentIndex === 0 ? "has-gradient" : ""}`}
         >
-            {/* 手機版阻擋層 */}
+            {/*mobile blocker*/}
             <div className="mobile-blocker">
                 <div className="blocker-icon">
                     <div className="phone-shape">
@@ -41,18 +49,18 @@ const GeneticsCourse: React.FC = () => {
                 </p>
             </div>
 
-            {/* 電腦版主內容 */}
+            {/* Main content*/}
             <div className="course-wrapper">
-                <Navbar activeStep={currentStep} />
+                <Navbar activeStep={currentIndex} />
                 {renderStep()}
             </div>
-            {/* 頁尾版權宣告 */}
+            {/* copyright footer */}
             <footer className="copyright-footer">
                 ©2024 Institute of Education, Science Education division, NYCU.
                 All Rights Reserved
             </footer>
         </div>
     );
-};
+}
 
 export default GeneticsCourse;

@@ -1,41 +1,42 @@
-type PageType = "material" | "questions" | "overview";
-
-type CoursePage = {
-    type: PageType;
-    title: string;
-};
-
-type Questions = {
-    type: "Questions";
+export type QuestionsType = {
+    type: "questions";
     content: {
-        questions: string[];
+        label: string[];
+        questions: {
+            questions: string[][];
+        };
     };
 };
 
-type Material = {
-    type: "Material";
+export type MaterialType = {
+    type: "material";
     content: {
+        image: string;
         description: string;
-        questions: string[];
+        questions: {
+            label: string[];
+            questions: string[];
+            options: string[][];
+        };
     };
 };
 
-type Overview = {
-    type: "Overview";
+export type OverviewType = {
+    type: "overview";
     content: {
-        title: string;
-        classical: string;
-        material: string;
+        label: string[];
+        rows: {
+            title: string[];
+            classical: string[];
+            material: string[];
+        };
     };
 };
 
-type CourseContent = Questions | Material | Overview;
-
-export type {
-    PageType,
-    CoursePage,
-    Questions,
-    Material,
-    Overview,
-    CourseContent,
+export type NavbarType = {
+    MainTitle: string;
+    SubTitle: string[];
+    SecondTitle: string[];
 };
+
+export type CourseContent = QuestionsType | MaterialType | OverviewType;

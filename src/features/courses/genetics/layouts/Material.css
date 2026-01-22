@@ -15,19 +15,19 @@
     overflow: hidden;
 }
 
-/* 左側佈局 */
+/* left section */
 .course-section {
     flex: 3;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     padding: 0.5rem 0;
-    overflow: hidden; /* 確保內容不溢出 */
-    min-height: 0; /* 允許縮小 */
+    overflow: hidden; /* ensure content doesn't overflow */
+    min-height: 0;
 }
 
 .image-container {
-    flex: 3; /* 保持比例 */
+    flex: 3; /* stay the same ratio */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -41,8 +41,8 @@
 
 .pea-main-image {
     width: 100%;
-    height: 100%; /* 強制高度填滿容器 */
-    object-fit: contain; /* 保持比例縮放並完整顯示 */
+    height: 100%; /* fill up the container */
+    object-fit: contain; /* stay within container */
     display: block;
 }
 
@@ -53,19 +53,18 @@
 .course-description {
     flex: 1;
     border: 0.125rem solid #7dc8b7;
-    border-radius: 1rem; /* 只有下方圓角 */
+    border-radius: 1rem;
     margin-top: 0;
-    overflow-y: auto; /* 內容多時內部捲動 */
+    overflow-y: auto; /* can scroll */
     background-color: #ffffff;
 }
 
-/* 針對內部的文字段落優化 */
 .course-description p {
-    margin: 0.5rem 0.5rem 1rem 0.5rem; /* 段落間距 */
-    text-align: justify; /* 文字對齊 */
+    margin: 0.5rem 0.5rem 1rem 0.5rem; /* gap between paragraphs */
+    text-align: justify; /* justify text alignment */
 }
 
-/* 右側側欄 */
+/* right sidebar */
 .question-sidebar {
     flex: 1;
     min-width: 0;
@@ -123,7 +122,7 @@
 }
 
 .textarea-mock {
-    height: 100%; /* 填滿 quiz-content */
+    height: 100%; /* fill up quiz-content */
     width: 100%;
     background: #fafafa;
     border: 0.0625rem inset #eee; /* 1px -> 0.0625rem */
@@ -131,18 +130,21 @@
 }
 
 .sidebar-footer {
-    margin-top: auto; /* 推到底部 */
-    flex-shrink: 0; /* 確保按鈕本身不會被壓扁 */
+    margin-top: auto;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
 .shadow-button {
+    cursor: pointer;
+    background-color: #79c5bc;
+    width: 100%;
+    height: 2.1875rem;
     box-shadow:
         0 0.5rem 0.9375rem rgba(0, 0, 0, 0.3),
         0 0.25rem 0.375rem rgba(0, 0, 0, 0.2);
-
     transition:
         transform 0.2s,
         box-shadow 0.2s;
@@ -152,7 +154,7 @@
     box-shadow:
         0 0.9375rem 1.5625rem rgba(0, 0, 0, 0.35),
         0 0.625rem 0.625rem rgba(0, 0, 0, 0.2);
-    transform: translateY(-0.1875rem); /* 向上浮動明顯一點 */
+    transform: translateY(-0.1875rem);
 }
 
 .shadow-button:active {

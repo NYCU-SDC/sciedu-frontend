@@ -28,10 +28,10 @@
     content: "";
     position: absolute;
     right: 0;
-    width: 0.125rem; /* 2px -> 0.125rem */
+    width: 0.1rem;
     height: 60%;
-    top: 50%; /* 定位在中間 */
-    transform: translateY(-50%); /* 修正垂直置中 */
+    top: 50%; /* position at center */
+    transform: translateY(-50%); /* fix to center */
 
     background-color: rgba(255, 255, 255, 0.6);
 }
@@ -45,16 +45,36 @@
 
 .main-nav-links {
     display: flex;
-    justify-content: space-around;
     align-items: center;
+    justify-content: center;
+    width: 100%;
     font-size: 1rem;
     letter-spacing: 0.1rem;
-    padding-bottom: 0.03125rem; /* 0.5px -> 0.03125rem */
+    padding-bottom: 0.03125rem;
+}
+
+.main-nav-links span {
+    flex: 1; /* Let the three spans share the width equally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Corrected separator line style */
+.main-nav-links span:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    width: 1px;
+    height: 1rem;
+    background-color: #fff;
 }
 
 .nav-link {
     opacity: 0.7;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .nav-link.active {
@@ -62,11 +82,7 @@
     font-weight: bold;
 }
 
-.divider {
-    opacity: 0.4;
-}
-
-/* 核心橫線設計 */
+/* Core horizontal line design */
 .horizontal-line {
     width: 100%;
     height: 0.0625rem; /* 1px -> 0.0625rem */
@@ -91,17 +107,24 @@
 
 .page-progress {
     display: flex;
-    gap: 0.5rem; /* 8px -> 0.5rem */
     opacity: 0.8;
+}
+.page-progress span {
+    display: flex;
+    align-items: center;
+}
+
+.page-progress span:not(:last-child)::after {
+    content: "";
+    width: 0.1rem;
+    height: 1.4rem;
+    margin: 0 1rem; /* 4px 0 -> 0.25rem 0 */
+    background-color: #fff;
 }
 
 .active-num {
     font-weight: 700;
     color: black;
-}
-
-.p-divider {
-    opacity: 0.5;
 }
 
 @media (min-width: 64rem) {

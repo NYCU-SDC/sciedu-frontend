@@ -1,18 +1,18 @@
-/* 容器 */
+/* Container */
 .page-container {
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 防止溢出 */
+    overflow: hidden; /* prevent overflow */
 }
 
-/* 內容區佈局 */
+/* Content wrapper */
 .content-wrapper {
     display: flex;
     gap: 2.2rem; /* 40px */
     padding: 0 2rem;
     flex: 1;
-    min-height: 0; /* 允許縮小 */
+    min-height: 0; /* approve shrink*/
     position: relative;
     overflow: hidden;
 }
@@ -37,7 +37,7 @@
     padding-bottom: 1rem;
 }
 
-/* 標題區 */
+/* Column header styles */
 .column-header {
     display: flex;
     align-items: center;
@@ -50,7 +50,7 @@
     margin: 0 0.5rem;
 }
 
-/* 卡片樣式 */
+/* Question card styles */
 .question-card {
     border: 0.09375rem solid #7dc8b7;
     border-radius: 0.75rem;
@@ -76,7 +76,7 @@
     margin: 0 0 0.3rem 0;
 }
 
-/* 按鈕區 */
+/* Footer actions */
 .footer-actions {
     flex-shrink: 0;
     padding: 1rem 2.5rem;
@@ -88,6 +88,10 @@
 }
 
 .shadow-button {
+    cursor: pointer;
+    background-color: #79c5bc;
+    width: 21.875rem;
+    height: 2.1875rem;
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
     transition:
         transform 0.2s,

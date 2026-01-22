@@ -16,7 +16,7 @@
 .comparison-table {
     table-layout: fixed;
     width: 100%;
-    border-collapse: separate; /* 配合 border-radius */
+    border-collapse: separate; /*  border-radius */
     width: 100%;
 
     font-size: 14px;
@@ -62,7 +62,6 @@
     border-left: none;
 }
 
-/* 標題欄位寬度與樣式 */
 .td-title {
     width: 10%;
     font-weight: bold;
@@ -70,7 +69,6 @@
     color: #444;
 }
 
-/* 內容欄位寬度 */
 .th-classical,
 .th-material {
     width: 42.5%;
@@ -80,7 +78,6 @@
     text-align: justify;
 }
 
-/* 下一頁按鈕 */
 .footer-nav {
     flex-shrink: 0;
     padding: 1rem 0;
@@ -90,6 +87,10 @@
 }
 
 .shadow-button {
+    cursor: pointer;
+    background-color: #79c5bc;
+    width: 21.875rem;
+    height: 2.1875rem;
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
     transition:
         transform 0.2s,

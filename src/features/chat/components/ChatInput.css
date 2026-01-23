@@ -5,7 +5,6 @@
     padding: 1rem 1.25rem;
     border-radius: 1rem;
     border: 1px solid var(--color-neutral-300);
-    width: 100%;
 }
 
 .chat-input-inner {

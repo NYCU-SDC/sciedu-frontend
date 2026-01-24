@@ -1,38 +1,38 @@
-import "./Navbar.css";
+import styles from "./Navbar.module.css";
 import type { JSX } from "react/jsx-runtime";
 import { subTitles } from "../../../../assets/NavbarContent";
 
 export function Navbar({ activeStep }: { activeStep: number }): JSX.Element {
     return (
-        <nav className="course-navbar">
-            <div className="navbar-container">
+        <nav className={styles["course-navbar"]}>
+            <div className={styles["navbar-container"]}>
                 {/* Left Main Title */}
-                <div className="brand-section">{subTitles.MainTitle}</div>
+                <div className={styles["brand-section"]}>{subTitles.MainTitle}</div>
                 {/* right side subtitle*/}
-                <div className="content-section">
-                    <div className="main-nav-links">
+                <div className={styles["content-section"]}>
+                    <div className={styles["main-nav-links"]}>
                         <span
-                            className={`nav-link ${activeStep === 0 ? "active" : ""}`}
+                            className={`${styles["nav-link"]} ${activeStep === 0 ? styles["active"] : ""}`}
                         >
                             {subTitles.SubTitle[0]}
                         </span>
                         <span
-                            className={`nav-link ${activeStep === 1 ? "active" : ""}`}
+                            className={`${styles["nav-link"]} ${activeStep === 1 ? styles["active"] : ""}`}
                         >
                             {subTitles.SubTitle[1]}
                         </span>
                         <span
-                            className={`nav-link ${activeStep === 2 ? "active" : ""}`}
+                            className={`${styles["nav-link"]} ${activeStep === 2 ? styles["active"] : ""}`}
                         >
                             {subTitles.SubTitle[2]}
                         </span>
                     </div>
 
                     {/* Straight line */}
-                    <div className="horizontal-line"></div>
+                    <div className={styles["horizontal-line"]}></div>
 
-                    <div className="sub-nav-info">
-                        <div className="current-subtitle">
+                    <div className={styles["sub-nav-info"]}>
+                        <div className={styles["current-subtitle"]}>
                             {
                                 subTitles.SecondTitle[
                                     activeStep === 0
@@ -44,19 +44,19 @@ export function Navbar({ activeStep }: { activeStep: number }): JSX.Element {
                             }
                         </div>
                         {/* number of pages */}
-                        <div className="page-progress">
+                        <div className={styles["page-progress"]}>
                             <span
-                                className={activeStep === 0 ? "active-num" : ""}
+                                className={activeStep === 0 ? styles["active-num"] : ""}
                             >
                                 01
                             </span>
                             <span
-                                className={activeStep === 1 ? "active-num" : ""}
+                                className={activeStep === 1 ? styles["active-num"] : ""}
                             >
                                 02
                             </span>
                             <span
-                                className={activeStep === 2 ? "active-num" : ""}
+                                className={activeStep === 2 ? styles["active-num"] : ""}
                             >
                                 03
                             </span>

@@ -4,7 +4,7 @@ import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
 import { courseContent } from "../../../assets/CourseContent";
-import "./GeneticsCourse.css";
+import styles from "./GeneticsCourse.module.css";
 import Navbar from "./components/Navbar";
 
 function GeneticsCourse(): JSX.Element {
@@ -32,13 +32,13 @@ function GeneticsCourse(): JSX.Element {
 
     return (
         <div
-            className={`course-container ${currentIndex === 0 ? "has-gradient" : ""}`}
+            className={`${styles["course-container"]} ${currentIndex === 0 ? styles["has-gradient"] : ""}`}
         >
             {/*mobile blocker*/}
-            <div className="mobile-blocker">
-                <div className="blocker-icon">
-                    <div className="phone-shape">
-                        <div className="phone-line"></div>
+            <div className={styles["mobile-blocker"]}>
+                <div className={styles["blocker-icon"]}>
+                    <div className={styles["phone-shape"]}>
+                        <div className={styles["phone-line"]}></div>
                     </div>
                 </div>
                 <h2>本教材尚未支援用手機觀看</h2>
@@ -50,12 +50,12 @@ function GeneticsCourse(): JSX.Element {
             </div>
 
             {/* Main content*/}
-            <div className="course-wrapper">
+            <div className={styles["course-wrapper"]}>
                 <Navbar activeStep={currentIndex} />
                 {renderStep()}
             </div>
             {/* copyright footer */}
-            <footer className="copyright-footer">
+            <footer className={styles["copyright-footer"]}>
                 ©2024 Institute of Education, Science Education division, NYCU.
                 All Rights Reserved
             </footer>

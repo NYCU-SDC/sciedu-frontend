@@ -1,6 +1,7 @@
 import { RouterProvider } from "react-router/dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Theme } from "@radix-ui/themes";
+import { Toaster } from "sonner";
 
 import "@radix-ui/themes/styles.css";
 
@@ -13,6 +14,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
             <Theme>
                 <RouterProvider router={router} />
+                <Toaster />
             </Theme>
         </QueryClientProvider>
     );

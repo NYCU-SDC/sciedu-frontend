@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { IconButton } from "@radix-ui/themes";
 import { Send } from "lucide-react";
-import "./ChatInput.css";
+import styles from "./ChatInput.module.css";
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -23,12 +23,12 @@ export function ChatInput({
     };
 
     return (
-        <div className="chat-input-wrapper">
-            <div className="chat-input-inner">
+        <div className={styles.wrapper}>
+            <div className={styles.inner}>
                 {/* Invisible mirror for auto-resize */}
-                <div className="chat-input-mirror">{input + "\n"}</div>
+                <div className={styles.mirror}>{input + "\n"}</div>
                 <textarea
-                    className="chat-input-field"
+                    className={styles.field}
                     placeholder={
                         disabled ? "正在回覆中，請稍候..." : placeholder
                     }
@@ -42,11 +42,11 @@ export function ChatInput({
                 />
             </div>
             <IconButton
-                className="chat-input-button-wrapper"
+                className={styles.buttonWrapper}
                 onClick={handleSend}
                 disabled={disabled || !input.trim()}
             >
-                <Send className="chat-input-button-icon" />
+                <Send className={styles.buttonIcon} />
             </IconButton>
         </div>
     );

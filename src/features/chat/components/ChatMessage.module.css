@@ -1,8 +1,8 @@
-.chat-message {
+.message {
     max-width: none;
 }
 
-.chat-message-user {
+.user {
     align-self: stretch;
     background-color: var(--color-neutral-200);
     padding: 1rem;
@@ -11,7 +11,7 @@
     word-break: break-word;
 }
 
-.chat-message-assistant {
+.assistant {
     align-self: stretch;
     width: 100%;
     background-color: transparent;
@@ -21,84 +21,84 @@
     line-height: 1.5;
 }
 
-.chat-message-assistant h1 {
+.assistant h1 {
     font-size: 1.875rem;
     font-weight: 700;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant h2 {
+.assistant h2 {
     font-size: 1.625rem;
     font-weight: 700;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant h3 {
+.assistant h3 {
     font-size: 1.375rem;
     font-weight: 700;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant h4 {
+.assistant h4 {
     font-size: 1.25rem;
     font-weight: 700;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant h5 {
+.assistant h5 {
     font-size: 1.125rem;
     font-weight: 700;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant h6 {
+.assistant h6 {
     font-size: 1.125rem;
     font-weight: 600;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant strong {
+.assistant strong {
     font-weight: 700;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant em {
+.assistant em {
     font-style: italic;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant ul {
+.assistant ul {
     padding-left: 1rem;
 }
 
-.chat-message-assistant ol {
+.assistant ol {
     padding-left: 1rem;
 }
 
-.chat-message-assistant li {
+.assistant li {
     margin-left: 1.5em;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant table {
+.assistant table {
     width: 100%;
     border-collapse: collapse;
     margin: 0;
 }
 
-.chat-message-table-wrapper {
+.tableWrapper {
     width: 100%;
     overflow-x: auto;
     margin: 1.5rem 0;
 }
 
-.chat-message-assistant th,
-.chat-message-assistant td {
+.assistant th,
+.assistant td {
     padding: 0.75rem;
     border: 1px solid var(--color-neutral-300);
 }
 
-.chat-message-assistant th {
+.assistant th {
     background-color: var(--color-neutral-100);
     font-weight: 600;
 }

@@ -3,7 +3,7 @@ import { WelcomeScreen } from "../components/WelcomeScreen";
 import { ChatMessageList } from "../components/ChatMessageList";
 import { ChatInput } from "../components/ChatInput";
 import type { BasicChatMessage, RichChatMessage } from "../types/chat";
-import "./ChatPage.css";
+import styles from "./ChatPage.module.css";
 import { streamChatCompletions } from "../services/chatStream";
 import { toast } from "sonner";
 
@@ -102,13 +102,13 @@ export default function ChatPage() {
         : messages;
 
     return (
-        <div className="chat-page-container">
+        <div className={styles.container}>
             {/* Content area */}
-            <div className="chat-page-content">
+            <div className={styles.content}>
                 {hasMessages ? (
                     <>
                         <ChatMessageList messages={messagesToDisplay} />
-                        <div className="chat-page-input-wrapper">
+                        <div className={styles.inputWrapper}>
                             <ChatInput
                                 onSend={handleSend}
                                 disabled={isStreaming}

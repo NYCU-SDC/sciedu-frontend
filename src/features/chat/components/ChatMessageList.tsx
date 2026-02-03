@@ -1,6 +1,6 @@
 import { ChatMessage } from "./ChatMessage";
 import type { RichChatMessage } from "../types/chat";
-import "./ChatMessageList.css";
+import styles from "./ChatMessageList.module.css";
 
 interface ChatMessageListProps {
     messages: RichChatMessage[];
@@ -12,8 +12,8 @@ export function ChatMessageList({
     streamingMessage,
 }: ChatMessageListProps) {
     return (
-        <div className="chat-message-list-scroll">
-            <div className="chat-message-list-container">
+        <div className={styles.scroll}>
+            <div className={styles.container}>
                 {messages.map((message) => (
                     <ChatMessage key={message.id} message={message} />
                 ))}

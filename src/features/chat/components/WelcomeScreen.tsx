@@ -1,5 +1,5 @@
 import { ChatInput } from "./ChatInput";
-import "./WelcomeScreen.css";
+import styles from "./WelcomeScreen.module.css";
 
 interface WelcomeScreenProps {
     onSend: (message: string) => void;
@@ -7,12 +7,12 @@ interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
     return (
-        <div className="welcome-screen-container">
-            <div className="welcome-screen-content">
-                <h1 className="welcome-heading">您好，歡迎回來</h1>
+        <div className={styles.container}>
+            <div className={styles.content}>
+                <h1 className={styles.heading}>您好，歡迎回來</h1>
             </div>
 
-            <div className="welcome-screen-input">
+            <div className={styles.input}>
                 <ChatInput onSend={onSend} />
             </div>
         </div>

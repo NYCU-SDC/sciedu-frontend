@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import "./ChatMessage.css";
+import styles from "./ChatMessage.module.css";
 
 interface ChatMessageProps {
     message: RichChatMessage;
@@ -15,8 +15,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
     return (
         <div
-            className={`chat-message ${
-                isUser ? "chat-message-user" : "chat-message-assistant"
+            className={`${styles.message} ${
+                isUser ? styles.user : styles.assistant
             }`}
         >
             {/* For assistant messages, render markdown */}
@@ -28,7 +28,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     rehypePlugins={[rehypeKatex]}
                     components={{
                         table: ({ node, ...props }) => (
-                            <div className="chat-message-table-wrapper">
+                            <div className={styles.tableWrapper}>
                                 <table {...props} />
                             </div>
                         ),

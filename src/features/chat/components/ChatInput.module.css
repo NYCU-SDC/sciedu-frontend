@@ -1,4 +1,4 @@
-.chat-input-wrapper {
+.wrapper {
     display: flex;
     align-items: flex-end;
     gap: 0.5rem;
@@ -7,14 +7,14 @@
     border: 1px solid var(--color-neutral-300);
 }
 
-.chat-input-inner {
+.inner {
     flex: 1;
     display: grid;
     max-height: 10rem;
 }
 
-.chat-input-field,
-.chat-input-mirror {
+.field,
+.mirror {
     /* Stack them on top of each other */
     grid-area: 1 / 1;
 
@@ -29,7 +29,7 @@
     max-height: 10rem;
 }
 
-.chat-input-mirror {
+.mirror {
     /* Make invisible but present for sizing */
     visibility: hidden;
     pointer-events: none;
@@ -40,7 +40,7 @@
     overflow-wrap: break-word;
 }
 
-.chat-input-field {
+.field {
     box-shadow: none;
     background-color: transparent;
     border: none;
@@ -50,31 +50,31 @@
     overflow-y: hidden;
 }
 
-.chat-input-inner:has(.chat-input-mirror) .chat-input-field {
+.inner:has(.mirror) .field {
     overflow-y: auto;
 }
 
-.chat-input-field:focus {
+.field:focus {
     outline: none;
 }
 
-.chat-input-button-wrapper {
+.buttonWrapper {
     height: 1.75rem;
     width: 1.75rem;
     padding: 0.375rem;
     background-color: var(--color-orange-500);
 }
 
-.chat-input-button-icon {
+.buttonIcon {
     height: 1rem;
     width: 1rem;
     color: var(--color-white);
 }
 
-.chat-input-button-wrapper:hover:not(:disabled) {
+.buttonWrapper:hover:not(:disabled) {
     background-color: var(--color-orange-600);
 }
 
-.chat-input-button-wrapper:disabled {
+.buttonWrapper:disabled {
     opacity: 0.5;
 }

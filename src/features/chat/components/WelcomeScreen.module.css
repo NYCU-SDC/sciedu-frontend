@@ -1,4 +1,4 @@
-.welcome-screen-container {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -7,19 +7,19 @@
     gap: 1.5rem;
 }
 
-.welcome-heading {
+.heading {
     font-size: 2.25rem;
     font-weight: 700;
     font-family: serif;
     color: var(--color-black);
 }
 
-.welcome-screen-input {
+.input {
     width: min(48rem, 100%);
 }
 
 @media (max-width: 40rem) {
-    .welcome-screen-container {
+    .container {
         height: 100dvh;
         justify-content: space-between;
         gap: 0;
@@ -27,13 +27,13 @@
         padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     }
 
-    .welcome-screen-content {
+    .content {
         flex: 1;
         display: flex;
         align-items: center;
     }
 
-    .welcome-heading {
+    .heading {
         font-size: 1.875rem;
     }
 }

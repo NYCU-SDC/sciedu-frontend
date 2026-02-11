@@ -1,4 +1,4 @@
-.chat-page-container {
+.container {
     display: flex;
     flex-direction: column;
     height: 100dvh; /* for mobile */
@@ -13,7 +13,7 @@
     padding-right: env(safe-area-inset-right);
 }
 
-.chat-page-content {
+.content {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -22,7 +22,7 @@
     overflow: hidden;
 }
 
-.chat-page-input-wrapper {
+.inputWrapper {
     display: flex;
     justify-content: center;
     width: 100%;
@@ -31,13 +31,13 @@
     background-color: var(--color-neutral-50);
 }
 
-.chat-page-input-wrapper > * {
+.inputWrapper > * {
     width: 100%;
     max-width: 50rem;
 }
 
 @media (max-width: 40rem) {
-    .chat-page-container {
+    .container {
         position: fixed;
         top: 0;
         left: 0;

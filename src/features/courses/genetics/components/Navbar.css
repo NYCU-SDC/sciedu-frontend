@@ -1,0 +1,134 @@
+.course-navbar {
+    width: 100%;
+    padding: 0.9375rem 2rem; /* 15px -> 0.9375rem */
+    box-sizing: border-box;
+    display: none;
+}
+
+.navbar-container {
+    background-color: #7dc8b7;
+    border-radius: 12px;
+    display: flex;
+    padding: 0 0;
+    color: white;
+}
+
+.brand-section {
+    padding: 0.625rem 1.5625rem; /* 10px 25px -> 0.625rem 1.5625rem */
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: black;
+    display: flex;
+    letter-spacing: 0.15rem;
+    align-items: center;
+    position: relative;
+}
+
+.brand-section::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    width: 0.1rem;
+    height: 60%;
+    top: 50%; /* position at center */
+    transform: translateY(-50%); /* fix to center */
+
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+.content-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.3125rem 1.25rem; /* 5px 20px -> 0.3125rem 1.25rem */
+}
+
+.main-nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-size: 1rem;
+    letter-spacing: 0.1rem;
+    padding-bottom: 0.03125rem;
+}
+
+.main-nav-links span {
+    flex: 1; /* Let the three spans share the width equally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Corrected separator line style */
+.main-nav-links span:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    width: 1px;
+    height: 1rem;
+    background-color: #fff;
+}
+
+.nav-link {
+    opacity: 0.7;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.nav-link.active {
+    opacity: 1;
+    font-weight: bold;
+}
+
+/* Core horizontal line design */
+.horizontal-line {
+    width: 100%;
+    height: 0.0625rem; /* 1px -> 0.0625rem */
+    background-color: rgba(255, 255, 255, 0.6);
+    margin: 0.125rem 0; /* 2px 0 -> 0.125rem 0 */
+}
+
+.sub-nav-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    padding-top: 0.125rem; /* 2px -> 0.125rem */
+}
+
+.current-subtitle {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1rem;
+    color: black;
+}
+
+.page-progress {
+    display: flex;
+    opacity: 0.8;
+}
+.page-progress span {
+    display: flex;
+    align-items: center;
+}
+
+.page-progress span:not(:last-child)::after {
+    content: "";
+    width: 0.1rem;
+    height: 1.4rem;
+    margin: 0 1rem; /* 4px 0 -> 0.25rem 0 */
+    background-color: #fff;
+}
+
+.active-num {
+    font-weight: 700;
+    color: black;
+}
+
+@media (min-width: 64rem) {
+    .course-navbar {
+        display: block;
+    }
+}

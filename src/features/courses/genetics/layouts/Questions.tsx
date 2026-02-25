@@ -1,7 +1,6 @@
 import "./Questions.css";
 import type { QuestionsType } from "../types/types";
 import { Button, TextArea } from "@radix-ui/themes";
-import { type JSX } from "react";
 
 export function Questions({
     data,
@@ -9,7 +8,7 @@ export function Questions({
 }: {
     data: QuestionsType;
     onNext: () => void;
-}): JSX.Element {
+}) {
     return (
         <div className="page-container">
             <main className="content-wrapper">

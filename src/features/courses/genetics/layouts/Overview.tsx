@@ -1,7 +1,6 @@
 import "./Overview.css";
 import { Button } from "@radix-ui/themes";
 import type { OverviewType } from "../types/types";
-import { type JSX } from "react";
 
 export function Overview({
     data,
@@ -9,7 +8,7 @@ export function Overview({
 }: {
     data: OverviewType;
     onNext: () => void;
-}): JSX.Element {
+}) {
     return (
         <div className="page-container">
             <main className="table-content">

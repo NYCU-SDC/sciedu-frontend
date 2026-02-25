@@ -1,5 +1,4 @@
 import "./Material.css";
-import { type JSX } from "react";
 import { Button } from "@radix-ui/themes";
 import { TextArea } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
@@ -10,7 +9,7 @@ export function Material({
 }: {
     data: MaterialType;
     onNext: () => void;
-}): JSX.Element {
+}) {
     return (
         <div className="page-container">
             <main className="overview-content">

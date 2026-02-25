@@ -1,4 +1,3 @@
-import { type JSX } from "react";
 import { useState } from "react";
 import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
@@ -7,7 +6,7 @@ import { courseContent } from "../../../assets/CourseContent";
 import "./GeneticsCourse.css";
 import Navbar from "./components/Navbar";
 
-function GeneticsCourse(): JSX.Element {
+function GeneticsCourse() {
     const [currentIndex, setCurrentIndex] = useState(() => 0);
     const currentData = courseContent[currentIndex];
 

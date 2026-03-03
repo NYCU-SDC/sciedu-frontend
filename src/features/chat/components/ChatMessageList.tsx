@@ -1,16 +1,13 @@
-import { ChatMessage } from "./ChatMessage";
+import ChatMessage from "./ChatMessage";
 import type { RichChatMessage } from "../types/chat";
 import styles from "./ChatMessageList.module.css";
 
-interface ChatMessageListProps {
+type Props = {
     messages: RichChatMessage[];
     streamingMessage?: string | null;
-}
+};
 
-export function ChatMessageList({
-    messages,
-    streamingMessage,
-}: ChatMessageListProps) {
+export default function ChatMessageList({ messages, streamingMessage }: Props) {
     return (
         <div className={styles.scroll}>
             <div className={styles.container}>

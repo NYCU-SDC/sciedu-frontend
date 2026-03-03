@@ -6,11 +6,11 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import styles from "./ChatMessage.module.css";
 
-interface ChatMessageProps {
+type Props = {
     message: RichChatMessage;
-}
+};
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message }: Props) {
     const isUser = message.role === "user";
 
     return (

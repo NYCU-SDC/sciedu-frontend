@@ -6,7 +6,7 @@ import { courseContent } from "../../../assets/CourseContent";
 import "./GeneticsCourse.css";
 import Navbar from "./components/Navbar";
 
-function GeneticsCourse() {
+export default function GeneticsCourse() {
     const [currentIndex, setCurrentIndex] = useState(1);
     const currentData = courseContent[currentIndex];
 
@@ -61,5 +61,3 @@ function GeneticsCourse() {
         </div>
     );
 }
-
-export default GeneticsCourse;

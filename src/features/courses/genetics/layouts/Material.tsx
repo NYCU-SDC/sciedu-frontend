@@ -1,20 +1,14 @@
-// import "./Material.css";
-import { Button, CheckboxGroup } from "@radix-ui/themes";
-import { TextArea } from "@radix-ui/themes";
+import { Button, CheckboxGroup, TextArea } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
 import styles from "./Material.module.css";
-import { useId } from "react";
 
-export function Material({
-    data,
-    onNext,
-}: {
+type Props = {
     data: MaterialType;
     onNext: () => void;
-}) {
+};
+
+export default function Material({ data, onNext }: Props) {
     const content = data.content;
-    // generate unique id for form elements to avoid DOM id conflicts
-    const componentId = useId();
 
     return (
         <div className={styles.pageContainer}>
@@ -90,5 +84,3 @@ export function Material({
         </div>
     );
 }
-
-export default Material;

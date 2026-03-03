@@ -7,7 +7,7 @@ import "./GeneticsCourse.css";
 import Navbar from "./components/Navbar";
 
 function GeneticsCourse() {
-    const [currentIndex, setCurrentIndex] = useState(() => 0);
+    const [currentIndex, setCurrentIndex] = useState(1);
     const currentData = courseContent[currentIndex];
 
     const handleNext = () => {

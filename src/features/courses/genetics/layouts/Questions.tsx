@@ -2,13 +2,12 @@ import "./Questions.css";
 import type { QuestionsType } from "../types/types";
 import { Button, TextArea } from "@radix-ui/themes";
 
-export function Questions({
-    data,
-    onNext,
-}: {
+type Props = {
     data: QuestionsType;
     onNext: () => void;
-}) {
+};
+
+export default function Questions({ data, onNext }: Props) {
     return (
         <div className="page-container">
             <main className="content-wrapper">
@@ -103,5 +102,3 @@ export function Questions({
         </div>
     );
 }
-
-export default Questions;

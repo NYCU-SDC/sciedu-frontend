@@ -8,15 +8,25 @@ export const courseContent: CourseContent[] = [
             image: peaImage,
             description:
                 "古典遺傳學強調基因型可直接決定表現型，基因在古典遺傳是一個抽象概念。認為顯性基因會表現在個體表徵，若一個體中顯性和隱性基因同時存在，則此隱性基因不會表現。豌豆種皮由一對基因控制，R代表顯性基因，r代表隱性基因。若豌豆具有R基因，則種皮形狀為平滑；若控制豌豆種皮形狀的一對基因均為r，則種皮形狀為皺皮。若R和r同時存在，則隱性性狀不會表現，只有顯性性狀會表現，種皮呈現平滑。",
-            questions: {
-                label: ["基因", "表徵", "機制"],
-                questions: [
-                    "控制豌豆種皮形狀的基因為何？",
-                    "豌豆RR種皮形狀表徵為何？",
-                    "R和r基因如何影響豌豆種皮形狀？",
-                ],
-                options: [["R", "r"], ["平滑", "皺皮"], [""]],
-            },
+            questions: [
+                {
+                    type: "select",
+                    title: "基因",
+                    description: "控制豌豆種皮形狀的基因為何？",
+                    options: ["R", "r"],
+                },
+                {
+                    type: "select",
+                    title: "表徵",
+                    description: "豌豆RR種皮形狀表徵為何？",
+                    options: ["平滑", "皺皮"],
+                },
+                {
+                    type: "text",
+                    title: "機制",
+                    description: "R和r基因如何影響豌豆種皮形狀？",
+                },
+            ],
         },
     },
     {

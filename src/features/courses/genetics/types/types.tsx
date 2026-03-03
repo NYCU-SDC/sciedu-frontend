@@ -8,16 +8,26 @@ export type QuestionsType = {
     };
 };
 
+type MaterialQuestionBase = {
+    title: string;
+    description: string;
+};
+
+type MaterialQuestionSelect = MaterialQuestionBase & {
+    type: "select";
+    options: string[];
+};
+
+type MaterialQuestionText = MaterialQuestionBase & {
+    type: "text";
+};
+
 export type MaterialType = {
     type: "material";
     content: {
         image: string;
         description: string;
-        questions: {
-            label: string[];
-            questions: string[];
-            options: string[][];
-        };
+        questions: (MaterialQuestionSelect | MaterialQuestionText)[];
     };
 };
 

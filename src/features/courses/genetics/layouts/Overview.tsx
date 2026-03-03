@@ -2,45 +2,49 @@ import "./Overview.css";
 import { Button } from "@radix-ui/themes";
 import type { OverviewType } from "../types/types";
 
-export function Overview({
-    data,
-    onNext,
-}: {
+type Props = {
     data: OverviewType;
     onNext: () => void;
-}) {
+};
+
+export default function Overview({ data, onNext }: Props) {
     return (
         <div className="page-container">
             <main className="table-content">
                 <table className="comparison-table">
+                    {data.styling?.ratio && (
+                        <colgroup>
+                            {data.styling.ratio.map((r, i) => (
+                                <col key={i} style={{ width: `${r}%` }} />
+                            ))}
+                        </colgroup>
+                    )}
                     <thead>
                         <tr>
-                            <th className="th-title"></th>
-                            <th className="th-classical">
-                                {data.content.label[0]}
-                            </th>
-                            <th className="th-material">
-                                {data.content.label[1]}
-                            </th>
+                            {data.content.header.map((label, index) => (
+                                <th key={index} className="th-title">
+                                    {label}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {data.content.rows.title.map((_, index) => {
-                            // get row data by index
-                            const rowTitle = data.content.rows.title[index];
-                            const rowClassical =
-                                data.content.rows.classical[index];
-                            const rowMaterial =
-                                data.content.rows.material[index];
+                        {data.content.content.map((row, rowIndex) => {
                             return (
-                                <tr key={index}>
-                                    <td className="td-title">{rowTitle}</td>
-                                    <td className="td-content">
-                                        {rowClassical}
-                                    </td>
-                                    <td className="td-content">
-                                        {rowMaterial}
-                                    </td>
+                                <tr key={rowIndex}>
+                                    {row.map((cell, cellIndex) => (
+                                        <td
+                                            key={cellIndex}
+                                            className={
+                                                cellIndex === 0 &&
+                                                data.styling?.titleColumn
+                                                    ? "td-title"
+                                                    : "td-content"
+                                            }
+                                        >
+                                            {cell}
+                                        </td>
+                                    ))}
                                 </tr>
                             );
                         })}
@@ -61,5 +65,3 @@ export function Overview({
         </div>
     );
 }
-
-export default Overview;

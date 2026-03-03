@@ -34,12 +34,12 @@ export type MaterialType = {
 export type OverviewType = {
     type: "overview";
     content: {
-        label: string[];
-        rows: {
-            title: string[];
-            classical: string[];
-            material: string[];
-        };
+        header: string[];
+        content: string[][];
+    };
+    styling?: {
+        titleColumn?: boolean;
+        ratio?: number[];
     };
 };
 

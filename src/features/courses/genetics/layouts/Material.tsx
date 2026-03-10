@@ -1,6 +1,7 @@
 import { Button, CheckboxGroup, TextArea } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
 import styles from "./Material.module.css";
+import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 
 type Props = {
     data: MaterialType;
@@ -50,7 +51,7 @@ export default function Material({ data, onNext }: Props) {
                             )}
                             {ques.type === "text" && (
                                 <TextArea
-                                    className={styles.textInput}
+                                    className={TextAreaStyle.textInput}
                                     placeholder="在此輸入答案..."
                                     variant="soft"
                                     color="gray"

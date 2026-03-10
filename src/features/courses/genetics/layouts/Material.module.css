@@ -92,23 +92,6 @@
     gap: 1rem;
 }
 
-.textInput {
-    height: 100%; /* fill up quiz-content */
-    width: 100%;
-    border: none;
-    resize: none;
-    background-color: transparent;
-    outline: none;
-}
-
-.textInput > textarea {
-    padding: 0;
-}
-
-.textInput:focus {
-    outline: none;
-}
-
 .sidebarFooter {
     margin-top: auto;
     flex-shrink: 0;

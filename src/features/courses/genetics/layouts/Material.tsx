@@ -2,6 +2,7 @@ import { Button, CheckboxGroup, TextArea } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
 import styles from "./Material.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
+import SubmitButtonStyle from "../components/SubmitButton.module.css";
 
 type Props = {
     data: MaterialType;
@@ -62,7 +63,7 @@ export default function Material({ data, onNext }: Props) {
 
                     <footer className={styles.sidebarFooter}>
                         <Button
-                            className={styles.shadowButton}
+                            className={SubmitButtonStyle.shadowButton}
                             variant="solid"
                             highContrast
                             onClick={onNext}
@@ -71,7 +72,7 @@ export default function Material({ data, onNext }: Props) {
                             送出 Send
                         </Button>
                         <Button
-                            className={styles.shadowButton}
+                            className={SubmitButtonStyle.shadowButton}
                             variant="solid"
                             highContrast
                             onClick={onNext}

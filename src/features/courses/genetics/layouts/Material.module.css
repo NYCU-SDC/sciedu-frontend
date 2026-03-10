@@ -99,21 +99,3 @@
     flex-direction: column;
     gap: 0.5rem;
 }
-
-.shadowButton {
-    cursor: pointer;
-    background-color: #79c5bc;
-    width: 100%;
-    height: 2.1875rem;
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-}
-
-.shadowButton:hover {
-    transform: translateY(-0.1875rem);
-}
-
-.shadowButton:active {
-    transform: translateY(0.0625rem);
-}

@@ -1,10 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
 import { courseContent } from "../../../assets/CourseContent";
 import "./GeneticsCourse.css";
 import Navbar from "./components/Navbar";
+import type { CourseContent } from "./types/types";
+
+type PageContentProps = {
+    data: CourseContent;
+    onNext: () => void;
+};
+
+function PageContent({ data, onNext }: PageContentProps) {
+    switch (data.type) {
+        case "material":
+            return <Material data={data} onNext={onNext} />;
+        case "questions":
+            return <Questions data={data} onNext={onNext} />;
+        case "overview":
+            return <Overview data={data} onNext={onNext} />;
+        default:
+            return null;
+    }
+}
 
 export default function GeneticsCourse() {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -13,19 +32,6 @@ export default function GeneticsCourse() {
     const handleNext = () => {
         if (currentIndex < courseContent.length - 1) {
             setCurrentIndex(currentIndex + 1);
-        }
-    };
-
-    const renderStep = () => {
-        switch (currentData.type) {
-            case "material":
-                return <Material data={currentData} onNext={handleNext} />;
-            case "questions":
-                return <Questions data={currentData} onNext={handleNext} />;
-            case "overview":
-                return <Overview data={currentData} onNext={handleNext} />;
-            default:
-                return null;
         }
     };
 
@@ -56,13 +62,14 @@ export default function GeneticsCourse() {
                     setActiveStep={(index) => setCurrentIndex(index)}
                     secondaryTitle={currentData.secondaryTitle}
                 />
-                {renderStep()}
+                <PageContent data={currentData} onNext={handleNext} />
+                {/* copyright footer */}
+                <footer className="copyright-footer">
+                    {/*Technically breaks pureness but works without causing considerable issues*/}
+                    ©{new Date().getFullYear()} Institute of Education, Science
+                    Education division, NYCU. All Rights Reserved
+                </footer>
             </div>
-            {/* copyright footer */}
-            <footer className="copyright-footer">
-                ©2024 Institute of Education, Science Education division, NYCU.
-                All Rights Reserved
-            </footer>
         </div>
     );
 }

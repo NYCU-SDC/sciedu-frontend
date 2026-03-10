@@ -46,7 +46,9 @@ export type QuestionsType = {
 export type NavbarType = {
     MainTitle: string;
     SubTitle: string[];
-    SecondTitle: string[];
 };
 
-export type CourseContent = QuestionsType | MaterialType | OverviewType;
+export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
+    activeNavbarTitles: number[];
+    secondaryTitle: string;
+};

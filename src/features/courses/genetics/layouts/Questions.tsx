@@ -2,7 +2,7 @@ import type { QuestionsType } from "../types/types";
 import { Button, TextArea } from "@radix-ui/themes";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
-import SubmitButtonStyle from "../components/SubmitButton.module.css";
+import FooterStyles from "../components/Footer.module.css";
 
 type Props = {
     data: QuestionsType;
@@ -39,25 +39,16 @@ export default function Questions({ data, onNext }: Props) {
             </main>
 
             {/* button area */}
-            <footer className={styles.footerContainer}>
-                <div className={styles.footerActions}>
+            <footer className={FooterStyles.footerContainer}>
+                <div className={FooterStyles.footerActions}>
                     <Button
-                        className={SubmitButtonStyle.shadowButton}
+                        className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
                         onClick={onNext}
                         radius="full"
                     >
-                        送出 Send
-                    </Button>
-                    <Button
-                        className={SubmitButtonStyle.shadowButton}
-                        variant="solid"
-                        highContrast
-                        onClick={onNext}
-                        radius="full"
-                    >
-                        下一頁
+                        送出並前往下一頁
                     </Button>
                 </div>
             </footer>

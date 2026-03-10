@@ -71,19 +71,3 @@
     color: #2c3e50;
     margin: 0 0 0.3rem 0;
 }
-
-.footerContainer {
-    display: flex;
-    justify-content: flex-end;
-    flex-shrink: 0;
-    padding: 1rem 2rem;
-}
-
-.footerActions {
-    min-width: 22rem;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-}

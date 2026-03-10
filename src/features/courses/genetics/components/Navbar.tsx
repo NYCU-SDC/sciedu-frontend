@@ -1,48 +1,42 @@
 import "./Navbar.css";
 import type { JSX } from "react/jsx-runtime";
-import { subTitles } from "../../../../assets/NavbarContent";
+import { SectionTitles } from "../../../../assets/NavbarContent";
 
-export function Navbar({ activeStep }: { activeStep: number }): JSX.Element {
+type Props = {
+    activeTitles: number[];
+    activeStep: number;
+    setActiveStep: (step: number) => void;
+    secondaryTitle: string;
+};
+
+export function Navbar({
+    activeTitles,
+    activeStep,
+    setActiveStep,
+    secondaryTitle,
+}: Props): JSX.Element {
     return (
         <nav className="course-navbar">
             <div className="navbar-container">
                 {/* Left Main Title */}
-                <div className="brand-section">{subTitles.MainTitle}</div>
+                <div className="brand-section">{SectionTitles.MainTitle}</div>
                 {/* right side subtitle*/}
                 <div className="content-section">
                     <div className="main-nav-links">
-                        <span
-                            className={`nav-link ${activeStep === 0 ? "active" : ""}`}
-                        >
-                            {subTitles.SubTitle[0]}
-                        </span>
-                        <span
-                            className={`nav-link ${activeStep === 1 ? "active" : ""}`}
-                        >
-                            {subTitles.SubTitle[1]}
-                        </span>
-                        <span
-                            className={`nav-link ${activeStep === 2 ? "active" : ""}`}
-                        >
-                            {subTitles.SubTitle[2]}
-                        </span>
+                        {SectionTitles.SubTitle.map((title, index) => (
+                            <span
+                                className={`nav-link ${activeTitles.includes(index) ? "active" : ""}`}
+                            >
+                                {title}
+                            </span>
+                        ))}
                     </div>
 
                     {/* Straight line */}
                     <div className="horizontal-line"></div>
 
                     <div className="sub-nav-info">
-                        <div className="current-subtitle">
-                            {
-                                subTitles.SecondTitle[
-                                    activeStep === 0
-                                        ? 1
-                                        : activeStep === 1
-                                          ? 2
-                                          : 3
-                                ]
-                            }
-                        </div>
+                        <div className="current-subtitle">{secondaryTitle}</div>
                         {/* number of pages */}
                         <div className="page-progress">
                             <span

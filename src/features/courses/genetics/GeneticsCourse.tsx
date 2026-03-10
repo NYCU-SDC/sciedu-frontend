@@ -7,7 +7,7 @@ import "./GeneticsCourse.css";
 import Navbar from "./components/Navbar";
 
 export default function GeneticsCourse() {
-    const [currentIndex, setCurrentIndex] = useState(1);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const currentData = courseContent[currentIndex];
 
     const handleNext = () => {
@@ -50,7 +50,12 @@ export default function GeneticsCourse() {
 
             {/* Main content*/}
             <div className="course-wrapper">
-                <Navbar activeStep={currentIndex} />
+                <Navbar
+                    activeTitles={currentData.activeNavbarTitles}
+                    activeStep={currentIndex}
+                    setActiveStep={(index) => setCurrentIndex(index)}
+                    secondaryTitle={currentData.secondaryTitle}
+                />
                 {renderStep()}
             </div>
             {/* copyright footer */}

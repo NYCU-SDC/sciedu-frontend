@@ -1,7 +1,7 @@
 import { Button } from "@radix-ui/themes";
 import type { OverviewType } from "../types/types";
 import styles from "./Overview.module.css";
-import SubmitButtonStyles from "../components/SubmitButton.module.css";
+import FooterStyles from "../components/Footer.module.css";
 
 type Props = {
     data: OverviewType;
@@ -49,18 +49,20 @@ export default function Overview({ data, onNext }: Props) {
                         })}
                     </tbody>
                 </table>
-                <footer className={styles.footerNav}>
+            </main>
+            <footer className={FooterStyles.footerContainer}>
+                <div className={FooterStyles.footerActions}>
                     <Button
-                        className={SubmitButtonStyles.shadowButton}
+                        className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
                         onClick={onNext}
                         radius="full"
                     >
-                        下一頁
+                        送出並前往下一頁
                     </Button>
-                </footer>
-            </main>
+                </div>
+            </footer>
         </div>
     );
 }

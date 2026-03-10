@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
@@ -59,7 +59,6 @@ export default function GeneticsCourse() {
                 <Navbar
                     activeTitles={currentData.activeNavbarTitles}
                     activeStep={currentIndex}
-                    setActiveStep={(index) => setCurrentIndex(index)}
                     secondaryTitle={currentData.secondaryTitle}
                 />
                 <PageContent data={currentData} onNext={handleNext} />

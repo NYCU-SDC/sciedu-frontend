@@ -5,14 +5,12 @@ import { SectionTitles } from "../../../../assets/NavbarContent";
 type Props = {
     activeTitles: number[];
     activeStep: number;
-    setActiveStep: (step: number) => void;
     secondaryTitle: string;
 };
 
 export function Navbar({
     activeTitles,
     activeStep,
-    setActiveStep,
     secondaryTitle,
 }: Props): JSX.Element {
     return (

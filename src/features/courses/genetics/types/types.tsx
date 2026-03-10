@@ -1,13 +1,3 @@
-export type QuestionsType = {
-    type: "questions";
-    content: {
-        label: string[];
-        questions: {
-            questions: string[][];
-        };
-    };
-};
-
 type MaterialQuestionBase = {
     title: string;
     description: string;
@@ -40,6 +30,16 @@ export type OverviewType = {
     styling?: {
         titleColumn?: boolean;
         ratio?: number[];
+    };
+};
+
+export type QuestionsType = {
+    type: "questions";
+    content: {
+        columns: {
+            label: string;
+            questions: string[];
+        }[];
     };
 };
 

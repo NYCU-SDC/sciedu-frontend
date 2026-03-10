@@ -78,19 +78,22 @@ export const courseContent: CourseContent[] = [
     {
         type: "questions",
         content: {
-            label: ["古典遺傳學", "分子遺傳學"],
-            questions: {
-                questions: [
-                    [
+            columns: [
+                {
+                    label: "古典遺傳學",
+                    questions: [
                         "請說明在古典遺傳學，顯性和隱性基因的意義。",
                         "在古典遺傳學，當同時具有一個顯性基因和一個隱性基因時，其表現型為何，請說明原因？",
                     ],
-                    [
+                },
+                {
+                    label: "分子遺傳學",
+                    questions: [
                         "在分子遺傳學，是否強調顯性和隱性基因？理由？",
                         "在分子遺傳學，當同源染色體上的等位基因不同時，表現型會受什麼因素影響？與古典遺傳學不同點為何？",
                     ],
-                ],
-            },
+                },
+            ],
         },
     },
 ];

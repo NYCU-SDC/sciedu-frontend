@@ -1,6 +1,7 @@
-import "./Overview.css";
 import { Button } from "@radix-ui/themes";
 import type { OverviewType } from "../types/types";
+import styles from "./Overview.module.css";
+import SubmitButtonStyles from "../components/SubmitButton.module.css";
 
 type Props = {
     data: OverviewType;
@@ -9,9 +10,9 @@ type Props = {
 
 export default function Overview({ data, onNext }: Props) {
     return (
-        <div className="page-container">
-            <main className="table-content">
-                <table className="comparison-table">
+        <div className={styles.pageContainer}>
+            <main className={styles.tableContent}>
+                <table className={styles.comparisonTable}>
                     {data.styling?.ratio && (
                         <colgroup>
                             {data.styling.ratio.map((r, i) => (
@@ -22,9 +23,7 @@ export default function Overview({ data, onNext }: Props) {
                     <thead>
                         <tr>
                             {data.content.header.map((label, index) => (
-                                <th key={index} className="th-title">
-                                    {label}
-                                </th>
+                                <th key={index}>{label}</th>
                             ))}
                         </tr>
                     </thead>
@@ -38,8 +37,8 @@ export default function Overview({ data, onNext }: Props) {
                                             className={
                                                 cellIndex === 0 &&
                                                 data.styling?.titleColumn
-                                                    ? "td-title"
-                                                    : "td-content"
+                                                    ? styles.tdTitle
+                                                    : styles.tdContent
                                             }
                                         >
                                             {cell}
@@ -50,9 +49,9 @@ export default function Overview({ data, onNext }: Props) {
                         })}
                     </tbody>
                 </table>
-                <footer className="footer-nav">
+                <footer className={styles.footerNav}>
                     <Button
-                        className="shadow-button"
+                        className={SubmitButtonStyles.shadowButton}
                         variant="solid"
                         highContrast
                         onClick={onNext}

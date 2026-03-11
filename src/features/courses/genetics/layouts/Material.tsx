@@ -1,103 +1,75 @@
-import "./Material.css";
-import { Button } from "@radix-ui/themes";
-import { TextArea } from "@radix-ui/themes";
+import { Button, CheckboxGroup, TextArea } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
+import styles from "./Material.module.css";
+import TextAreaStyle from "../components/UnstyledTextArea.module.css";
+import FooterStyles from "../components/Footer.module.css";
 
-export function Material({
-    data,
-    onNext,
-}: {
+type Props = {
     data: MaterialType;
     onNext: () => void;
-}) {
+};
+
+export default function Material({ data, onNext }: Props) {
+    const content = data.content;
+
     return (
-        <div className="page-container">
-            <main className="overview-content">
+        <div className={styles.pageContainer}>
+            <main className={styles.overviewContent}>
                 {/* left section */}
-                <section className="course-section">
-                    <div className="image-container">
-                        <img
-                            src={data.content.image}
-                            alt="教材"
-                            className="pea-main-image"
-                        />
+                <section className={styles.courseSection}>
+                    <div className={styles.imageContainer}>
+                        <img src={content.image} alt="教材" />
                     </div>
 
-                    <div className="course-description">
-                        <p>{data.content.description}</p>
+                    <div className={styles.courseDescription}>
+                        <p>{content.description}</p>
                     </div>
                 </section>
 
                 {/* right sidebar */}
-                <aside className="question-sidebar">
-                    <div className="sidebar-header">
-                        <span>請根據左圖回答下列問題：</span>
+                <aside className={styles.questionSidebar}>
+                    <div className={styles.sidebarHeader}>
+                        <h2>請根據左圖回答下列問題</h2>
                     </div>
 
-                    <div className="quiz-card">
-                        <label className="quiz-label">
-                            {data.content.questions.label[0]}
-                        </label>
-                        <p>{data.content.questions.questions[0]}</p>
-                        <div className="radio-group type-small">
-                            <label>
-                                <input type="radio" name="q1" />{" "}
-                                {data.content.questions.options[0][0]}
-                            </label>
-                            <label>
-                                <input type="radio" name="q1" />{" "}
-                                {data.content.questions.options[0][1]}
-                            </label>
+                    {content.questions.map((ques) => (
+                        <div className={styles.quizCard}>
+                            <h3>{ques.title}</h3>
+                            <p>{ques.description}</p>
+                            {ques.type === "select" && (
+                                <CheckboxGroup.Root
+                                    className={styles.radioGroup}
+                                >
+                                    {ques.options.map((opt, j) => (
+                                        <CheckboxGroup.Item
+                                            value={`${j}`}
+                                            key={j}
+                                        >
+                                            {opt}
+                                        </CheckboxGroup.Item>
+                                    ))}
+                                </CheckboxGroup.Root>
+                            )}
+                            {ques.type === "text" && (
+                                <TextArea
+                                    className={TextAreaStyle.textInput}
+                                    placeholder="在此輸入答案..."
+                                    variant="soft"
+                                    color="gray"
+                                />
+                            )}
                         </div>
-                    </div>
+                    ))}
 
-                    <div className="quiz-card quiz-card-2">
-                        <label className="quiz-label">
-                            {data.content.questions.label[1]}
-                        </label>
-                        <p>{data.content.questions.questions[1]}</p>
-                        <div className="radio-group type-large">
-                            <label>
-                                <input type="radio" name="q2" />{" "}
-                                {data.content.questions.options[1][0]}
-                            </label>
-                            <label>
-                                <input type="radio" name="q2" />{" "}
-                                {data.content.questions.options[1][1]}
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="quiz-card type-large">
-                        <label className="quiz-label">
-                            {data.content.questions.label[2]}
-                        </label>
-                        <p>{data.content.questions.questions[2]}</p>
-                        <TextArea
-                            placeholder="在此輸入答案..."
-                            variant="classic"
-                            color="indigo"
-                        />
-                    </div>
-
-                    <footer className="sidebar-footer">
+                    <footer className={styles.sidebarFooter}>
                         <Button
-                            className="shadow-button"
+                            className={FooterStyles.shadowButton}
                             variant="solid"
                             highContrast
                             onClick={onNext}
                             radius="full"
                         >
-                            送出 Send
-                        </Button>
-                        <Button
-                            className="shadow-button"
-                            variant="solid"
-                            highContrast
-                            onClick={onNext}
-                            radius="full"
-                        >
-                            下一頁
+                            送出並前往下一頁
                         </Button>
                     </footer>
                 </aside>
@@ -105,5 +77,3 @@ export function Material({
         </div>
     );
 }
-
-export default Material;

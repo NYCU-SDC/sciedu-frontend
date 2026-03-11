@@ -1,65 +1,68 @@
-import "./Overview.css";
 import { Button } from "@radix-ui/themes";
 import type { OverviewType } from "../types/types";
+import styles from "./Overview.module.css";
+import FooterStyles from "../components/Footer.module.css";
 
-export function Overview({
-    data,
-    onNext,
-}: {
+type Props = {
     data: OverviewType;
     onNext: () => void;
-}) {
+};
+
+export default function Overview({ data, onNext }: Props) {
     return (
-        <div className="page-container">
-            <main className="table-content">
-                <table className="comparison-table">
+        <div className={styles.pageContainer}>
+            <main className={styles.tableContent}>
+                <table className={styles.comparisonTable}>
+                    {data.styling?.ratio && (
+                        <colgroup>
+                            {data.styling.ratio.map((r, i) => (
+                                <col key={i} style={{ width: `${r}%` }} />
+                            ))}
+                        </colgroup>
+                    )}
                     <thead>
                         <tr>
-                            <th className="th-title"></th>
-                            <th className="th-classical">
-                                {data.content.label[0]}
-                            </th>
-                            <th className="th-material">
-                                {data.content.label[1]}
-                            </th>
+                            {data.content.header.map((label, index) => (
+                                <th key={index}>{label}</th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {data.content.rows.title.map((_, index) => {
-                            // get row data by index
-                            const rowTitle = data.content.rows.title[index];
-                            const rowClassical =
-                                data.content.rows.classical[index];
-                            const rowMaterial =
-                                data.content.rows.material[index];
+                        {data.content.content.map((row, rowIndex) => {
                             return (
-                                <tr key={index}>
-                                    <td className="td-title">{rowTitle}</td>
-                                    <td className="td-content">
-                                        {rowClassical}
-                                    </td>
-                                    <td className="td-content">
-                                        {rowMaterial}
-                                    </td>
+                                <tr key={rowIndex}>
+                                    {row.map((cell, cellIndex) => (
+                                        <td
+                                            key={cellIndex}
+                                            className={
+                                                cellIndex === 0 &&
+                                                data.styling?.titleColumn
+                                                    ? styles.tdTitle
+                                                    : styles.tdContent
+                                            }
+                                        >
+                                            {cell}
+                                        </td>
+                                    ))}
                                 </tr>
                             );
                         })}
                     </tbody>
                 </table>
-                <footer className="footer-nav">
+            </main>
+            <footer className={FooterStyles.footerContainer}>
+                <div className={FooterStyles.footerActions}>
                     <Button
-                        className="shadow-button"
+                        className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
                         onClick={onNext}
                         radius="full"
                     >
-                        下一頁
+                        送出並前往下一頁
                     </Button>
-                </footer>
-            </main>
+                </div>
+            </footer>
         </div>
     );
 }
-
-export default Overview;

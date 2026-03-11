@@ -1,4 +1,4 @@
-.page-container {
+.pageContainer {
     flex: 1;
     padding: 0;
     display: flex;
@@ -6,45 +6,35 @@
     overflow: hidden;
 }
 
-.table-content {
+.tableContent {
     flex: 1;
     padding: 0 2rem;
     display: flex;
     flex-direction: column;
 }
 
-.comparison-table {
+.comparisonTable {
     table-layout: fixed;
     width: 100%;
-    border-collapse: separate; /*  border-radius */
-    width: 100%;
-
+    border-collapse: separate;
     font-size: 14px;
-
     line-height: 1.6;
-
     color: #333;
-
     border: 0.1rem solid #7dc8b7;
-
     border-radius: 0.9375rem;
-
     border-spacing: 0;
-
     overflow: hidden;
-
-    margin-bottom: 0%;
 }
 
-.comparison-table th {
+.comparisonTable th {
     background-color: #7dc8b7;
-    color: rgb(0, 0, 0);
+    color: #000;
     padding: 0.25rem 0.75rem;
     text-align: left;
     font-weight: bold;
 }
 
-.comparison-table td {
+.comparisonTable td {
     height: 5rem;
     border: 0.0625rem solid #7dc8b7;
     border-bottom: none;
@@ -52,57 +42,31 @@
     vertical-align: top;
 }
 
-.comparison-table th:last-child,
-.comparison-table td:last-child {
+.comparisonTable th:last-child,
+.comparisonTable td:last-child {
     border-right: none;
 }
 
-.comparison-table th:first-child,
-.comparison-table td:first-child {
+.comparisonTable th:first-child,
+.comparisonTable td:first-child {
     border-left: none;
 }
 
-.td-title {
+.tdTitle {
     width: 10%;
     font-weight: bold;
     background-color: #ffffff;
     color: #444;
 }
 
-.th-classical,
-.th-material {
-    width: 42.5%;
-}
-
-.td-content {
+.tdContent {
     text-align: justify;
 }
 
-.footer-nav {
+.footerNav {
     flex-shrink: 0;
     padding: 1rem 0;
     display: flex;
     justify-content: flex-end;
     margin-top: auto;
-}
-
-.shadow-button {
-    cursor: pointer;
-    background-color: #79c5bc;
-    width: 21.875rem;
-    height: 2.1875rem;
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-}
-
-.shadow-button:hover {
-    box-shadow: 0 0.375rem 1rem rgba(0, 0, 0, 0.2);
-    transform: translateY(-0.0625rem);
-}
-
-.shadow-button:active {
-    transform: translateY(0.0625rem);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
 }

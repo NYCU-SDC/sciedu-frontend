@@ -1,11 +1,11 @@
-import { ChatInput } from "./ChatInput";
+import ChatInput from "./ChatInput";
 import styles from "./WelcomeScreen.module.css";
 
-interface WelcomeScreenProps {
+type Props = {
     onSend: (message: string) => void;
-}
+};
 
-export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onSend }: Props) {
     return (
         <div className={styles.container}>
             <div className={styles.content}>

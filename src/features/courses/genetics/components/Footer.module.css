@@ -1,0 +1,33 @@
+.shadowButton {
+    cursor: pointer;
+    background-color: #79c5bc;
+    width: 100%;
+    height: 2.1875rem;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+.shadowButton:hover {
+    transform: translateY(-0.1875rem);
+}
+
+.shadowButton:active {
+    transform: translateY(0.0625rem);
+}
+
+.footerContainer {
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    padding: 1rem 2rem;
+}
+
+.footerActions {
+    min-width: 22rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}

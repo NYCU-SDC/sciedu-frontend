@@ -3,17 +3,17 @@ import { IconButton } from "@radix-ui/themes";
 import { Send } from "lucide-react";
 import styles from "./ChatInput.module.css";
 
-interface ChatInputProps {
+type Props = {
     onSend: (message: string) => void;
     disabled?: boolean;
     placeholder?: string;
-}
+};
 
-export function ChatInput({
+export default function ChatInput({
     onSend,
     disabled,
     placeholder = "想問什麼問題？",
-}: ChatInputProps) {
+}: Props) {
     const [input, setInput] = useState<string>("");
 
     const handleSend = () => {

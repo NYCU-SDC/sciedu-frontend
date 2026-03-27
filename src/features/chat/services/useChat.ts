@@ -98,7 +98,6 @@ export default function useChat() {
         : messages;
 
     return {
-        messages,
         isStreaming,
         handleSend,
         hasMessages,

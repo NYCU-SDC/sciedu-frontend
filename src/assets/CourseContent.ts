@@ -8,27 +8,10 @@ export const courseContent: CourseContent[] = [
         secondaryTitle: "碗豆-種皮形狀",
         content: {
             image: peaImage,
+            title: ["基因", "表徵", "機制"],
             description:
                 "古典遺傳學強調基因型可直接決定表現型，基因在古典遺傳是一個抽象概念。認為顯性基因會表現在個體表徵，若一個體中顯性和隱性基因同時存在，則此隱性基因不會表現。豌豆種皮由一對基因控制，R代表顯性基因，r代表隱性基因。若豌豆具有R基因，則種皮形狀為平滑；若控制豌豆種皮形狀的一對基因均為r，則種皮形狀為皺皮。若R和r同時存在，則隱性性狀不會表現，只有顯性性狀會表現，種皮呈現平滑。",
-            questions: [
-                {
-                    type: "select",
-                    title: "基因",
-                    description: "控制豌豆種皮形狀的基因為何？",
-                    options: ["R", "r"],
-                },
-                {
-                    type: "select",
-                    title: "表徵",
-                    description: "豌豆RR種皮形狀表徵為何？",
-                    options: ["平滑", "皺皮"],
-                },
-                {
-                    type: "text",
-                    title: "機制",
-                    description: "R和r基因如何影響豌豆種皮形狀？",
-                },
-            ],
+            questions: ["q-material-1", "q-material-2", "q-material-3"],
         },
     },
     {
@@ -39,17 +22,11 @@ export const courseContent: CourseContent[] = [
             columns: [
                 {
                     label: "古典遺傳學",
-                    questions: [
-                        "請說明在古典遺傳學，顯性和隱性基因的意義。",
-                        "在古典遺傳學，當同時具有一個顯性基因和一個隱性基因時，其表現型為何，請說明原因？",
-                    ],
+                    questions: ["q-question-1", "q-question-2"],
                 },
                 {
                     label: "分子遺傳學",
-                    questions: [
-                        "在分子遺傳學，是否強調顯性和隱性基因？理由？",
-                        "在分子遺傳學，當同源染色體上的等位基因不同時，表現型會受什麼因素影響？與古典遺傳學不同點為何？",
-                    ],
+                    questions: ["q-question-3", "q-question-4"],
                 },
             ],
         },

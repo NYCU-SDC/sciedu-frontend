@@ -1,23 +1,10 @@
-type MaterialQuestionBase = {
-    title: string;
-    description: string;
-};
-
-type MaterialQuestionSelect = MaterialQuestionBase & {
-    type: "select";
-    options: string[];
-};
-
-type MaterialQuestionText = MaterialQuestionBase & {
-    type: "text";
-};
-
 export type MaterialType = {
     type: "material";
     content: {
         image: string;
         description: string;
-        questions: (MaterialQuestionSelect | MaterialQuestionText)[];
+        title: string[];
+        questions: string[];
     };
 };
 
@@ -51,4 +38,11 @@ export type NavbarType = {
 export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
     activeNavbarTitles: number[];
     secondaryTitle: string;
+};
+
+export type QuestionResponse = {
+    id: string;
+    type: "CHOICE" | "TEXT";
+    content: string;
+    options: string[];
 };

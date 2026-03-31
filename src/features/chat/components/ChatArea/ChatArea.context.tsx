@@ -20,10 +20,7 @@ type ChatAreaContextValue = {
     onRefresh?: () => void;
     onEditMessage?: (messageId: string) => void;
     onResendMessage?: (messageId: string) => void;
-    onSwitchBranch?: (
-        messageId: string,
-        direction: BranchDirection
-    ) => void;
+    onSwitchBranch?: (messageId: string, direction: BranchDirection) => void;
     getBranchState?: (messageId: string) => MessageBranchState;
     errorMessage?: string;
 };

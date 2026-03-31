@@ -139,7 +139,8 @@ export function mockStreamMessage(
             pendingReplies.delete(messageID);
             onComplete?.();
         } catch (error) {
-            const err = error instanceof Error ? error : new Error(String(error));
+            const err =
+                error instanceof Error ? error : new Error(String(error));
             onError?.(err);
         }
     })();

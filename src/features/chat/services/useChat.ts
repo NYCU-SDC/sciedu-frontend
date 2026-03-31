@@ -196,7 +196,9 @@ export default function useChat() {
 
     const onSend = async (content: string) => {
         const editingTarget = editingMessageId
-            ? messageRef.current.find((message) => message.id === editingMessageId)
+            ? messageRef.current.find(
+                  (message) => message.id === editingMessageId
+              )
             : undefined;
 
         const branchPreviousID = editingTarget
@@ -279,11 +281,10 @@ export default function useChat() {
         });
     };
 
-    const onSwitchBranch = (
-        messageId: string,
-        direction: BranchDirection
-    ) => {
-        const target = messageRef.current.find((message) => message.id === messageId);
+    const onSwitchBranch = (messageId: string, direction: BranchDirection) => {
+        const target = messageRef.current.find(
+            (message) => message.id === messageId
+        );
         if (!target) return;
 
         const siblings = messageRef.current.filter(
@@ -312,7 +313,9 @@ export default function useChat() {
     };
 
     const getBranchState = (messageId: string): MessageBranchState => {
-        const target = messageRef.current.find((message) => message.id === messageId);
+        const target = messageRef.current.find(
+            (message) => message.id === messageId
+        );
         if (!target || target.role !== "user") {
             return {
                 currentIndex: 1,

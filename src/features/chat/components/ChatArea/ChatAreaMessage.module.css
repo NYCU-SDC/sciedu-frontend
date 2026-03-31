@@ -1,0 +1,64 @@
+.userRow {
+    display: flex;
+    justify-content: flex-end;
+    padding-bottom: 1.5em;
+}
+
+.assistantRow {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.messageShell {
+    position: relative;
+    font-size: 0.875rem;
+}
+
+.userBubble {
+    background-color: var(--color-neutral-200);
+    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.actions {
+    position: absolute;
+    right: 0;
+    bottom: -1.5rem;
+    padding: 0.375rem;
+
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: max-content;
+
+    gap: 0.5rem;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: 0.25rem;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease;
+}
+
+.userRow:hover .actions,
+.userRow:focus-within .actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.switchWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.icon {
+    height: 1rem;
+    width: 1rem;
+}

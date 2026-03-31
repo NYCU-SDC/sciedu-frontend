@@ -11,6 +11,7 @@ export default function ExampleChatPage() {
         status,
         onSend,
         onAbort,
+        onRefresh,
     } = useChat();
 
     // displayMessages are for UI rendering (instant streaming)
@@ -35,6 +36,8 @@ export default function ExampleChatPage() {
                 streamingMessage={streamingMessage}
                 displayMessages={displayMessages}
                 onSend={onSend}
+                onAbort={onAbort}
+                onRefresh={onRefresh}
             >
                 <ChatArea.NavBar />
                 <ChatArea.Content />

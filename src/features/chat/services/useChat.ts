@@ -105,17 +105,15 @@ export default function useChat() {
         setErrorMessage(null); // no error message generated when user abort the streaming
     };
 
-    // const messagesToDisplay = streamingMessage
-    //     ? [
-    //           ...messages,
-    //           {
-    //               id: "streaming-temp-id",
-    //               conversationId,
-    //               role: "assistant",
-    //               content: streamingMessage,
-    //           } as RichChatMessage,
-    //       ]
-    //     : messages;
+    const onRefresh = () => {
+        abortRef.current?.abort();
+        abortRef.current = null;
+
+        setMessages([]);
+        setStreamingMessage(null);
+        setErrorMessage(null);
+        setStatus("idle");
+    };
 
     return {
         messages,
@@ -124,5 +122,6 @@ export default function useChat() {
         status,
         onSend,
         onAbort,
+        onRefresh,
     };
 }

@@ -4,7 +4,7 @@ import { useChatAreaContext } from "./ChatArea.context";
 import styles from "./ChatAreaContent.module.css";
 
 export default function ChatAreaContent() {
-    const { messages, streamingMessage, errorMessage, status, onSend } =
+    const { messages, streamingMessage, errorMessage, status } =
         useChatAreaContext();
 
     const hasMessages = messages.length > 0;
@@ -32,10 +32,11 @@ export default function ChatAreaContent() {
                     {streamingMessage !== null && (
                         <ChatAreaMessage
                             message={{
-                                id: "stream-temp-conversationId",
-                                conversationId: "streaming-temp-id",
+                                id: "streaming-temp-id",
                                 role: "assistant",
                                 content: streamingMessage,
+                                status: "streaming",
+                                createdAt: new Date().toISOString(),
                             }}
                         />
                     )}

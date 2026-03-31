@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { RichChatMessage } from "../../types/chat";
+import type { Message } from "../../types/chat";
 
 export type ChatStatus = "idle" | "submitting" | "streaming" | "error";
 
@@ -7,9 +7,9 @@ export type ChatAreaRootProps = {
     children: ReactNode;
     title: string;
     status: ChatStatus;
-    messages: RichChatMessage[];
+    messages: Message[];
     streamingMessage: string | null;
-    displayMessages: RichChatMessage[];
+    displayMessages: Message[];
     onSend: (text: string) => void;
     onAbort?: () => void;
     onRefresh?: () => void;

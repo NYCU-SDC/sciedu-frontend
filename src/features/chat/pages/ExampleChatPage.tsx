@@ -1,13 +1,12 @@
 import { ChatArea } from "../components/ChatArea/ChatArea";
 import useChat from "../services/useChat";
-import type { RichChatMessage } from "../types/chat";
+import type { Message } from "../types/chat";
 import styles from "./ExampleChatPage.module.css";
 
 export default function ExampleChatPage() {
     const {
         messages,
         streamingMessage,
-        errorMessage,
         status,
         onSend,
         onAbort,
@@ -15,14 +14,15 @@ export default function ExampleChatPage() {
     } = useChat();
 
     // displayMessages are for UI rendering (instant streaming)
-    const displayMessages: RichChatMessage[] = streamingMessage
+    const displayMessages: Message[] = streamingMessage
         ? [
               ...messages,
               {
                   id: "streaming-temp-id",
-                  conversationId: "temp",
                   role: "assistant",
                   content: streamingMessage,
+                  status: "streaming",
+                  createdAt: new Date().toISOString(),
               },
           ]
         : messages;

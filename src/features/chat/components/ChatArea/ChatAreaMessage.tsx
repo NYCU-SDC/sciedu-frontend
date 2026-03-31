@@ -1,4 +1,4 @@
-import type { RichChatMessage } from "../../types/chat";
+import type { Message } from "../../types/chat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Edit, RefreshCcw } from "lucide-react";
 import styles from "./ChatAreaMessage.module.css";
 
 type ChatAreaMessageProps = {
-    message: RichChatMessage;
+    message: Message;
     onSwitchBranch?: (messageId: string) => void;
     onEdit?: (messageId: string) => void;
     onResend?: (messageId: string) => void;

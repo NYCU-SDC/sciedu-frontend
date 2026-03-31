@@ -1,13 +1,13 @@
 import { createContext, useContext } from "react";
 import type { ChatStatus } from "./ChatArea.types";
-import type { RichChatMessage } from "../../types/chat";
+import type { Message } from "../../types/chat";
 
 type ChatAreaContextValue = {
     title: string;
     status: ChatStatus;
-    messages: RichChatMessage[]; // TODO
+    messages: Message[];
     streamingMessage: string | null;
-    displayMessages: RichChatMessage[];
+    displayMessages: Message[];
     onSend: (text: string) => void;
     onAbort?: () => void;
     onRefresh?: () => void;

@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import type { BasicChatMessage, RichChatMessage } from "../types/chat";
-import { streamChatCompletions } from "../services/chatStream";
+import type { Message } from "../types/chat";
+import { createChat } from "./createChat";
+import { createMessage } from "./createMessage";
+import { streamMessage } from "./streamMessage";
 
 export default function useChat() {
-    const [messages, setMessages] = useState<RichChatMessage[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [streamingMessage, setStreamingMessage] = useState<string | null>(
         null
     );
@@ -13,10 +15,14 @@ export default function useChat() {
     >("idle");
 
     const abortRef = useRef<AbortController | null>(null);
-    const messageRef = useRef<RichChatMessage[]>([]);
+    const messageRef = useRef<Message[]>([]);
+    const chatIdRef = useRef<string | null>(null);
+    const replyMessageIdRef = useRef<string | null>(null);
+    const previousMessageIdRef = useRef<string | undefined>(undefined);
 
     useEffect(() => {
         messageRef.current = messages;
+        previousMessageIdRef.current = messages.at(-1)?.id;
     }, [messages]);
 
     // cleanup
@@ -24,65 +30,77 @@ export default function useChat() {
         return () => abortRef.current?.abort();
     }, []);
 
-    const conversationId = "temp"; // for now
-
-    const onSend = (content: string) => {
+    const onSend = async (content: string) => {
         const trimmed = content.trim();
         if (!trimmed) return;
 
         // Safety check: Prevents race conditions. Even if the UI blocks input,
         // we explicitly abort existing streams to ensure a clean slate.
-        if (status == "streaming") abortRef.current?.abort();
-
-        // Will be changed to the new type called Message
-        const userMsg: RichChatMessage = {
-            id: crypto.randomUUID(),
-            conversationId,
-            role: "user",
-            content: trimmed,
-            // createdAt,
-        };
-
-        setMessages((prev) => [...prev, userMsg]);
+        if (status === "submitting" || status === "streaming") {
+            abortRef.current?.abort();
+        }
 
         // handle error message and status
         setErrorMessage(null);
         setStatus("submitting");
         setStreamingMessage("");
-
-        const apiMessage: BasicChatMessage[] = [...messageRef.current, userMsg];
-
         let fullResponse = "";
 
-        abortRef.current = streamChatCompletions(
-            apiMessage,
-            (chunk) => {
-                if (chunk.delta) {
-                    fullResponse += chunk.delta;
-                    setStreamingMessage((prev) => (prev || "") + chunk.delta);
-                }
+        try {
+            if (!chatIdRef.current) {
+                const { chatID } = await createChat();
+                chatIdRef.current = chatID;
+            }
 
-                if (chunk.isFinished) {
-                    const assistantMsg: RichChatMessage = {
-                        id: crypto.randomUUID(),
-                        conversationId,
+            const { message, replyMessageID } = await createMessage(
+                chatIdRef.current,
+                trimmed,
+                previousMessageIdRef.current
+            );
+
+            setMessages((prev) => [...prev, message]);
+            replyMessageIdRef.current = replyMessageID;
+            previousMessageIdRef.current = replyMessageID;
+            setStatus("streaming");
+
+            abortRef.current = streamMessage(
+                replyMessageID,
+                (chunk) => {
+                    fullResponse += chunk.content;
+                    setStreamingMessage((prev) => (prev || "") + chunk.content);
+                },
+                () => {
+                    const assistantMsg: Message = {
+                        id: replyMessageID,
                         role: "assistant",
                         content: fullResponse,
+                        previousID: message.id,
+                        status: "done",
+                        createdAt: new Date().toISOString(),
                     };
 
                     setMessages((prev) => [...prev, assistantMsg]);
-                    setStreamingMessage(null); // which clear the streaming buffer
+                    setStreamingMessage(null);
                     setStatus("idle");
                     abortRef.current = null;
+                    replyMessageIdRef.current = null;
+                },
+                (error) => {
+                    console.error("Chat error", error);
+                    setStatus("error");
+                    setErrorMessage(error.message);
+                    setStreamingMessage(null);
+                    abortRef.current = null;
+                    replyMessageIdRef.current = null;
                 }
-            },
-            (error) => {
-                console.error("Chat error", error);
-                setStatus("error");
-                setErrorMessage(error.message);
-                setStreamingMessage(null);
-            }
-        );
+            );
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : String(error);
+            setStatus("error");
+            setErrorMessage(message);
+            setStreamingMessage(null);
+        }
     };
 
     const onAbort = () => {
@@ -90,12 +108,14 @@ export default function useChat() {
         abortRef.current = null;
 
         // save partial assistant message
-        if (streamingMessage) {
-            const assistantMsg: RichChatMessage = {
-                id: crypto.randomUUID(),
-                conversationId,
+        if (streamingMessage && replyMessageIdRef.current) {
+            const assistantMsg: Message = {
+                id: replyMessageIdRef.current,
                 role: "assistant",
                 content: streamingMessage,
+                previousID: messageRef.current.at(-1)?.id,
+                status: "done",
+                createdAt: new Date().toISOString(),
             };
             setMessages((prev) => [...prev, assistantMsg]);
         }
@@ -103,6 +123,7 @@ export default function useChat() {
         setStreamingMessage(null); // clear the streaming cache
         setStatus("idle"); // if user stop streaming, the status will become "idle".
         setErrorMessage(null); // no error message generated when user abort the streaming
+        replyMessageIdRef.current = null;
     };
 
     const onRefresh = () => {
@@ -113,6 +134,9 @@ export default function useChat() {
         setStreamingMessage(null);
         setErrorMessage(null);
         setStatus("idle");
+        chatIdRef.current = null;
+        replyMessageIdRef.current = null;
+        previousMessageIdRef.current = undefined;
     };
 
     return {

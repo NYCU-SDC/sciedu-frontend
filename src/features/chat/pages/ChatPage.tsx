@@ -1,7 +1,7 @@
 import WelcomeScreen from "../components/WelcomeScreen";
 import ChatMessageList from "../components/ChatMessageList";
 import ChatInput from "../components/ChatInput";
-import type { RichChatMessage } from "../types/chat";
+import type { Message } from "../types/chat";
 import styles from "./ChatPage.module.css";
 import useChat from "../services/useChat";
 
@@ -12,15 +12,16 @@ export default function ChatPage() {
 
     const hasMessages = messages.length > 0;
 
-    const messagesToDisplay: RichChatMessage[] =
+    const messagesToDisplay: Message[] =
         streamingMessage !== null
             ? [
                   ...messages,
                   {
                       id: "streaming-temp-id",
-                      conversationId: "temp",
                       role: "assistant",
                       content: streamingMessage,
+                      status: "streaming",
+                      createdAt: new Date().toISOString(),
                   },
               ]
             : messages;

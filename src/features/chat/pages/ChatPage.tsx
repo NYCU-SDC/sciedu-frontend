@@ -1,12 +1,30 @@
 import WelcomeScreen from "../components/WelcomeScreen";
 import ChatMessageList from "../components/ChatMessageList";
 import ChatInput from "../components/ChatInput";
+import type { RichChatMessage } from "../types/chat";
 import styles from "./ChatPage.module.css";
 import useChat from "../services/useChat";
 
 export default function ChatPage() {
-    const { isStreaming, hasMessages, messagesToDisplay, handleSend } =
-        useChat();
+    const { messages, streamingMessage, status, onSend } = useChat();
+
+    const isStreaming = status === "submitting" || status === "streaming";
+
+    const hasMessages = messages.length > 0;
+
+    const messagesToDisplay: RichChatMessage[] =
+        streamingMessage !== null
+            ? [
+                  ...messages,
+                  {
+                      id: "streaming-temp-id",
+                      conversationId: "temp",
+                      role: "assistant",
+                      content: streamingMessage,
+                  },
+              ]
+            : messages;
+
     return (
         <div className={styles.container}>
             {/* Content area */}
@@ -15,14 +33,11 @@ export default function ChatPage() {
                     <>
                         <ChatMessageList messages={messagesToDisplay} />
                         <div className={styles.inputWrapper}>
-                            <ChatInput
-                                onSend={handleSend}
-                                disabled={isStreaming}
-                            />
+                            <ChatInput onSend={onSend} disabled={isStreaming} />
                         </div>
                     </>
                 ) : (
-                    <WelcomeScreen onSend={handleSend} />
+                    <WelcomeScreen onSend={onSend} />
                 )}
             </div>
         </div>

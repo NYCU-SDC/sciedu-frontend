@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import type { BasicChatMessage, RichChatMessage } from "../types/chat";
 import { streamChatCompletions } from "../services/chatStream";
-import { toast } from "sonner";
 
 export default function useChat() {
     const [messages, setMessages] = useState<RichChatMessage[]>([]);
     const [streamingMessage, setStreamingMessage] = useState<string | null>(
         null
     );
-    const [isStreaming, setIsStreaming] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [status, setStatus] = useState<
+        "idle" | "submitting" | "streaming" | "error"
+    >("idle");
 
     const abortRef = useRef<AbortController | null>(null);
     const messageRef = useRef<RichChatMessage[]>([]);
@@ -24,15 +26,15 @@ export default function useChat() {
 
     const conversationId = "temp"; // for now
 
-    const handleSend = (content: string) => {
+    const onSend = (content: string) => {
         const trimmed = content.trim();
         if (!trimmed) return;
 
         // Safety check: Prevents race conditions. Even if the UI blocks input,
         // we explicitly abort existing streams to ensure a clean slate.
-        if (isStreaming) abortRef.current?.abort();
+        if (status == "streaming") abortRef.current?.abort();
 
-        // Add user message
+        // Will be changed to the new type called Message
         const userMsg: RichChatMessage = {
             id: crypto.randomUUID(),
             conversationId,
@@ -43,7 +45,9 @@ export default function useChat() {
 
         setMessages((prev) => [...prev, userMsg]);
 
-        setIsStreaming(true);
+        // handle error message and status
+        setErrorMessage(null);
+        setStatus("submitting");
         setStreamingMessage("");
 
         const apiMessage: BasicChatMessage[] = [...messageRef.current, userMsg];
@@ -68,39 +72,57 @@ export default function useChat() {
 
                     setMessages((prev) => [...prev, assistantMsg]);
                     setStreamingMessage(null); // which clear the streaming buffer
-                    setIsStreaming(false);
+                    setStatus("idle");
                     abortRef.current = null;
                 }
             },
             (error) => {
                 console.error("Chat error", error);
-
-                toast.error(`傳送失敗: ${error.message}`);
-
-                setIsStreaming(false);
+                setStatus("error");
+                setErrorMessage(error.message);
                 setStreamingMessage(null);
             }
         );
     };
 
-    const hasMessages = messages.length > 0;
+    const onAbort = () => {
+        abortRef.current?.abort();
+        abortRef.current = null;
 
-    const messagesToDisplay = streamingMessage
-        ? [
-              ...messages,
-              {
-                  id: "streaming-temp-id",
-                  conversationId,
-                  role: "assistant",
-                  content: streamingMessage,
-              } as RichChatMessage,
-          ]
-        : messages;
+        // save partial assistant message
+        if (streamingMessage) {
+            const assistantMsg: RichChatMessage = {
+                id: crypto.randomUUID(),
+                conversationId,
+                role: "assistant",
+                content: streamingMessage,
+            };
+            setMessages((prev) => [...prev, assistantMsg]);
+        }
+
+        setStreamingMessage(null); // clear the streaming cache
+        setStatus("idle"); // if user stop streaming, the status will become "idle".
+        setErrorMessage(null); // no error message generated when user abort the streaming
+    };
+
+    // const messagesToDisplay = streamingMessage
+    //     ? [
+    //           ...messages,
+    //           {
+    //               id: "streaming-temp-id",
+    //               conversationId,
+    //               role: "assistant",
+    //               content: streamingMessage,
+    //           } as RichChatMessage,
+    //       ]
+    //     : messages;
 
     return {
-        isStreaming,
-        handleSend,
-        hasMessages,
-        messagesToDisplay,
+        messages,
+        streamingMessage,
+        errorMessage,
+        status,
+        onSend,
+        onAbort,
     };
 }

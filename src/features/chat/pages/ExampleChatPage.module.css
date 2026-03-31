@@ -1,0 +1,8 @@
+.container {
+    display: flex;
+    align-items: center;
+    /* height: 50.75rem;
+    width: 18rem; */
+    height: 100vh;
+    padding: 1rem;
+}

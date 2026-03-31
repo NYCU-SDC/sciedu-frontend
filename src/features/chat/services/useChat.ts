@@ -68,6 +68,9 @@ export default function useChat() {
     const [editingMessageId, setEditingMessageId] = useState<string | null>(
         null
     );
+    const [pendingReplyParentId, setPendingReplyParentId] = useState<
+        string | undefined
+    >(undefined);
     const [branchSelectionByParent, setBranchSelectionByParent] = useState<
         Record<string, string>
     >({});
@@ -76,7 +79,6 @@ export default function useChat() {
     const messageRef = useRef<Message[]>([]);
     const chatIdRef = useRef<string | null>(null);
     const replyMessageIdRef = useRef<string | null>(null);
-    const pendingReplyParentIdRef = useRef<string | undefined>(undefined);
 
     useEffect(() => {
         messageRef.current = allMessages;
@@ -95,7 +97,7 @@ export default function useChat() {
                       id: "streaming-temp-id",
                       role: "assistant",
                       content: streamingMessage,
-                      previousID: pendingReplyParentIdRef.current,
+                      previousID: pendingReplyParentId,
                       status: "streaming",
                       createdAt: new Date().toISOString(),
                   } satisfies Message,
@@ -137,7 +139,7 @@ export default function useChat() {
                 [toBranchKey(message.previousID)]: message.id,
             }));
             replyMessageIdRef.current = replyMessageID;
-            pendingReplyParentIdRef.current = message.id;
+            setPendingReplyParentId(message.id);
             setStatus("streaming");
 
             if (options?.clearDraft ?? true) {
@@ -172,7 +174,7 @@ export default function useChat() {
                     setStatus("idle");
                     abortRef.current = null;
                     replyMessageIdRef.current = null;
-                    pendingReplyParentIdRef.current = undefined;
+                    setPendingReplyParentId(undefined);
                 },
                 (error) => {
                     console.error("Chat error", error);
@@ -181,7 +183,7 @@ export default function useChat() {
                     setStreamingMessage(null);
                     abortRef.current = null;
                     replyMessageIdRef.current = null;
-                    pendingReplyParentIdRef.current = undefined;
+                    setPendingReplyParentId(undefined);
                 }
             );
         } catch (error) {
@@ -190,7 +192,7 @@ export default function useChat() {
             setStatus("error");
             setErrorMessage(message);
             setStreamingMessage(null);
-            pendingReplyParentIdRef.current = undefined;
+            setPendingReplyParentId(undefined);
         }
     };
 
@@ -220,7 +222,7 @@ export default function useChat() {
                 id: replyMessageIdRef.current,
                 role: "assistant",
                 content: streamingMessage,
-                previousID: pendingReplyParentIdRef.current,
+                previousID: pendingReplyParentId,
                 status: "done",
                 createdAt: new Date().toISOString(),
             };
@@ -236,7 +238,7 @@ export default function useChat() {
         setStatus("idle");
         setErrorMessage(null);
         replyMessageIdRef.current = null;
-        pendingReplyParentIdRef.current = undefined;
+        setPendingReplyParentId(undefined);
     };
 
     const onRefresh = () => {
@@ -252,7 +254,7 @@ export default function useChat() {
         setBranchSelectionByParent({});
         chatIdRef.current = null;
         replyMessageIdRef.current = null;
-        pendingReplyParentIdRef.current = undefined;
+        setPendingReplyParentId(undefined);
     };
 
     const onDraftChange = (text: string) => {

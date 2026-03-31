@@ -1,4 +1,4 @@
-import { useChatAreaContext } from "./ChatArea.context";
+import { useChatAreaContext } from "./useChatAreaContext";
 import styles from "./ChatAreaNavBar.module.css";
 import { Sparkles, RefreshCcw } from "lucide-react";
 

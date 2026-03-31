@@ -1,6 +1,6 @@
 import ChatAreaMessage from "./ChatAreaMessage.tsx";
 import WelcomeScreen from "./ChatAreaWelcome.tsx";
-import { useChatAreaContext } from "./ChatArea.context";
+import { useChatAreaContext } from "./useChatAreaContext";
 import styles from "./ChatAreaContent.module.css";
 
 export default function ChatAreaContent() {

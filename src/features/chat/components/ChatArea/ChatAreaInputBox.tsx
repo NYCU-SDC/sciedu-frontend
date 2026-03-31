@@ -1,4 +1,4 @@
-import { useChatAreaContext } from "./ChatArea.context";
+import { useChatAreaContext } from "./useChatAreaContext";
 import type { ChatAreaInputBoxProps } from "./ChatArea.types";
 import styles from "./ChatAreaInputBox.module.css";
 import { IconButton } from "@radix-ui/themes";

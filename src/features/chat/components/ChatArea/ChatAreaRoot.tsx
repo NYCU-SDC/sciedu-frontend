@@ -1,4 +1,4 @@
-import { ChatAreaProvider } from "./ChatArea.context";
+import { ChatAreaContext } from "./ChatArea.context";
 import type { ChatAreaRootProps } from "./ChatArea.types";
 import styles from "./ChatAreaRoot.module.css";
 
@@ -22,7 +22,7 @@ export default function ChatAreaRoot({
     errorMessage,
 }: ChatAreaRootProps) {
     return (
-        <ChatAreaProvider
+        <ChatAreaContext.Provider
             value={{
                 title,
                 status,
@@ -43,6 +43,6 @@ export default function ChatAreaRoot({
             }}
         >
             <div className={styles.root}>{children}</div>
-        </ChatAreaProvider>
+        </ChatAreaContext.Provider>
     );
 }

@@ -9,9 +9,16 @@ export default function ChatAreaRoot({
     messages,
     streamingMessage,
     displayMessages,
+    draftInput,
+    editingMessageId,
     onSend,
+    onDraftChange,
     onAbort,
     onRefresh,
+    onEditMessage,
+    onResendMessage,
+    onSwitchBranch,
+    getBranchState,
     errorMessage,
 }: ChatAreaRootProps) {
     return (
@@ -22,9 +29,16 @@ export default function ChatAreaRoot({
                 messages,
                 streamingMessage,
                 displayMessages,
+                draftInput,
+                editingMessageId,
                 onSend,
+                onDraftChange,
                 onAbort,
                 onRefresh,
+                onEditMessage,
+                onResendMessage,
+                onSwitchBranch,
+                getBranchState,
                 errorMessage,
             }}
         >

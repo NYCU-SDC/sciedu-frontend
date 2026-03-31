@@ -1,31 +1,23 @@
 import { ChatArea } from "../components/ChatArea/ChatArea";
 import useChat from "../services/useChat";
-import type { Message } from "../types/chat";
 import styles from "./ExampleChatPage.module.css";
 
 export default function ExampleChatPage() {
     const {
         messages,
-        streamingMessage,
+        displayMessages,
+        draftInput,
+        editingMessageId,
         status,
         onSend,
+        onDraftChange,
         onAbort,
         onRefresh,
+        onEditMessage,
+        onResendMessage,
+        onSwitchBranch,
+        getBranchState,
     } = useChat();
-
-    // displayMessages are for UI rendering (instant streaming)
-    const displayMessages: Message[] = streamingMessage
-        ? [
-              ...messages,
-              {
-                  id: "streaming-temp-id",
-                  role: "assistant",
-                  content: streamingMessage,
-                  status: "streaming",
-                  createdAt: new Date().toISOString(),
-              },
-          ]
-        : messages;
 
     return (
         <div className={styles.container}>
@@ -33,11 +25,18 @@ export default function ExampleChatPage() {
                 title="基因性狀討論"
                 status={status}
                 messages={messages}
-                streamingMessage={streamingMessage}
+                streamingMessage={null}
                 displayMessages={displayMessages}
+                draftInput={draftInput}
+                editingMessageId={editingMessageId}
                 onSend={onSend}
+                onDraftChange={onDraftChange}
                 onAbort={onAbort}
                 onRefresh={onRefresh}
+                onEditMessage={onEditMessage}
+                onResendMessage={onResendMessage}
+                onSwitchBranch={onSwitchBranch}
+                getBranchState={getBranchState}
             >
                 <ChatArea.NavBar />
                 <ChatArea.Content />

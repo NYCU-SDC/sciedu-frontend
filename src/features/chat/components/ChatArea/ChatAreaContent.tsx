@@ -4,8 +4,16 @@ import { useChatAreaContext } from "./ChatArea.context";
 import styles from "./ChatAreaContent.module.css";
 
 export default function ChatAreaContent() {
-    const { messages, streamingMessage, errorMessage, status } =
-        useChatAreaContext();
+    const {
+        messages,
+        displayMessages,
+        errorMessage,
+        status,
+        onEditMessage,
+        onResendMessage,
+        onSwitchBranch,
+        getBranchState,
+    } = useChatAreaContext();
 
     const hasMessages = messages.length > 0;
 
@@ -25,21 +33,16 @@ export default function ChatAreaContent() {
         <main className={styles.chatContent}>
             <div className={styles.scrollArea}>
                 <div className={styles.inner}>
-                    {messages.map((message) => (
-                        <ChatAreaMessage key={message.id} message={message} />
-                    ))}
-
-                    {streamingMessage !== null && (
+                    {displayMessages.map((message) => (
                         <ChatAreaMessage
-                            message={{
-                                id: "streaming-temp-id",
-                                role: "assistant",
-                                content: streamingMessage,
-                                status: "streaming",
-                                createdAt: new Date().toISOString(),
-                            }}
+                            key={message.id}
+                            message={message}
+                            branchState={getBranchState?.(message.id)}
+                            onSwitchBranch={onSwitchBranch}
+                            onEdit={onEditMessage}
+                            onResend={onResendMessage}
                         />
-                    )}
+                    ))}
 
                     {status === "error" && errorMessage && (
                         <p className={styles.errorMessage}>{errorMessage}</p>

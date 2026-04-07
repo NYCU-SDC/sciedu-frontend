@@ -31,7 +31,7 @@ export default function Questions({ data, onNext }: Props) {
             content: q.content,
             isLoading: results[idx].isLoading,
             isError: results[idx].isError,
-            failureReason: results[idx].failureReason,
+            failureReason: results[idx++].failureReason,
         })),
     }));
 

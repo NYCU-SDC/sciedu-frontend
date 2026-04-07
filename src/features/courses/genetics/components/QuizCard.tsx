@@ -56,7 +56,6 @@ export default function QuizCard({ question, i }: Props) {
                     );
                 })()
             )}
-            )
         </div>
     );
 }

@@ -31,7 +31,7 @@ export default function Questions({ data, onNext }: Props) {
             content: q.content,
             isLoading: results[idx].isLoading,
             isError: results[idx].isError,
-            failerReason: results[idx].failureReason,
+            failureReason: results[idx].failureReason,
         })),
     }));
 
@@ -58,7 +58,7 @@ export default function Questions({ data, onNext }: Props) {
                                         (() => {
                                             if (question.isError)
                                                 throw new Error(
-                                                    `Question ${question.id} not found`
+                                                    `Question ${question.failureReason} not found`
                                                 );
                                             return (
                                                 <p

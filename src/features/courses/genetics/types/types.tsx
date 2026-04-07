@@ -1,10 +1,21 @@
+export type MaterialQuestionSection = {
+    title: string;
+    questionContent: QuestionResponse;
+};
+
+export type QuestionResponse = {
+    id: string;
+    type: "CHOICE" | "TEXT";
+    content: string;
+    options: string[];
+};
+
 export type MaterialType = {
     type: "material";
     content: {
         image: string;
         description: string;
-        title: string[];
-        questions: string[];
+        questionSections: MaterialQuestionSection[];
     };
 };
 
@@ -25,7 +36,7 @@ export type QuestionsType = {
     content: {
         columns: {
             label: string;
-            questions: string[];
+            questions: QuestionResponse[];
         }[];
     };
 };
@@ -38,11 +49,4 @@ export type NavbarType = {
 export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
     activeNavbarTitles: number[];
     secondaryTitle: string;
-};
-
-export type QuestionResponse = {
-    id: string;
-    type: "CHOICE" | "TEXT";
-    content: string;
-    options: string[];
 };

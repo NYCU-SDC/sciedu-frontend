@@ -12,52 +12,64 @@ type Props = {
     onNext: () => void;
 };
 
-// const mockQuestions: Record<string, QuestionResponse> = {
-//     "q-question-1": { id: "q-question-1", type: "TEXT", content: "什麼是顯性基因？", options: [] },
-//     "q-question-2": { id: "q-question-2", type: "TEXT", content: "隱性基因如何表現？", options: [] },
-//     "q-question-3": { id: "q-question-3", type: "TEXT", content: "基因如何轉錄？", options: [] },
-//     "q-question-4": { id: "q-question-4", type: "TEXT", content: "轉譯的過程為何？", options: [] },
-// };
-
 export default function Questions({ data, onNext }: Props) {
-    const allQuestionIds = data.content.columns.flatMap((col) => col.questions);
-
+    const content = data.content;
+    const allQuestionIds = content.columns.flatMap((col) =>
+        col.questions.map((q) => q.id)
+    );
     const results = useQueries({
         queries: allQuestionIds.map((id) => ({
             queryKey: ["question", id],
             queryFn: () => api<QuestionResponse>(`/questions/${id}`),
-            // placeholderData: mockQuestions[id],
         })),
     });
-    const questionMap = Object.fromEntries(
-        allQuestionIds.map((id, i) => [id, results[i].data])
-    );
+    let idx = 0;
+    const columnsWithData = content.columns.map((col) => ({
+        label: col.label,
+        questions: col.questions.map((q) => ({
+            id: q.id,
+            content: q.content,
+            isLoading: results[idx].isLoading,
+            isError: results[idx].isError,
+            failerReason: results[idx].failureReason,
+        })),
+    }));
 
     return (
         <div className={styles.pageContainer}>
             <main className={styles.contentWrapper}>
-                {data.content.columns.map((column, colIndex) => (
+                {columnsWithData.map((column, colIndex) => (
                     <section key={colIndex} className={styles.column}>
                         <div className={styles.columnHeader}>
                             <h2>{column.label}：</h2>
                         </div>
-
-                        {column.questions.map((id, i) => {
-                            const result = results[allQuestionIds.indexOf(id)];
+                        {column.questions.map((question, i) => {
                             return (
                                 <div key={i} className={styles.questionCard}>
                                     <h3 className={styles.questionTitle}>
                                         問題 {colIndex + 1}-{i + 1}
                                     </h3>
-                                    {result.isLoading ? (
+                                    {question.isLoading ? (
                                         <Skeleton
                                             className={styles.skeleton}
                                             minHeight="0.875rem"
                                         />
                                     ) : (
-                                        <p className={styles.questionText}>
-                                            {questionMap[id]?.content}
-                                        </p>
+                                        (() => {
+                                            if (question.isError)
+                                                throw new Error(
+                                                    `Question ${question.id} not found`
+                                                );
+                                            return (
+                                                <p
+                                                    className={
+                                                        styles.questionText
+                                                    }
+                                                >
+                                                    {question.content}
+                                                </p>
+                                            );
+                                        })()
                                     )}
                                     <TextArea
                                         className={TextAreaStyle.textInput}

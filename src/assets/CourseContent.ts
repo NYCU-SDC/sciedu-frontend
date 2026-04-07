@@ -8,10 +8,47 @@ export const courseContent: CourseContent[] = [
         secondaryTitle: "碗豆-種皮形狀",
         content: {
             image: peaImage,
-            title: ["基因", "表徵", "機制"],
             description:
                 "古典遺傳學強調基因型可直接決定表現型，基因在古典遺傳是一個抽象概念。認為顯性基因會表現在個體表徵，若一個體中顯性和隱性基因同時存在，則此隱性基因不會表現。豌豆種皮由一對基因控制，R代表顯性基因，r代表隱性基因。若豌豆具有R基因，則種皮形狀為平滑；若控制豌豆種皮形狀的一對基因均為r，則種皮形狀為皺皮。若R和r同時存在，則隱性性狀不會表現，只有顯性性狀會表現，種皮呈現平滑。",
-            questions: ["q-material-1", "q-material-2", "q-material-3"],
+            questionSections: [
+                {
+                    title: "問題 1",
+                    questionContent: {
+                        id: "q-material-1",
+                        type: "CHOICE",
+                        content: "豌豆種皮形狀由幾對基因控制？",
+                        options: ["一對", "兩對", "三對", "四對"],
+                    },
+                },
+                {
+                    title: "問題 2",
+                    questionContent: {
+                        id: "q-material-2",
+                        type: "CHOICE",
+                        content: "R基因代表什麼？",
+                        options: [
+                            "隱性基因",
+                            "顯性基因",
+                            "中性基因",
+                            "突變基因",
+                        ],
+                    },
+                },
+                {
+                    title: "問題 3",
+                    questionContent: {
+                        id: "q-material-3",
+                        type: "CHOICE",
+                        content: "r基因代表什麼？",
+                        options: [
+                            "隱性基因",
+                            "顯性基因",
+                            "中性基因",
+                            "突變基因",
+                        ],
+                    },
+                },
+            ],
         },
     },
     {
@@ -22,11 +59,59 @@ export const courseContent: CourseContent[] = [
             columns: [
                 {
                     label: "古典遺傳學",
-                    questions: ["q-question-1", "q-question-2"],
+                    questions: [
+                        {
+                            id: "q-question-1",
+                            type: "CHOICE",
+                            content:
+                                "古典遺傳學中，基因型與表現型的關係是什麼？",
+                            options: [
+                                "基因型直接決定表現型",
+                                "表現型直接決定基因型",
+                                "基因型和表現型無關",
+                                "基因型和表現型相互影響",
+                            ],
+                        },
+                        {
+                            id: "q-question-2",
+                            type: "CHOICE",
+                            content:
+                                "在古典遺傳學中，顯性基因和隱性基因的關係是什麼？",
+                            options: [
+                                "顯性基因總是表現在個體表徵上",
+                                "隱性基因總是表現在個體表徵上",
+                                "顯性和隱性基因同時表現在個體表徵上",
+                                "顯性和隱性基因的表達沒有規律",
+                            ],
+                        },
+                    ],
                 },
                 {
                     label: "分子遺傳學",
-                    questions: ["q-question-3", "q-question-4"],
+                    questions: [
+                        {
+                            id: "q-question-3",
+                            type: "CHOICE",
+                            content: "分子遺傳學中，基因與性狀的關係是什麼？",
+                            options: [
+                                "基因直接決定性狀",
+                                "性狀直接決定基因",
+                                "基因和性狀無關",
+                                "基因和性狀相互影響",
+                            ],
+                        },
+                        {
+                            id: "q-question-4",
+                            type: "CHOICE",
+                            content: "在分子遺傳學中，基因表達的過程是什麼？",
+                            options: [
+                                "轉錄→轉譯",
+                                "轉譯→轉錄",
+                                "轉錄→DNA複製",
+                                "DNA複製→轉錄",
+                            ],
+                        },
+                    ],
                 },
             ],
         },

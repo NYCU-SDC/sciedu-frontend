@@ -11,6 +11,12 @@
     word-break: break-word;
 }
 
+.userPatch {
+    align-self: flex-end;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
 .assistant {
     align-self: stretch;
     width: 100%;
@@ -19,6 +25,14 @@
     border-radius: 0;
     color: var(--color-neutral-950);
     line-height: 1.5;
+}
+
+.assistantPatch {
+    font-size: 0.875rem;
+}
+
+.chatAreaPatch assistant {
+    font-size: rem;
 }
 
 .assistant h1 {

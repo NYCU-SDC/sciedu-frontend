@@ -1,4 +1,4 @@
-import type { RichChatMessage } from "../types/chat";
+import type { Message } from "../types/chat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -7,7 +7,7 @@ import "katex/dist/katex.min.css";
 import styles from "./ChatMessage.module.css";
 
 type Props = {
-    message: RichChatMessage;
+    message: Message;
 };
 
 export default function ChatMessage({ message }: Props) {

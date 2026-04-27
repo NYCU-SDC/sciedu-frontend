@@ -1,9 +1,9 @@
 import ChatMessage from "./ChatMessage";
-import type { RichChatMessage } from "../types/chat";
+import type { Message } from "../types/chat";
 import styles from "./ChatMessageList.module.css";
 
 type Props = {
-    messages: RichChatMessage[];
+    messages: Message[];
     streamingMessage?: string | null;
 };
 
@@ -19,10 +19,11 @@ export default function ChatMessageList({ messages, streamingMessage }: Props) {
                     streamingMessage !== undefined && (
                         <ChatMessage
                             message={{
-                                id: "stream-temp-conversationId",
-                                conversationId: "streaming-temp-id",
+                                id: "streaming-temp-id",
                                 role: "assistant",
                                 content: streamingMessage,
+                                status: "streaming",
+                                createdAt: new Date().toISOString(),
                             }}
                         />
                     )}

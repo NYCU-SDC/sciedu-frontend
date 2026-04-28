@@ -12,12 +12,11 @@ type Props = {
         isError: boolean;
         failureReason?: Error | null;
     };
-    i: number;
 };
 
-export default function QuizCard({ question, i }: Props) {
+export default function QuizCard({ question }: Props) {
     return (
-        <div key={i} className={styles.quizCard}>
+        <div className={styles.quizCard}>
             <h3>{question.title}</h3>
             {question.isLoading ? (
                 <Skeleton width="100%" height="1rem" />

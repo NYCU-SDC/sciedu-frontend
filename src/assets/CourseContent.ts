@@ -10,23 +10,43 @@ export const courseContent: CourseContent[] = [
             image: peaImage,
             description:
                 "古典遺傳學強調基因型可直接決定表現型，基因在古典遺傳是一個抽象概念。認為顯性基因會表現在個體表徵，若一個體中顯性和隱性基因同時存在，則此隱性基因不會表現。豌豆種皮由一對基因控制，R代表顯性基因，r代表隱性基因。若豌豆具有R基因，則種皮形狀為平滑；若控制豌豆種皮形狀的一對基因均為r，則種皮形狀為皺皮。若R和r同時存在，則隱性性狀不會表現，只有顯性性狀會表現，種皮呈現平滑。",
-            questions: [
+            questionSections: [
                 {
-                    type: "select",
-                    title: "基因",
-                    description: "控制豌豆種皮形狀的基因為何？",
-                    options: ["R", "r"],
+                    title: "問題 1",
+                    questionContent: {
+                        id: "q-material-1",
+                        type: "CHOICE",
+                        content: "豌豆種皮形狀由幾對基因控制？",
+                        options: ["一對", "兩對", "三對", "四對"],
+                    },
                 },
                 {
-                    type: "select",
-                    title: "表徵",
-                    description: "豌豆RR種皮形狀表徵為何？",
-                    options: ["平滑", "皺皮"],
+                    title: "問題 2",
+                    questionContent: {
+                        id: "q-material-2",
+                        type: "CHOICE",
+                        content: "R基因代表什麼？",
+                        options: [
+                            "隱性基因",
+                            "顯性基因",
+                            "中性基因",
+                            "突變基因",
+                        ],
+                    },
                 },
                 {
-                    type: "text",
-                    title: "機制",
-                    description: "R和r基因如何影響豌豆種皮形狀？",
+                    title: "問題 3",
+                    questionContent: {
+                        id: "q-material-3",
+                        type: "CHOICE",
+                        content: "r基因代表什麼？",
+                        options: [
+                            "隱性基因",
+                            "顯性基因",
+                            "中性基因",
+                            "突變基因",
+                        ],
+                    },
                 },
             ],
         },
@@ -40,15 +60,57 @@ export const courseContent: CourseContent[] = [
                 {
                     label: "古典遺傳學",
                     questions: [
-                        "請說明在古典遺傳學，顯性和隱性基因的意義。",
-                        "在古典遺傳學，當同時具有一個顯性基因和一個隱性基因時，其表現型為何，請說明原因？",
+                        {
+                            id: "q-question-1",
+                            type: "CHOICE",
+                            content:
+                                "古典遺傳學中，基因型與表現型的關係是什麼？",
+                            options: [
+                                "基因型直接決定表現型",
+                                "表現型直接決定基因型",
+                                "基因型和表現型無關",
+                                "基因型和表現型相互影響",
+                            ],
+                        },
+                        {
+                            id: "q-question-2",
+                            type: "CHOICE",
+                            content:
+                                "在古典遺傳學中，顯性基因和隱性基因的關係是什麼？",
+                            options: [
+                                "顯性基因總是表現在個體表徵上",
+                                "隱性基因總是表現在個體表徵上",
+                                "顯性和隱性基因同時表現在個體表徵上",
+                                "顯性和隱性基因的表達沒有規律",
+                            ],
+                        },
                     ],
                 },
                 {
                     label: "分子遺傳學",
                     questions: [
-                        "在分子遺傳學，是否強調顯性和隱性基因？理由？",
-                        "在分子遺傳學，當同源染色體上的等位基因不同時，表現型會受什麼因素影響？與古典遺傳學不同點為何？",
+                        {
+                            id: "q-question-3",
+                            type: "CHOICE",
+                            content: "分子遺傳學中，基因與性狀的關係是什麼？",
+                            options: [
+                                "基因直接決定性狀",
+                                "性狀直接決定基因",
+                                "基因和性狀無關",
+                                "基因和性狀相互影響",
+                            ],
+                        },
+                        {
+                            id: "q-question-4",
+                            type: "CHOICE",
+                            content: "在分子遺傳學中，基因表達的過程是什麼？",
+                            options: [
+                                "轉錄→轉譯",
+                                "轉譯→轉錄",
+                                "轉錄→DNA複製",
+                                "DNA複製→轉錄",
+                            ],
+                        },
                     ],
                 },
             ],

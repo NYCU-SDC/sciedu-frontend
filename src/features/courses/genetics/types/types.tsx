@@ -1,15 +1,13 @@
-type MaterialQuestionBase = {
+export type MaterialQuestionSection = {
     title: string;
-    description: string;
+    questionContent: QuestionResponse;
 };
 
-type MaterialQuestionSelect = MaterialQuestionBase & {
-    type: "select";
+export type QuestionResponse = {
+    id: string;
+    type: "CHOICE" | "TEXT";
+    content: string;
     options: string[];
-};
-
-type MaterialQuestionText = MaterialQuestionBase & {
-    type: "text";
 };
 
 export type MaterialType = {
@@ -17,7 +15,7 @@ export type MaterialType = {
     content: {
         image: string;
         description: string;
-        questions: (MaterialQuestionSelect | MaterialQuestionText)[];
+        questionSections: MaterialQuestionSection[];
     };
 };
 
@@ -38,7 +36,7 @@ export type QuestionsType = {
     content: {
         columns: {
             label: string;
-            questions: string[];
+            questions: QuestionResponse[];
         }[];
     };
 };

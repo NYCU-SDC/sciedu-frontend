@@ -1,8 +1,11 @@
-import { Button, CheckboxGroup, TextArea } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
+import { useQueries } from "@tanstack/react-query";
 import styles from "./Material.module.css";
-import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
+import type { QuestionResponse } from "../types/types";
+import { api } from "../../../../shared/utils/api";
+import QuizCard from "../components/QuizCard";
 
 type Props = {
     data: MaterialType;
@@ -11,6 +14,26 @@ type Props = {
 
 export default function Material({ data, onNext }: Props) {
     const content = data.content;
+    const allQuestionIds = content.questionSections.flatMap(
+        (section) => section.questionContent.id
+    );
+    const results = useQueries({
+        queries: allQuestionIds.map((id) => ({
+            queryKey: ["question", id],
+            queryFn: () => api<QuestionResponse>(`/questions/${id}`),
+        })),
+    });
+    const questions = allQuestionIds.map((id, i) => ({
+        id,
+        title:
+            content.questionSections.find(
+                (section) => section.questionContent.id === id
+            )?.title || "",
+        data: results[i].data,
+        isLoading: results[i].isLoading,
+        isError: results[i].isError,
+        failureReason: results[i].failureReason,
+    }));
 
     return (
         <div className={styles.pageContainer}>
@@ -18,11 +41,11 @@ export default function Material({ data, onNext }: Props) {
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        <img src={content.image} alt="教材" />
+                        <img src={data.content.image} alt="教材" />
                     </div>
 
                     <div className={styles.courseDescription}>
-                        <p>{content.description}</p>
+                        <p>{data.content.description}</p>
                     </div>
                 </section>
 
@@ -31,35 +54,9 @@ export default function Material({ data, onNext }: Props) {
                     <div className={styles.sidebarHeader}>
                         <h2>請根據左圖回答下列問題</h2>
                     </div>
-
-                    {content.questions.map((ques) => (
-                        <div className={styles.quizCard}>
-                            <h3>{ques.title}</h3>
-                            <p>{ques.description}</p>
-                            {ques.type === "select" && (
-                                <CheckboxGroup.Root
-                                    className={styles.radioGroup}
-                                >
-                                    {ques.options.map((opt, j) => (
-                                        <CheckboxGroup.Item
-                                            value={`${j}`}
-                                            key={j}
-                                        >
-                                            {opt}
-                                        </CheckboxGroup.Item>
-                                    ))}
-                                </CheckboxGroup.Root>
-                            )}
-                            {ques.type === "text" && (
-                                <TextArea
-                                    className={TextAreaStyle.textInput}
-                                    placeholder="在此輸入答案..."
-                                    variant="soft"
-                                    color="gray"
-                                />
-                            )}
-                        </div>
-                    ))}
+                    {questions.map((question, i) => {
+                        return <QuizCard question={question} key={i} />;
+                    })}
 
                     <footer className={styles.sidebarFooter}>
                         <Button

@@ -1,4 +1,4 @@
-import { Button} from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import type { MaterialType } from "../types/types";
 import { useQueries } from "@tanstack/react-query";
 import styles from "./Material.module.css";
@@ -55,9 +55,7 @@ export default function Material({ data, onNext }: Props) {
                         <h2>請根據左圖回答下列問題</h2>
                     </div>
                     {questions.map((question, i) => {
-                        return (
-                            <QuizCard question={question} key={i}/>
-                        );
+                        return <QuizCard question={question} key={i} />;
                     })}
 
                     <footer className={styles.sidebarFooter}>

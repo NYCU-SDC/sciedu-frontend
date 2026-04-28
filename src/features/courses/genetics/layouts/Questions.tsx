@@ -54,22 +54,15 @@ export default function Questions({ data, onNext }: Props) {
                                             className={styles.skeleton}
                                             minHeight="0.875rem"
                                         />
+                                    ) : question.isError ? (
+                                        <p>
+                                            載入失敗：
+                                            {question.failureReason?.message}
+                                        </p>
                                     ) : (
-                                        (() => {
-                                            if (question.isError)
-                                                throw new Error(
-                                                    `Question ${question.failureReason} not found`
-                                                );
-                                            return (
-                                                <p
-                                                    className={
-                                                        styles.questionText
-                                                    }
-                                                >
-                                                    {question.content}
-                                                </p>
-                                            );
-                                        })()
+                                        <p className={styles.questionText}>
+                                            {question.content}
+                                        </p>
                                     )}
                                     <TextArea
                                         className={TextAreaStyle.textInput}

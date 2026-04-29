@@ -19,6 +19,9 @@ enable_error_handling="false"
 
 mkdir -p "$VERSION" || true
 envsubst < "./compose.yaml" > "./"$VERSION"/compose.yaml"
+if [ -e ./env ]; then
+    cp ./env "./$VERSION/env"
+fi
 cd "$VERSION"
 
 docker compose down

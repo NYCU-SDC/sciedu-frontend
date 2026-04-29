@@ -2,6 +2,8 @@ services:
     frontend:
         image: "ghcr.io/nycu-sdc/sciedu-frontend:$VERSION"
         container_name: sciedu-frontend-$VERSION
+        env_file:
+            - ./env
         networks:
             - traefik
         environment:

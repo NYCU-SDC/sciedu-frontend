@@ -122,7 +122,7 @@ jobs:
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development
-                      VITE_BACKEND_BASE_URL=https://api.pr-${{ github.event.pull_request.number }}.sciedu.sdc.nycu.club/api
+                      VITE_BACKEND_BASE_URL=https://api.pr-${{ github.event.pull_request.number }}.sciedu.sdc.nycu.club
                       VITE_USE_CHAT_MOCK=false
 
     Deploy:

@@ -117,7 +117,7 @@ jobs:
                   cache-to: type=gha,mode=max
                   push: true
                   tags: |
-                      ghcr.io/nycu-sdc/sciedu-frontend:pr-${{ github.event.number }}
+                      ghcr.io/nycu-sdc/sciedu-frontend:pr-${{ github.event.pull_request.number }}
                       ghcr.io/nycu-sdc/sciedu-frontend:${{ github.sha }}
                   context: .
                   build-args: |

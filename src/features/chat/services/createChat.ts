@@ -11,7 +11,7 @@ export async function createChat(): Promise<CreateChatResponse> {
         return mockCreateChat();
     }
 
-    return api<CreateChatResponse>("/api/chat", {
+    return api<CreateChatResponse>("/chat", {
         method: "POST",
     });
 }

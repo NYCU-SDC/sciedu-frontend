@@ -117,11 +117,13 @@ jobs:
                   cache-to: type=gha,mode=max
                   push: true
                   tags: |
-                      ghcr.io/nycu-sdc/sciedu-frontend:pr-${{ github.event.number }}
+                      ghcr.io/nycu-sdc/sciedu-frontend:pr-${{ github.event.pull_request.number }}
                       ghcr.io/nycu-sdc/sciedu-frontend:${{ github.sha }}
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development
+                      VITE_BACKEND_BASE_URL=https://api.pr-${{ github.event.pull_request.number }}.sciedu.sdc.nycu.club
+                      VITE_USE_CHAT_MOCK=false
 
     Deploy:
         name: Deploy

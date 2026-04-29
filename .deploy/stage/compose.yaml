@@ -6,6 +6,8 @@ services:
             - traefik
         environment:
             HOST: 0.0.0.0
+            VITE_BACKEND_BASE_URL: "https://api.pr-26.sciedu.sdc.nycu.club/api"
+            VITE_USE_CHAT_MOCK: false
         labels:
             - "vector.enable=true"
             - "traefik.enable=true"

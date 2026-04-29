@@ -14,7 +14,7 @@ export async function listMessages(
         return mockListMessages(chatID);
     }
 
-    return api<ListMessagesResponse>(`/api/chat/${chatID}/messages`, {
+    return api<ListMessagesResponse>(`/chat/${chatID}/messages`, {
         method: "GET",
     });
 }

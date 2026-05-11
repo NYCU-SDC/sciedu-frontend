@@ -45,8 +45,10 @@ export default function Material({ data, onNext }: Props) {
                         <img src={data.content.image} alt="教材" />
                     </div>
 
-                    <div className={styles.courseDescription}>
-                        <p>{data.content.description}</p>
+                    <div className={styles.courseDescriptionWrapper}>
+                        <div className={styles.courseDescription}>
+                            <p>{data.content.description}</p>
+                        </div>
                     </div>
                     <div className={styles.sidebarHeader}>
                         <h2>請根據左圖回答下列問題</h2>

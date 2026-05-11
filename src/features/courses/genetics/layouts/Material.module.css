@@ -39,17 +39,22 @@
     object-fit: contain;
 }
 
-.courseDescription {
+.courseDescriptionWrapper {
     flex: 1;
     min-height: 0;
     border: 0.125rem solid #7dc8b7;
     border-radius: 1rem;
+    overflow: hidden;
+}
+
+.courseDescription {
+    height: 100%;
     overflow-y: auto;
     background-color: #ffffff;
 }
 
 .courseDescription p {
-    margin: 0.5rem 0.5rem 1rem 0.5rem; /* gap between paragraphs */
+    margin: 0.5rem 0.5rem 1rem 0.5rem;
 }
 
 .questionList {

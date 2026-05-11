@@ -16,7 +16,7 @@
 
 /* left section */
 .courseSection {
-    flex: 3;
+    flex: 2;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -25,6 +25,7 @@
 }
 
 .imageContainer {
+    flex: 2;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -32,11 +33,18 @@
     border-radius: 1rem;
 }
 
+.imageContainer img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 .courseDescription {
     flex: 1;
+    min-height: 0;
     border: 0.125rem solid #7dc8b7;
     border-radius: 1rem;
-    overflow-y: auto; /* can scroll */
+    overflow-y: auto;
     background-color: #ffffff;
 }
 
@@ -44,13 +52,12 @@
     margin: 0.5rem 0.5rem 1rem 0.5rem; /* gap between paragraphs */
 }
 
-/* right sidebar */
-.questionSidebar {
+.questionList {
     flex: 1;
     display: flex;
-    padding: 0.5rem 0;
+    padding: 0;
     overflow: hidden;
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
 }
 
@@ -75,3 +82,11 @@
     flex-direction: column;
     gap: 0.5rem;
 }
+
+/* right sidebar */
+.chatSidebar{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+

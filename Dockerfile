@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY package.json ./
 COPY pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN npm install -g pnpm@11.1.0 && pnpm install --frozen-lockfile
 
 COPY . .
 ARG VITE_BUILD_MODE

@@ -55,8 +55,8 @@ export default function Material({ data, onNext }: Props) {
                     </div>
                     <div className={styles.questionList}>
                         {questions.map((question, i) => {
-                        return <QuizCard question={question} key={i} />;
-                    })}
+                            return <QuizCard question={question} key={i} />;
+                        })}
                     </div>
                     <Button
                         className={FooterStyles.shadowButton}

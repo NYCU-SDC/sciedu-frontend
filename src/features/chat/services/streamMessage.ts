@@ -29,13 +29,10 @@ export function streamMessage(
 
     (async () => {
         try {
-            const res = await fetch(
-                `${BASE_URL}/api/chat/stream/${messageID}`,
-                {
-                    method: "GET",
-                    signal: controller.signal,
-                }
-            );
+            const res = await fetch(`${BASE_URL}/chat/stream/${messageID}`, {
+                method: "GET",
+                signal: controller.signal,
+            });
 
             if (!res.ok) {
                 const msg = await safeReadProblemDetail(res);

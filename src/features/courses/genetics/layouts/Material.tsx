@@ -50,7 +50,7 @@ export default function Material({ data, onNext }: Props) {
                             <p>{data.content.description}</p>
                         </div>
                     </div>
-                    <div className={styles.sidebarHeader}>
+                    <div className={styles.questionHeader}>
                         <h2>請根據左圖回答下列問題</h2>
                     </div>
                     <div className={styles.questionList}>
@@ -58,6 +58,10 @@ export default function Material({ data, onNext }: Props) {
                             return <QuizCard question={question} key={i} />;
                         })}
                     </div>
+                </section>
+                {/* right sidebar */}
+                <aside className={styles.chatSidebar}>
+                    <CourseChat />
                     <Button
                         className={FooterStyles.shadowButton}
                         variant="solid"
@@ -67,10 +71,6 @@ export default function Material({ data, onNext }: Props) {
                     >
                         送出並前往下一頁
                     </Button>
-                </section>
-                {/* right sidebar */}
-                <aside className={styles.chatSidebar}>
-                    <CourseChat />
                 </aside>
             </main>
         </div>

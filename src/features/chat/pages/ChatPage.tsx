@@ -85,6 +85,7 @@ export default function ChatPage() {
     const [editingMessageId, setEditingMessageId] = useState<string | null>(
         null
     );
+    const [editingDraft, setEditingDraft] = useState("");
     const [pendingReplyParentId, setPendingReplyParentId] = useState<
         string | undefined
     >(undefined);
@@ -235,6 +236,7 @@ export default function ChatPage() {
             }
 
             if (options?.clearEditing ?? true) {
+                setEditingDraft("");
                 setEditingMessageId(null);
             }
 
@@ -270,19 +272,7 @@ export default function ChatPage() {
     };
 
     const handleSend = async (content: string) => {
-        const editingTarget = editingMessageId
-            ? messageRef.current.find(
-                  (message) =>
-                      message.id === editingMessageId &&
-                      message.role === "user"
-              )
-            : undefined;
-
-        const branchPreviousID = editingTarget
-            ? editingTarget.previousID
-            : visibleMessages.at(-1)?.id;
-
-        await sendMessageBranch(content, branchPreviousID, {
+        await sendMessageBranch(content, visibleMessages.at(-1)?.id, {
             clearDraft: true,
             clearEditing: true,
         });
@@ -296,8 +286,28 @@ export default function ChatPage() {
         );
         if (!target) return;
 
-        setDraftInput(target.content);
+        setEditingDraft(target.content);
         setEditingMessageId(messageId);
+    };
+
+    const handleCancelEditMessage = () => {
+        setEditingDraft("");
+        setEditingMessageId(null);
+    };
+
+    const handleSubmitEditMessage = async () => {
+        if (!editingMessageId || isBusy) return;
+
+        const target = messageRef.current.find(
+            (message) =>
+                message.id === editingMessageId && message.role === "user"
+        );
+        if (!target) return;
+
+        await sendMessageBranch(editingDraft, target.previousID, {
+            clearDraft: false,
+            clearEditing: true,
+        });
     };
 
     const handleResendMessage = async (messageId: string) => {
@@ -349,7 +359,7 @@ export default function ChatPage() {
         }));
 
         if (editingMessageId) {
-            setDraftInput("");
+            setEditingDraft("");
         }
         setEditingMessageId(null);
     };
@@ -401,9 +411,14 @@ export default function ChatPage() {
                         <ChatMessageList
                             messages={displayMessages}
                             actionsDisabled={isBusy}
+                            editingMessageId={editingMessageId}
+                            editingDraft={editingDraft}
                             getBranchState={getBranchState}
                             onSwitchBranch={handleSwitchBranch}
                             onEditMessage={handleEditMessage}
+                            onEditingDraftChange={setEditingDraft}
+                            onCancelEditMessage={handleCancelEditMessage}
+                            onSubmitEditMessage={handleSubmitEditMessage}
                             onResendMessage={handleResendMessage}
                         />
                         <div className={styles.inputWrapper}>
@@ -412,11 +427,6 @@ export default function ChatPage() {
                                 onChange={setDraftInput}
                                 onSend={handleSend}
                                 disabled={isBusy}
-                                placeholder={
-                                    editingMessageId
-                                        ? "編輯訊息後重新送出"
-                                        : undefined
-                                }
                             />
                         </div>
                     </>

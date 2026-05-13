@@ -27,6 +27,100 @@
     word-break: break-word;
 }
 
+.editPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--color-neutral-200);
+}
+
+.editFieldInner {
+    display: grid;
+    width: 100%;
+    max-height: 10rem;
+}
+
+.editField,
+.editMirror {
+    grid-area: 1 / 1;
+    width: 100%;
+    min-height: 2rem;
+    max-height: 10rem;
+    padding: 0.5rem 0.625rem;
+    box-sizing: border-box;
+    border: 1px solid var(--color-neutral-300);
+    border-radius: 0.5rem;
+    font: inherit;
+    line-height: 1.5;
+}
+
+.editMirror {
+    visibility: hidden;
+    overflow-y: hidden;
+    overflow-wrap: break-word;
+    pointer-events: none;
+    white-space: pre-wrap;
+}
+
+.editField {
+    resize: none;
+    background-color: var(--color-white);
+    color: var(--color-neutral-950);
+    overflow-y: auto;
+}
+
+.editField:focus {
+    outline: 2px solid var(--color-sky-500);
+    outline-offset: 1px;
+}
+
+.editActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.375rem;
+}
+
+.editCancelButton,
+.editSubmitButton {
+    min-height: 1.5rem;
+    padding: 0 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    cursor: pointer;
+    width: 3.75rem;
+    height: 2rem;
+}
+
+.editCancelButton {
+    border: 1px solid var(--color-neutral-300);
+    background-color: transparent;
+    color: var(--color-gray-800);
+}
+
+.editSubmitButton {
+    border: 1px solid var(--color-neutral-900);
+    background-color: var(--color-neutral-900);
+    color: var(--color-white);
+}
+
+.editCancelButton:hover:not(:disabled) {
+    background-color: var(--color-neutral-100);
+}
+
+.editSubmitButton:hover:not(:disabled) {
+    background-color: var(--color-neutral-700);
+}
+
+.editCancelButton:disabled,
+.editSubmitButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .actions {
     display: inline-flex;
     align-items: center;

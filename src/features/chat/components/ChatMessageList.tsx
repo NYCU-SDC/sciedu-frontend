@@ -15,9 +15,14 @@ type Props = {
     messages: Message[];
     streamingMessage?: string | null;
     actionsDisabled?: boolean;
+    editingMessageId?: string | null;
+    editingDraft?: string;
     getBranchState?: (messageId: string) => MessageBranchState;
     onSwitchBranch?: (messageId: string, direction: BranchDirection) => void;
     onEditMessage?: (messageId: string) => void;
+    onEditingDraftChange?: (text: string) => void;
+    onCancelEditMessage?: () => void;
+    onSubmitEditMessage?: () => void;
     onResendMessage?: (messageId: string) => void;
 };
 
@@ -25,9 +30,14 @@ export default function ChatMessageList({
     messages,
     streamingMessage,
     actionsDisabled,
+    editingMessageId,
+    editingDraft,
     getBranchState,
     onSwitchBranch,
     onEditMessage,
+    onEditingDraftChange,
+    onCancelEditMessage,
+    onSubmitEditMessage,
     onResendMessage,
 }: Props) {
     return (
@@ -38,9 +48,14 @@ export default function ChatMessageList({
                         key={message.id}
                         message={message}
                         actionsDisabled={actionsDisabled}
+                        isEditing={editingMessageId === message.id}
+                        editingDraft={editingDraft}
                         branchState={getBranchState?.(message.id)}
                         onSwitchBranch={onSwitchBranch}
                         onEdit={onEditMessage}
+                        onEditingDraftChange={onEditingDraftChange}
+                        onCancelEdit={onCancelEditMessage}
+                        onSubmitEdit={onSubmitEditMessage}
                         onResend={onResendMessage}
                     />
                 ))}

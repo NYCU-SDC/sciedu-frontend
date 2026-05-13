@@ -1,4 +1,5 @@
 import type { Message } from "../types/chat";
+import { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -20,8 +21,13 @@ type Props = {
     message: Message;
     branchState?: MessageBranchState;
     actionsDisabled?: boolean;
+    isEditing?: boolean;
+    editingDraft?: string;
     onSwitchBranch?: (messageId: string, direction: BranchDirection) => void;
     onEdit?: (messageId: string) => void;
+    onEditingDraftChange?: (text: string) => void;
+    onCancelEdit?: () => void;
+    onSubmitEdit?: () => void;
     onResend?: (messageId: string) => void;
 };
 
@@ -29,11 +35,18 @@ export default function ChatMessage({
     message,
     branchState,
     actionsDisabled,
+    isEditing,
+    editingDraft,
     onSwitchBranch,
     onEdit,
+    onEditingDraftChange,
+    onCancelEdit,
+    onSubmitEdit,
     onResend,
 }: Props) {
+    const editInputRef = useRef<HTMLTextAreaElement | null>(null);
     const isUser = message.role === "user";
+    const draftValue = editingDraft ?? message.content;
     const currentBranchIndex = branchState?.currentIndex ?? 1;
     const totalBranches = branchState?.total ?? 1;
     const canGoPrev =
@@ -42,6 +55,76 @@ export default function ChatMessage({
         !actionsDisabled && !!onSwitchBranch && (branchState?.canGoNext ?? false);
     const canEdit = !actionsDisabled && !!onEdit;
     const canResend = !actionsDisabled && !!onResend;
+    const canSubmitEdit =
+        !actionsDisabled && !!onSubmitEdit && draftValue.trim().length > 0;
+
+    useEffect(() => {
+        if (!isEditing) return;
+
+        const input = editInputRef.current;
+        input?.focus();
+        input?.setSelectionRange(input.value.length, input.value.length);
+    }, [isEditing]);
+
+    if (isUser && isEditing) {
+        return (
+            <div className={`${styles.messageShell} ${styles.userShell}`}>
+                <form
+                    className={styles.editPanel}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (canSubmitEdit) {
+                            onSubmitEdit?.();
+                        }
+                    }}
+                >
+                    <div className={styles.editFieldInner}>
+                        <div className={styles.editMirror}>
+                            {draftValue + " "}
+                        </div>
+                        <textarea
+                            ref={editInputRef}
+                            className={styles.editField}
+                            value={draftValue}
+                            onChange={(event) =>
+                                onEditingDraftChange?.(event.target.value)
+                            }
+                            onKeyDown={(event) => {
+                                if (
+                                    event.key === "Enter" &&
+                                    (event.metaKey || event.ctrlKey)
+                                ) {
+                                    event.preventDefault();
+                                    if (canSubmitEdit) {
+                                        onSubmitEdit?.();
+                                    }
+                                }
+                            }}
+                            disabled={actionsDisabled}
+                            rows={1}
+                        />
+                    </div>
+                    <div className={styles.editActions}>
+                        <button
+                            type="button"
+                            className={styles.editCancelButton}
+                            onClick={onCancelEdit}
+                            disabled={actionsDisabled}
+                        >
+                            取消
+                        </button>
+                        <button
+                            type="submit"
+                            className={styles.editSubmitButton}
+                            disabled={!canSubmitEdit}
+                        >
+                            送出
+                        </button>
+                    </div>
+                </form>
+            </div>
+        );
+    }
 
     return (
         <div

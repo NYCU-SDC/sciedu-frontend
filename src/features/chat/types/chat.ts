@@ -9,3 +9,19 @@ export type Message = {
     status: MessageStatus;
     createdAt: string;
 };
+
+export type ChatSummary = {
+    id: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type ListChatsResponse = {
+    items: ChatSummary[];
+    totalPages: number;
+    totalItems: number;
+    currentPage: number;
+    pageSize: number;
+    hasNextPage: boolean;
+};

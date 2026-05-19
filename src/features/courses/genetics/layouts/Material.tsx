@@ -5,7 +5,7 @@ import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
 import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
-import { getText, getMediaUrl } from "../services/content";
+import { getText, getMediaUrl } from "../services/mockContent";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
 

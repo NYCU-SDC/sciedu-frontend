@@ -6,7 +6,7 @@ import FooterStyles from "../components/Footer.module.css";
 import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
-import CourseChat from "../components/CouseChat";
+import CourseChat from "../components/CourseChat";
 
 type Props = {
     data: MaterialType;

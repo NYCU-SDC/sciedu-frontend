@@ -1,5 +1,5 @@
 import ExampleChatPage from "../../../chat/pages/ExampleChatPage";
-import styles from "./CouseChat.module.css";
+import styles from "./CourseChat.module.css";
 
 export default function CourseChat() {
     return (

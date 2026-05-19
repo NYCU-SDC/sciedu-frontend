@@ -1,6 +1,6 @@
 import { ChatArea } from "../../../chat/components/ChatArea/ChatArea";
 import useChat from "../../../chat/services/useChat";
-import styles from "./CouseChat.module.css";
+import styles from "./CourseChat.module.css";
 
 export default function CourseChat() {
     const {

@@ -40,10 +40,15 @@ function buildMockReply(content: string) {
         return "I did not receive any content, but the mock chat service is working.";
     }
 
+    const mockThought =
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris quis nisi erat. Aliquam egestas, tellus at blandit semper, nisl odio viverra neque, in tincidunt nisl sem sed massa. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Ut fringilla risus vel tellus consequat vestibulum. Cras orci urna, efficitur vitae mi vitae, rutrum faucibus mauris. Donec cursus quam in ipsum tincidunt efficitur. Sed vitae sem efficitur, porta diam sit amet, viverra mi. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec bibendum varius sem, in convallis neque ultrices quis. Praesent eleifend suscipit enim, nec pellentesque purus pretium at.";
     return [
+        "<think>",
+        mockThought,
+        "</think>",
         `Mock reply received: "${trimmed}".`,
-        "This response is generated entirely on the frontend so you can keep building the chat UI before the backend is ready.",
-        "You can now test message layout, streaming behavior, abort, refresh, and chat-area interactions safely.",
+        "This response is generated entirely on the frontend so you can test the thinking indicator before the backend streams model-generated thinking tags.",
+        "The thought process should appear above this answer, and the raw tags should stay hidden from the final assistant message body.",
     ].join(" ");
 }
 

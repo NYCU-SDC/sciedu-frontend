@@ -212,6 +212,106 @@
     line-height: 1.5;
 }
 
+.thinkingSection {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-gray-600);
+}
+
+.thinkingHeader {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 1.75rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-gray-500);
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.thinkingHeader:hover:not(:disabled),
+.thinkingHeader:hover:not(:disabled) .thinkingIcon {
+    color: var(--color-gray-800);
+}
+
+.thinkingHeader:disabled {
+    cursor: default;
+}
+
+.thinkingHeader:disabled:hover {
+    color: var(--color-gray-600);
+}
+
+.thinkingHeader:focus-visible {
+    outline: 2px solid var(--color-sky-500);
+    outline-offset: 0.1875rem;
+    border-radius: 0.25rem;
+}
+
+.thinkingIcon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--color-gray-500);
+    flex: 0 0 auto;
+}
+
+.thinkingLabel {
+    line-height: 1.25;
+    font-size: 1rem;
+}
+
+.thinkingDots {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1875rem;
+    height: 1rem;
+}
+
+.thinkingDots span {
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 999px;
+    background-color: currentColor;
+    animation: thinkingDotPulse 900ms ease-in-out infinite;
+}
+
+.thinkingDots span:nth-child(2) {
+    animation-delay: 150ms;
+}
+
+.thinkingDots span:nth-child(3) {
+    animation-delay: 300ms;
+}
+
+.thinkingBody {
+    max-width: 100%;
+    color: var(--color-gray-500);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+@keyframes thinkingDotPulse {
+    0%,
+    80%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+
+    40% {
+        opacity: 1;
+        transform: translateY(-0.125rem);
+    }
+}
+
 .assistantPatch {
     font-size: 0.875rem;
 }

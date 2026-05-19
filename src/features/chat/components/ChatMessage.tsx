@@ -50,9 +50,13 @@ export default function ChatMessage({
     const currentBranchIndex = branchState?.currentIndex ?? 1;
     const totalBranches = branchState?.total ?? 1;
     const canGoPrev =
-        !actionsDisabled && !!onSwitchBranch && (branchState?.canGoPrev ?? false);
+        !actionsDisabled &&
+        !!onSwitchBranch &&
+        (branchState?.canGoPrev ?? false);
     const canGoNext =
-        !actionsDisabled && !!onSwitchBranch && (branchState?.canGoNext ?? false);
+        !actionsDisabled &&
+        !!onSwitchBranch &&
+        (branchState?.canGoNext ?? false);
     const canEdit = !actionsDisabled && !!onEdit;
     const canResend = !actionsDisabled && !!onResend;
     const canSubmitEdit =

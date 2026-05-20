@@ -22,7 +22,9 @@ export default function Material({ data, onNext }: Props) {
     const { data: description, isLoading: descriptionLoading } = useQuery({
         queryKey: ["content", "text", content.descriptionId],
         queryFn: () =>
-            api<{ content: string }>(`/api/content/text/${content.descriptionId}`),
+            api<{ content: string }>(
+                `/api/content/text/${content.descriptionId}`
+            ),
     });
 
     const imageUrl = `${BASE_URL}/api/content/media/${content.imageId}`;
@@ -56,7 +58,9 @@ export default function Material({ data, onNext }: Props) {
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
                         {imageError ? (
-                            <span className={styles.errorText}>圖片載入失敗</span>
+                            <span className={styles.errorText}>
+                                圖片載入失敗
+                            </span>
                         ) : (
                             <img
                                 src={imageUrl}

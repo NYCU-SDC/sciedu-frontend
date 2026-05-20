@@ -1,13 +1,15 @@
 import { Button, Skeleton } from "@radix-ui/themes";
+import { useState } from "react";
 import type { MaterialType } from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
 import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
-import { getText, getMediaUrl } from "../services/mockContent";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
+
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
 type Props = {
     data: MaterialType;
@@ -19,10 +21,12 @@ export default function Material({ data, onNext }: Props) {
 
     const { data: description, isLoading: descriptionLoading } = useQuery({
         queryKey: ["content", "text", content.descriptionId],
-        queryFn: () => getText(content.descriptionId),
+        queryFn: () =>
+            api<{ content: string }>(`/api/content/text/${content.descriptionId}`),
     });
 
-    const imageUrl = getMediaUrl(content.imageId);
+    const imageUrl = `${BASE_URL}/api/content/media/${content.imageId}`;
+    const [imageError, setImageError] = useState(false);
 
     const allQuestionIds = content.questionSections.flatMap(
         (section) => section.questionContent.id
@@ -51,7 +55,15 @@ export default function Material({ data, onNext }: Props) {
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        <img src={imageUrl} alt="教材" />
+                        {imageError ? (
+                            <span className={styles.errorText}>圖片載入失敗</span>
+                        ) : (
+                            <img
+                                src={imageUrl}
+                                alt="教材"
+                                onError={() => setImageError(true)}
+                            />
+                        )}
                     </div>
 
                     <div className={styles.courseDescriptionWrapper}>
@@ -59,7 +71,7 @@ export default function Material({ data, onNext }: Props) {
                             {descriptionLoading ? (
                                 <Skeleton minHeight="4rem" />
                             ) : (
-                                <p>{description}</p>
+                                <p>{description?.content}</p>
                             )}
                         </div>
                     </div>

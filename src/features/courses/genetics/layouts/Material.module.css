@@ -39,6 +39,12 @@
     object-fit: contain;
 }
 
+.errorText {
+    margin: auto;
+    font-size: 0.875rem;
+    color: var(--red-9);
+}
+
 .courseDescriptionWrapper {
     flex: 1;
     min-height: 0;

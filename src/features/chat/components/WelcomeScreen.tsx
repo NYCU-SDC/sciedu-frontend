@@ -6,7 +6,10 @@ type WelcomeScreenProps = {
     disabled?: boolean;
 };
 
-export default function WelcomeScreen({ onSend, disabled }: WelcomeScreenProps) {
+export default function WelcomeScreen({
+    onSend,
+    disabled,
+}: WelcomeScreenProps) {
     return (
         <div className={styles.container}>
             <div className={styles.content}>

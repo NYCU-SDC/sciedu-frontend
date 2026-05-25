@@ -428,9 +428,7 @@ export default function useChat({ chatId, onChatCreated }: UseChatOptions) {
     };
 
     const onSwitchBranch = (messageId: string, direction: BranchDirection) => {
-        const target = allMessages.find(
-            (message) => message.id === messageId
-        );
+        const target = allMessages.find((message) => message.id === messageId);
         if (!target) return;
 
         const siblings = allMessages.filter(

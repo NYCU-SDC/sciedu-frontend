@@ -7,9 +7,7 @@ export type ParsedAssistantContent = {
 const THINK_OPEN_TAG = "<think>";
 const THINK_CLOSE_TAG = "</think>";
 
-export function parseAssistantContent(
-    content: string
-): ParsedAssistantContent {
+export function parseAssistantContent(content: string): ParsedAssistantContent {
     const answerParts: string[] = [];
     const thoughtParts: string[] = [];
     let cursor = 0;

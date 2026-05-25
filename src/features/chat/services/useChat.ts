@@ -261,11 +261,21 @@ export default function useChat({ chatId, onChatCreated }: UseChatOptions) {
                 activeChatId = newChatId;
             }
 
-            const { message, replyMessageID } = await createMessage(
+            const { message: rawMessage, replyMessageID } = await createMessage(
                 activeChatId,
                 trimmed,
                 branchPreviousID
             );
+
+            // The backend's createMessage response omits previousID, so we
+            // restore it from the value we just sent. Without this, the new
+            // user message looks like a root message to buildChildrenMap and
+            // hides every prior message in the conversation until the
+            // post-stream listMessages refetch fills in the correct parent.
+            const message: Message = {
+                ...rawMessage,
+                previousID: branchPreviousID,
+            };
 
             // Seed the message cache for activeChatId *before* navigating.
             // The auto-fetch React Query kicks off when chatId flips from

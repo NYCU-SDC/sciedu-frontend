@@ -90,7 +90,7 @@
 }
 
 .assistantBubble code {
-    padding: 0.125rem 0.25rem;
+    padding: 0e25rem 0.25rem;
     background-color: var(--color-neutral-100);
     border-radius: 0.25rem;
     font-size: 0.875em;

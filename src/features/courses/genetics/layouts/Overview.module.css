@@ -63,6 +63,11 @@
     text-align: justify;
 }
 
+.errorText {
+    font-size: 0.75rem;
+    color: var(--red-9);
+}
+
 .footerNav {
     flex-shrink: 0;
     padding: 1rem 0;

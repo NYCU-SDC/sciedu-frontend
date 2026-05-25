@@ -1,12 +1,11 @@
 import { Button, Skeleton } from "@radix-ui/themes";
-import { useEffect } from "react";
+import { useState } from "react";
 import type {
     CoursePageRequest,
     MaterialPage,
     QuestionResponse,
 } from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
 import { api } from "../../../../shared/utils/api";
@@ -23,7 +22,11 @@ type Props = {
 export default function Material({ data, onNext }: Props) {
     const req = data.request as MaterialPage;
 
-    const { data: description, isLoading: descriptionLoading } = useQuery({
+    const {
+        data: description,
+        isLoading: descriptionLoading,
+        isError: descriptionError,
+    } = useQuery({
         queryKey: ["content", "text", req.content.descriptionId],
         queryFn: () =>
             api<{ content: string }>(
@@ -32,6 +35,7 @@ export default function Material({ data, onNext }: Props) {
     });
 
     const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
+    const [imageError, setImageError] = useState(false);
 
     const quesTitleQueries = useQueries({
         queries: req.questionSections.map((section) => ({
@@ -51,33 +55,31 @@ export default function Material({ data, onNext }: Props) {
         })),
     });
 
-    useEffect(() => {
-        if (!quesContentQueries.some((item) => item.isError)) return;
-        toast.error("部分題目載入失敗");
-        if (import.meta.env.DEV) {
-            console.warn(
-                "Question fetching failed with errors: ",
-                quesContentQueries
-                    .filter((q) => q.isError)
-                    .map((q) => q.error)
-                    .join(",")
-            );
-        }
-    }, [quesContentQueries]);
-
     return (
         <div className={styles.pageContainer}>
             <main className={styles.overviewContent}>
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        <img src={imageUrl} alt="教材" />
+                        {imageError ? (
+                            <span className={styles.errorText}>
+                                圖片載入失敗
+                            </span>
+                        ) : (
+                            <img
+                                src={imageUrl}
+                                alt="教材"
+                                onError={() => setImageError(true)}
+                            />
+                        )}
                     </div>
 
                     <div className={styles.courseDescriptionWrapper}>
                         <div className={styles.courseDescription}>
                             {descriptionLoading ? (
                                 <Skeleton minHeight="4rem" />
+                            ) : descriptionError ? (
+                                <p className={styles.errorText}>內容載入失敗</p>
                             ) : (
                                 <p>{description?.content}</p>
                             )}

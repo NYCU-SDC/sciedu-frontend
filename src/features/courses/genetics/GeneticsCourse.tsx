@@ -36,7 +36,7 @@ export default function GeneticsCourse() {
     const queryClient = useQueryClient();
 
     const pageRequests = useMemo(
-        () => coursePageRequests.sort((a, b) => a.pageIndex - b.pageIndex),
+        () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
         []
     );
     const currentPage = pageRequests[currentIndex];

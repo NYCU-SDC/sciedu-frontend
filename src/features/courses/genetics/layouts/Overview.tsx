@@ -1,7 +1,6 @@
 import { Button, Skeleton } from "@radix-ui/themes";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { toast } from "sonner";
 import type { CoursePageRequest, OverviewPage } from "../types/types";
 import { api } from "../../../../shared/utils/api";
 import styles from "./Overview.module.css";
@@ -32,20 +31,6 @@ export default function Overview({ data, onNext }: Props) {
         [allTextIds, textQueries]
     );
 
-    useEffect(() => {
-        if (!textQueries.some((q) => q.isError)) return;
-        toast.error("部分內容載入失敗");
-        if (import.meta.env.DEV) {
-            console.warn(
-                "Overview content fetching failed with errors: ",
-                textQueries
-                    .filter((q) => q.isError)
-                    .map((q) => q.error)
-                    .join(",")
-            );
-        }
-    }, [textQueries]);
-
     return (
         <div className={styles.pageContainer}>
             <main className={styles.tableContent}>
@@ -58,6 +43,10 @@ export default function Overview({ data, onNext }: Props) {
                                     <th key={index}>
                                         {query?.isLoading ? (
                                             <Skeleton minHeight="1rem" />
+                                        ) : query?.isError ? (
+                                            <span className={styles.errorText}>
+                                                載入失敗
+                                            </span>
                                         ) : (
                                             (query?.data?.content ?? "")
                                         )}
@@ -78,6 +67,12 @@ export default function Overview({ data, onNext }: Props) {
                                         >
                                             {query?.isLoading ? (
                                                 <Skeleton minHeight="1rem" />
+                                            ) : query?.isError ? (
+                                                <span
+                                                    className={styles.errorText}
+                                                >
+                                                    載入失敗
+                                                </span>
                                             ) : (
                                                 (query?.data?.content ?? "")
                                             )}

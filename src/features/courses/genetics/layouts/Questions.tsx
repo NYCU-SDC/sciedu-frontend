@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type {
     CoursePageRequest,
     QuestionPage,
@@ -7,7 +7,6 @@ import type {
 import { useQueries } from "@tanstack/react-query";
 import { api } from "../../../../shared/utils/api";
 import { Skeleton, Button, TextArea } from "@radix-ui/themes";
-import { toast } from "sonner";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
@@ -72,20 +71,6 @@ export default function Questions({ data, onNext }: Props) {
         [allQuestionIds, questionQueries]
     );
 
-    useEffect(() => {
-        if (!questionQueries.some((res) => res.isError)) return;
-        toast.error("部分題目載入失敗");
-        if (import.meta.env.DEV) {
-            console.warn(
-                "Question fetching failed with errors: ",
-                questionQueries
-                    .filter((q) => q.isError)
-                    .map((q) => q.error)
-                    .join(",")
-            );
-        }
-    }, [questionQueries]);
-
     return (
         <div className={styles.pageContainer}>
             <main className={styles.contentWrapper}>
@@ -94,7 +79,13 @@ export default function Questions({ data, onNext }: Props) {
                     return (
                         <section key={colIndex} className={styles.column}>
                             <div className={styles.columnHeader}>
-                                <h2>{`${labelQuery?.data?.content ?? ""}：`}</h2>
+                                {labelQuery?.isError ? (
+                                    <h2 className={styles.errorText}>
+                                        載入失敗
+                                    </h2>
+                                ) : (
+                                    <h2>{`${labelQuery?.data?.content ?? ""}：`}</h2>
+                                )}
                             </div>
                             {column.questions.map((q, i) => {
                                 const result = questionById.get(q.questionId);
@@ -102,6 +93,7 @@ export default function Questions({ data, onNext }: Props) {
                                     titlesByColumn[colIndex]?.[i];
                                 const isLoading = result?.isLoading ?? true;
                                 const isError = result?.isError ?? false;
+                                const titleError = titleQuery?.isError ?? false;
                                 return (
                                     <div
                                         key={i}
@@ -114,7 +106,7 @@ export default function Questions({ data, onNext }: Props) {
                                                 {titleQuery?.data?.content ??
                                                     ""}
                                             </h3>
-                                            {isError && (
+                                            {(isError || titleError) && (
                                                 <span
                                                     className={styles.errorText}
                                                 >

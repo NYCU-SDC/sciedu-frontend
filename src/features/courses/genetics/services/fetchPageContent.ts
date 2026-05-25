@@ -32,7 +32,6 @@ export function generateRQRequestFromPage({ request }: CoursePageRequest): {
                     ),
                     ...request.contentId
                         .flat()
-                        .flat()
                         .map((id) => ({ type: "text", id }) as const),
                 ],
                 question: [],

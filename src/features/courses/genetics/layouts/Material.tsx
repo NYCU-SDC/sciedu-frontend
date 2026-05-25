@@ -1,10 +1,13 @@
 import { Button, Skeleton } from "@radix-ui/themes";
 import { useState } from "react";
-import type { MaterialType } from "../types/types";
+import type {
+    CoursePageRequest,
+    MaterialPage,
+    QuestionResponse,
+} from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
-import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
@@ -12,44 +15,45 @@ import CourseChat from "../components/CourseChat";
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
 type Props = {
-    data: MaterialType;
+    data: CoursePageRequest;
     onNext: () => void;
 };
 
 export default function Material({ data, onNext }: Props) {
-    const content = data.content;
+    const req = data.request as MaterialPage;
 
-    const { data: description, isLoading: descriptionLoading } = useQuery({
-        queryKey: ["content", "text", content.descriptionId],
+    const {
+        data: description,
+        isLoading: descriptionLoading,
+        isError: descriptionError,
+    } = useQuery({
+        queryKey: ["content", "text", req.content.descriptionId],
         queryFn: () =>
             api<{ content: string }>(
-                `/api/content/text/${content.descriptionId}`
+                `/api/content/text/${req.content.descriptionId}`
             ),
     });
 
-    const imageUrl = `${BASE_URL}/api/content/media/${content.imageId}`;
+    const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
     const [imageError, setImageError] = useState(false);
 
-    const allQuestionIds = content.questionSections.flatMap(
-        (section) => section.questionContent.id
-    );
-    const results = useQueries({
-        queries: allQuestionIds.map((id) => ({
-            queryKey: ["question", id],
-            queryFn: () => api<QuestionResponse>(`/questions/${id}`),
+    const quesTitleQueries = useQueries({
+        queries: req.questionSections.map((section) => ({
+            queryKey: ["content", "text", section.titleId],
+            queryFn: () =>
+                api<{ content: string }>(
+                    `/api/content/text/${section.titleId}`
+                ),
         })),
     });
-    const questions = allQuestionIds.map((id, i) => ({
-        id,
-        title:
-            content.questionSections.find(
-                (section) => section.questionContent.id === id
-            )?.title || "",
-        data: results[i].data,
-        isLoading: results[i].isLoading,
-        isError: results[i].isError,
-        failureReason: results[i].failureReason,
-    }));
+
+    const quesContentQueries = useQueries({
+        queries: req.questionSections.map((section) => ({
+            queryKey: ["question", section.questionId],
+            queryFn: () =>
+                api<QuestionResponse>(`/api/questions/${section.questionId}`),
+        })),
+    });
 
     return (
         <div className={styles.pageContainer}>
@@ -74,6 +78,8 @@ export default function Material({ data, onNext }: Props) {
                         <div className={styles.courseDescription}>
                             {descriptionLoading ? (
                                 <Skeleton minHeight="4rem" />
+                            ) : descriptionError ? (
+                                <p className={styles.errorText}>內容載入失敗</p>
                             ) : (
                                 <p>{description?.content}</p>
                             )}
@@ -83,8 +89,26 @@ export default function Material({ data, onNext }: Props) {
                         <h2>請根據左圖回答下列問題</h2>
                     </div>
                     <div className={styles.questionList}>
-                        {questions.map((question, i) => {
-                            return <QuizCard question={question} key={i} />;
+                        {req.questionSections.map((section, i) => {
+                            const titleQuery = quesTitleQueries[i];
+                            const contentQuery = quesContentQueries[i];
+                            return (
+                                <QuizCard
+                                    key={section.questionId}
+                                    question={{
+                                        id: section.questionId,
+                                        title: titleQuery.data?.content ?? "",
+                                        data: contentQuery.data,
+                                    }}
+                                    isLoading={contentQuery.isLoading}
+                                    error={
+                                        contentQuery.isError
+                                            ? (contentQuery.error?.message ??
+                                              "載入失敗")
+                                            : null
+                                    }
+                                />
+                            );
                         })}
                     </div>
                 </section>

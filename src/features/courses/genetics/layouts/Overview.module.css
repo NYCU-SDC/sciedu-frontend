@@ -17,17 +17,17 @@
     table-layout: fixed;
     width: 100%;
     border-collapse: separate;
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.6;
     color: #333;
-    border: 0.1rem solid #7dc8b7;
+    border: 0.1rem solid var(--color-genetics-brand-teal);
     border-radius: 0.9375rem;
     border-spacing: 0;
     overflow: hidden;
 }
 
 .comparisonTable th {
-    background-color: #7dc8b7;
+    background-color: var(--color-genetics-brand-teal);
     color: #000;
     padding: 0.25rem 0.75rem;
     text-align: left;
@@ -36,7 +36,7 @@
 
 .comparisonTable td {
     height: 5rem;
-    border: 0.0625rem solid #7dc8b7;
+    border: 0.0625rem solid var(--color-genetics-brand-teal);
     border-bottom: none;
     padding: 0.25rem 0.75rem;
     vertical-align: top;
@@ -61,6 +61,11 @@
 
 .tdContent {
     text-align: justify;
+}
+
+.errorText {
+    font-size: 0.75rem;
+    color: var(--red-9);
 }
 
 .footerNav {

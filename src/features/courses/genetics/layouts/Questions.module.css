@@ -22,7 +22,7 @@
     top: 3rem;
     bottom: 1.2rem;
     width: 0.0625rem;
-    background-color: #79c5bc;
+    background-color: var(--color-genetics-brand-teal-alt);
     transform: translateX(-50%);
 }
 
@@ -48,7 +48,7 @@
 }
 
 .questionCard {
-    border: 0.09375rem solid #7dc8b7;
+    border: 0.09375rem solid var(--color-genetics-brand-teal);
     border-radius: 0.75rem;
     padding: 0.5rem;
     flex: 1;
@@ -74,7 +74,6 @@
 .errorText {
     font-size: 0.75rem;
     color: var(--red-9);
-    margin-bottom: 0.3rem;
 }
 
 .questionText {

@@ -10,7 +10,6 @@ import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
 
-import { courseContent } from "../../../assets/CourseContent";
 import { coursePageRequests } from "./assets/courseResource";
 import type { CoursePageRequest } from "./types/types";
 
@@ -46,9 +45,9 @@ export default function GeneticsCourse() {
 
     // Prefetch next page content when currentIndex changes
     useEffect(() => {
-        const nextPageRequests = generateRQRequestFromPage(
-            pageRequests[currentIndex + 1]
-        );
+        const nextPage = pageRequests[currentIndex + 1];
+        if (!nextPage) return;
+        const nextPageRequests = generateRQRequestFromPage(nextPage);
         nextPageRequests.forEach((req) =>
             queryClient.prefetchQuery({
                 queryKey: req.queryKey,
@@ -58,7 +57,7 @@ export default function GeneticsCourse() {
     }, [pageRequests, currentIndex, queryClient]);
 
     const handleNext = () => {
-        const nextIndex = Math.min(currentIndex + 1, courseContent.length - 1);
+        const nextIndex = Math.min(currentIndex + 1, pageRequests.length - 1);
         setCurrentIndex(nextIndex);
     };
 

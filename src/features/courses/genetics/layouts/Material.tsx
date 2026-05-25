@@ -1,11 +1,14 @@
 import { Button, Skeleton } from "@radix-ui/themes";
-import { useEffect, useMemo, useState } from "react";
-import type { MaterialType } from "../types/types";
+import { useEffect } from "react";
+import type {
+    CoursePageRequest,
+    MaterialPage,
+    QuestionResponse,
+} from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
-import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
@@ -13,66 +16,54 @@ import CourseChat from "../components/CourseChat";
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
 type Props = {
-    data: MaterialType;
+    data: CoursePageRequest;
     onNext: () => void;
 };
 
 export default function Material({ data, onNext }: Props) {
-    const content = data.content;
+    const req = data.request as MaterialPage;
 
     const { data: description, isLoading: descriptionLoading } = useQuery({
-        queryKey: ["content", "text", content.descriptionId],
+        queryKey: ["content", "text", req.content.descriptionId],
         queryFn: () =>
             api<{ content: string }>(
-                `/api/content/text/${content.descriptionId}`
+                `/api/content/text/${req.content.descriptionId}`
             ),
     });
 
-    const imageUrl = `${BASE_URL}/api/content/media/${content.imageId}`;
-    const [imageError, setImageError] = useState(false);
+    const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
 
-    const allQuestionIds = useMemo(
-        () =>
-            content.questionSections.flatMap(
-                (section) => section.questionContent.id
-            ),
-        [content.questionSections]
-    );
-
-    const results = useQueries({
-        queries: allQuestionIds.map((id) => ({
-            queryKey: ["question", id],
-            queryFn: () => api<QuestionResponse>(`/questions/${id}`),
+    const quesTitleQueries = useQueries({
+        queries: req.questionSections.map((section) => ({
+            queryKey: ["content", "text", section.titleId],
+            queryFn: () =>
+                api<{ content: string }>(
+                    `/api/content/text/${section.titleId}`
+                ),
         })),
     });
 
-    const questions = useMemo(() => {
-        const titleById = new Map(
-            content.questionSections.map((s) => [s.questionContent.id, s.title])
-        );
-        return allQuestionIds.map((id, i) => ({
-            id,
-            title: titleById.get(id) ?? "",
-            data: results[i].data,
-            isLoading: results[i].isLoading,
-            isError: results[i].isError,
-            failureReason: results[i].failureReason,
-        }));
-    }, [allQuestionIds, results, content.questionSections]);
+    const quesContentQueries = useQueries({
+        queries: req.questionSections.map((section) => ({
+            queryKey: ["question", section.questionId],
+            queryFn: () =>
+                api<QuestionResponse>(`/api/questions/${section.questionId}`),
+        })),
+    });
 
     useEffect(() => {
-        if (!questions.some((item) => item.isError)) return;
+        if (!quesContentQueries.some((item) => item.isError)) return;
         toast.error("部分題目載入失敗");
         if (import.meta.env.DEV) {
             console.warn(
-                "Failed question IDs:",
-                questions
+                "Question fetching failed with errors: ",
+                quesContentQueries
                     .filter((q) => q.isError)
-                    .map((q) => q.id)
+                    .map((q) => q.error)
                     .join(",")
             );
         }
-    }, [questions]);
+    }, [quesContentQueries]);
 
     return (
         <div className={styles.pageContainer}>
@@ -80,17 +71,7 @@ export default function Material({ data, onNext }: Props) {
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        {imageError ? (
-                            <span className={styles.errorText}>
-                                圖片載入失敗
-                            </span>
-                        ) : (
-                            <img
-                                src={imageUrl}
-                                alt="教材"
-                                onError={() => setImageError(true)}
-                            />
-                        )}
+                        <img src={imageUrl} alt="教材" />
                     </div>
 
                     <div className={styles.courseDescriptionWrapper}>
@@ -106,8 +87,26 @@ export default function Material({ data, onNext }: Props) {
                         <h2>請根據左圖回答下列問題</h2>
                     </div>
                     <div className={styles.questionList}>
-                        {questions.map((question, i) => {
-                            return <QuizCard question={question} key={i} />;
+                        {req.questionSections.map((section, i) => {
+                            const titleQuery = quesTitleQueries[i];
+                            const contentQuery = quesContentQueries[i];
+                            return (
+                                <QuizCard
+                                    key={section.questionId}
+                                    question={{
+                                        id: section.questionId,
+                                        title: titleQuery.data?.content ?? "",
+                                        data: contentQuery.data,
+                                    }}
+                                    isLoading={contentQuery.isLoading}
+                                    error={
+                                        contentQuery.isError
+                                            ? (contentQuery.error?.message ??
+                                              "載入失敗")
+                                            : null
+                                    }
+                                />
+                            );
                         })}
                     </div>
                 </section>

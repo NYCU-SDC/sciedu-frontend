@@ -8,31 +8,38 @@ type Props = {
         id: string;
         title: string;
         data: QuestionResponse | undefined;
-        isLoading: boolean;
-        isError: boolean;
-        failureReason?: Error | null;
     };
+    isLoading: boolean;
+    error: string | null;
 };
 
-export default function QuizCard({ question }: Props) {
+export default function QuizCard({ question, isLoading, error }: Props) {
+    if (error) {
+        return (
+            <div className={styles.quizCard}>
+                <div className={styles.titleRow}>
+                    <h3>{question.title}</h3>
+                    <span className={styles.errorText}>載入失敗</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.quizCard}>
             <div className={styles.titleRow}>
                 <h3>{question.title}</h3>
-                {question.isError && (
-                    <span className={styles.errorText}>載入失敗</span>
-                )}
             </div>
-            {question.isLoading ? (
+            {isLoading ? (
                 <Skeleton width="100%" height="1rem" />
-            ) : question.isError ? null : (
+            ) : (
                 <>
                     <p>{question.data?.content}</p>
                     {question.data?.type === "CHOICE" && (
                         <CheckboxGroup.Root className={styles.radioGroup}>
-                            {question.data?.options.map((opt, j) => (
-                                <CheckboxGroup.Item value={`${j}`} key={j}>
-                                    {opt}
+                            {question.data?.options.map((opt) => (
+                                <CheckboxGroup.Item value={opt.id} key={opt.id}>
+                                    {opt.label}. {opt.content}
                                 </CheckboxGroup.Item>
                             ))}
                         </CheckboxGroup.Root>

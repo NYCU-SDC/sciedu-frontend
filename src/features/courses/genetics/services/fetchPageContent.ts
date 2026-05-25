@@ -14,8 +14,14 @@ export function generateRQRequestFromPage({ request }: CoursePageRequest): {
                 content: [
                     { type: "text", id: request.content.descriptionId },
                     { type: "media", id: request.content.imageId },
+                    ...request.questionSections.map(
+                        (section) =>
+                            ({ type: "text", id: section.titleId }) as const
+                    ),
                 ],
-                question: request.questionIds,
+                question: request.questionSections.map(
+                    (section) => section.questionId
+                ),
             };
             break;
         case "overview":
@@ -34,11 +40,19 @@ export function generateRQRequestFromPage({ request }: CoursePageRequest): {
             break;
         case "questions":
             request_raw = {
-                content: request.columns.map((col) => ({
-                    type: "text",
-                    id: col.labelId,
-                })),
-                question: request.columns.flatMap((col) => col.questionIds),
+                content: [
+                    ...request.columns.map(
+                        (col) => ({ type: "text", id: col.labelId }) as const
+                    ),
+                    ...request.columns.flatMap((col) =>
+                        col.questions.map(
+                            (q) => ({ type: "text", id: q.titleId }) as const
+                        )
+                    ),
+                ],
+                question: request.columns.flatMap((col) =>
+                    col.questions.map((q) => q.questionId)
+                ),
             };
             break;
         default:

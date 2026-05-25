@@ -3,11 +3,17 @@ export type MaterialQuestionSection = {
     questionContent: QuestionResponse;
 };
 
+export type QuestionOption = {
+    id: string;
+    label: string;
+    content: string;
+};
+
 export type QuestionResponse = {
     id: string;
     type: "CHOICE" | "TEXT";
     content: string;
-    options: string[];
+    options: QuestionOption[];
 };
 
 export type MaterialType = {
@@ -25,7 +31,10 @@ export type MaterialPage = {
         imageId: string;
         descriptionId: string;
     };
-    questionIds: string[];
+    questionSections: {
+        titleId: string;
+        questionId: string;
+    }[];
 };
 
 export type OverviewType = {
@@ -60,7 +69,10 @@ export type QuestionPage = {
     type: "questions";
     columns: {
         labelId: string;
-        questionIds: string[];
+        questions: {
+            titleId: string;
+            questionId: string;
+        }[];
     }[];
 };
 

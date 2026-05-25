@@ -1,7 +1,8 @@
 import { Button, Skeleton } from "@radix-ui/themes";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MaterialType } from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
 import type { QuestionResponse } from "../types/types";
@@ -30,26 +31,48 @@ export default function Material({ data, onNext }: Props) {
     const imageUrl = `${BASE_URL}/api/content/media/${content.imageId}`;
     const [imageError, setImageError] = useState(false);
 
-    const allQuestionIds = content.questionSections.flatMap(
-        (section) => section.questionContent.id
+    const allQuestionIds = useMemo(
+        () =>
+            content.questionSections.flatMap(
+                (section) => section.questionContent.id
+            ),
+        [content.questionSections]
     );
+
     const results = useQueries({
         queries: allQuestionIds.map((id) => ({
             queryKey: ["question", id],
             queryFn: () => api<QuestionResponse>(`/questions/${id}`),
         })),
     });
-    const questions = allQuestionIds.map((id, i) => ({
-        id,
-        title:
-            content.questionSections.find(
-                (section) => section.questionContent.id === id
-            )?.title || "",
-        data: results[i].data,
-        isLoading: results[i].isLoading,
-        isError: results[i].isError,
-        failureReason: results[i].failureReason,
-    }));
+
+    const questions = useMemo(() => {
+        const titleById = new Map(
+            content.questionSections.map((s) => [s.questionContent.id, s.title])
+        );
+        return allQuestionIds.map((id, i) => ({
+            id,
+            title: titleById.get(id) ?? "",
+            data: results[i].data,
+            isLoading: results[i].isLoading,
+            isError: results[i].isError,
+            failureReason: results[i].failureReason,
+        }));
+    }, [allQuestionIds, results, content.questionSections]);
+
+    useEffect(() => {
+        if (!questions.some((item) => item.isError)) return;
+        toast.error("部分題目載入失敗");
+        if (import.meta.env.DEV) {
+            console.warn(
+                "Failed question IDs:",
+                questions
+                    .filter((q) => q.isError)
+                    .map((q) => q.id)
+                    .join(",")
+            );
+        }
+    }, [questions]);
 
     return (
         <div className={styles.pageContainer}>

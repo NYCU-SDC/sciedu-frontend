@@ -3,7 +3,7 @@ import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
 import { courseContent } from "../../../assets/CourseContent";
-import "./GeneticsCourse.css";
+import styles from "./GeneticsCourse.module.css";
 import Navbar from "./components/Navbar";
 import type { CourseContent } from "./types/types";
 
@@ -35,15 +35,19 @@ export default function GeneticsCourse() {
         }
     };
 
+    const currentYear = new Date().getFullYear();
+
+    if (!currentData) return null;
+
     return (
         <div
-            className={`course-container ${currentIndex === 0 ? "has-gradient" : ""}`}
+            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
         >
             {/*mobile blocker*/}
-            <div className="mobile-blocker">
-                <div className="blocker-icon">
-                    <div className="phone-shape">
-                        <div className="phone-line"></div>
+            <div className={styles.mobileBlocker}>
+                <div className={styles.blockerIcon}>
+                    <div className={styles.phoneShape}>
+                        <div className={styles.phoneLine}></div>
                     </div>
                 </div>
                 <h2>本教材尚未支援用手機觀看</h2>
@@ -55,7 +59,7 @@ export default function GeneticsCourse() {
             </div>
 
             {/* Main content*/}
-            <div className="course-wrapper">
+            <div className={styles.courseWrapper}>
                 <Navbar
                     activeTitles={currentData.activeNavbarTitles}
                     activeStep={currentIndex}
@@ -63,10 +67,10 @@ export default function GeneticsCourse() {
                 />
                 <PageContent data={currentData} onNext={handleNext} />
                 {/* copyright footer */}
-                <footer className="copyright-footer">
+                <footer className={styles.copyrightFooter}>
                     {/*Technically breaks pureness but works without causing considerable issues*/}
-                    ©{new Date().getFullYear()} Institute of Education, Science
-                    Education division, NYCU. All Rights Reserved
+                    ©{currentYear} Institute of Education, Science Education
+                    division, NYCU. All Rights Reserved
                 </footer>
             </div>
         </div>

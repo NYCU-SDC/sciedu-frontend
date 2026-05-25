@@ -1,7 +1,7 @@
 .quizCard {
     flex: 1;
     background: white;
-    border: 0.0625rem solid #7dc8b7;
+    border: 0.0625rem solid var(--color-genetics-brand-teal);
     border-radius: 0.625rem;
     padding: 0.75rem;
     display: flex;

@@ -265,6 +265,9 @@
 
     --color-black: #000;
     --color-white: #fff;
+
+    --color-genetics-brand-teal: #7dc8b7;
+    --color-genetics-brand-teal-alt: #79c5bc;
 }
 
 @supports (color: oklch(0 0 0)) {

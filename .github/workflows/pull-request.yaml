@@ -2,8 +2,6 @@ name: Lint, Build and Deploy
 
 on:
     pull_request:
-        branches:
-            - main
 
 permissions:
     packages: write

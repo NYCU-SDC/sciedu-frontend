@@ -6,6 +6,7 @@ import FooterStyles from "../components/Footer.module.css";
 import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
+import CourseChat from "../components/CourseChat";
 
 type Props = {
     data: MaterialType;
@@ -44,31 +45,32 @@ export default function Material({ data, onNext }: Props) {
                         <img src={data.content.image} alt="教材" />
                     </div>
 
-                    <div className={styles.courseDescription}>
-                        <p>{data.content.description}</p>
+                    <div className={styles.courseDescriptionWrapper}>
+                        <div className={styles.courseDescription}>
+                            <p>{data.content.description}</p>
+                        </div>
                     </div>
-                </section>
-
-                {/* right sidebar */}
-                <aside className={styles.questionSidebar}>
-                    <div className={styles.sidebarHeader}>
+                    <div className={styles.questionHeader}>
                         <h2>請根據左圖回答下列問題</h2>
                     </div>
-                    {questions.map((question, i) => {
-                        return <QuizCard question={question} key={i} />;
-                    })}
-
-                    <footer className={styles.sidebarFooter}>
-                        <Button
-                            className={FooterStyles.shadowButton}
-                            variant="solid"
-                            highContrast
-                            onClick={onNext}
-                            radius="full"
-                        >
-                            送出並前往下一頁
-                        </Button>
-                    </footer>
+                    <div className={styles.questionList}>
+                        {questions.map((question, i) => {
+                            return <QuizCard question={question} key={i} />;
+                        })}
+                    </div>
+                </section>
+                {/* right sidebar */}
+                <aside className={styles.chatSidebar}>
+                    <CourseChat />
+                    <Button
+                        className={FooterStyles.shadowButton}
+                        variant="solid"
+                        highContrast
+                        onClick={onNext}
+                        radius="full"
+                    >
+                        送出並前往下一頁
+                    </Button>
                 </aside>
             </main>
         </div>

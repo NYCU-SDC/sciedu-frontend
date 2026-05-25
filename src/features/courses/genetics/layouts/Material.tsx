@@ -1,12 +1,15 @@
-import { Button } from "@radix-ui/themes";
+import { Button, Skeleton } from "@radix-ui/themes";
+import { useState } from "react";
 import type { MaterialType } from "../types/types";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
 import type { QuestionResponse } from "../types/types";
 import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
+
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
 type Props = {
     data: MaterialType;
@@ -15,6 +18,18 @@ type Props = {
 
 export default function Material({ data, onNext }: Props) {
     const content = data.content;
+
+    const { data: description, isLoading: descriptionLoading } = useQuery({
+        queryKey: ["content", "text", content.descriptionId],
+        queryFn: () =>
+            api<{ content: string }>(
+                `/api/content/text/${content.descriptionId}`
+            ),
+    });
+
+    const imageUrl = `${BASE_URL}/api/content/media/${content.imageId}`;
+    const [imageError, setImageError] = useState(false);
+
     const allQuestionIds = content.questionSections.flatMap(
         (section) => section.questionContent.id
     );
@@ -42,12 +57,26 @@ export default function Material({ data, onNext }: Props) {
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        <img src={data.content.image} alt="教材" />
+                        {imageError ? (
+                            <span className={styles.errorText}>
+                                圖片載入失敗
+                            </span>
+                        ) : (
+                            <img
+                                src={imageUrl}
+                                alt="教材"
+                                onError={() => setImageError(true)}
+                            />
+                        )}
                     </div>
 
                     <div className={styles.courseDescriptionWrapper}>
                         <div className={styles.courseDescription}>
-                            <p>{data.content.description}</p>
+                            {descriptionLoading ? (
+                                <Skeleton minHeight="4rem" />
+                            ) : (
+                                <p>{description?.content}</p>
+                            )}
                         </div>
                     </div>
                     <div className={styles.questionHeader}>

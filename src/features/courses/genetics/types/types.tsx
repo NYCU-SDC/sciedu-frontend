@@ -13,8 +13,8 @@ export type QuestionResponse = {
 export type MaterialType = {
     type: "material";
     content: {
-        image: string;
-        description: string;
+        imageId: string;
+        descriptionId: string;
         questionSections: MaterialQuestionSection[];
     };
 };

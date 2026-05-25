@@ -46,20 +46,22 @@ export default function Questions({ data, onNext }: Props) {
                         {column.questions.map((question, i) => {
                             return (
                                 <div key={i} className={styles.questionCard}>
-                                    <h3 className={styles.questionTitle}>
-                                        問題 {colIndex + 1}-{i + 1}
-                                    </h3>
+                                    <div className={styles.titleRow}>
+                                        <h3 className={styles.questionTitle}>
+                                            問題 {colIndex + 1}-{i + 1}
+                                        </h3>
+                                        {question.isError && (
+                                            <span className={styles.errorText}>
+                                                載入失敗
+                                            </span>
+                                        )}
+                                    </div>
                                     {question.isLoading ? (
                                         <Skeleton
                                             className={styles.skeleton}
                                             minHeight="0.875rem"
                                         />
-                                    ) : question.isError ? (
-                                        <p>
-                                            載入失敗：
-                                            {question.failureReason?.message}
-                                        </p>
-                                    ) : (
+                                    ) : question.isError ? null : (
                                         <p className={styles.questionText}>
                                             {question.content}
                                         </p>

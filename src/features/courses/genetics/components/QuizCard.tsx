@@ -17,12 +17,15 @@ type Props = {
 export default function QuizCard({ question }: Props) {
     return (
         <div className={styles.quizCard}>
-            <h3>{question.title}</h3>
+            <div className={styles.titleRow}>
+                <h3>{question.title}</h3>
+                {question.isError && (
+                    <span className={styles.errorText}>載入失敗</span>
+                )}
+            </div>
             {question.isLoading ? (
                 <Skeleton width="100%" height="1rem" />
-            ) : question.isError ? (
-                <p>載入失敗：{question.failureReason?.message}</p>
-            ) : (
+            ) : question.isError ? null : (
                 <>
                     <p>{question.data?.content}</p>
                     {question.data?.type === "CHOICE" && (

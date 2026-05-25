@@ -11,7 +11,7 @@ export const coursePageRequests: CoursePageRequest[] = [
         request: {
             type: "material",
             content: {
-                imageId: "genetics_material_1",
+                imageId: "7499de8e-1b0c-4da9-967d-952f735a35ad",
                 descriptionId: TEXT_ID,
             },
             questionSections: [

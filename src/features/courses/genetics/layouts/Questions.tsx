@@ -36,8 +36,7 @@ export default function Questions({ data, onNext }: Props) {
     const titleQueries = useQueries({
         queries: allTitleIds.map((id) => ({
             queryKey: ["content", "text", id],
-            queryFn: () =>
-                api<{ content: string }>(`/api/content/text/${id}`),
+            queryFn: () => api<{ content: string }>(`/api/content/text/${id}`),
         })),
     });
 
@@ -99,7 +98,8 @@ export default function Questions({ data, onNext }: Props) {
                             </div>
                             {column.questions.map((q, i) => {
                                 const result = questionById.get(q.questionId);
-                                const titleQuery = titlesByColumn[colIndex]?.[i];
+                                const titleQuery =
+                                    titlesByColumn[colIndex]?.[i];
                                 const isLoading = result?.isLoading ?? true;
                                 const isError = result?.isError ?? false;
                                 return (

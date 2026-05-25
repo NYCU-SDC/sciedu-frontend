@@ -21,7 +21,7 @@ export async function createMessage(
         content,
         previousID,
     };
-    return api<CreateMessageResponse>(`/api/chat/${chatID}/messages`, {
+    return api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
         body: JSON.stringify(payload),
     });

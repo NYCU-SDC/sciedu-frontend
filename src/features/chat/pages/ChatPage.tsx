@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Message } from "../types/chat";
+import type { ChatSummary, Message } from "../types/chat";
 import ChatInput from "../components/ChatInput";
 import ChatNavBar from "../components/ChatNavBar";
 import ChatMessageList from "../components/ChatMessageList";
+import ChatSidebar from "../components/ChatSidebar";
 import WelcomeScreen from "../components/WelcomeScreen";
 import { createChat } from "../services/createChat";
 import { createMessage } from "../services/createMessage";
+import { deleteChat } from "../services/deleteChat";
+import { CHAT_HISTORY_QUERY_KEY } from "../services/listChats";
 import { listMessages } from "../services/listMessages";
 import { streamMessage } from "../services/streamMessage";
 import styles from "./ChatPage.module.css";
@@ -74,13 +78,20 @@ function appendIfMissing(messages: Message[], message: Message) {
 }
 
 export default function ChatPage() {
+    const queryClient = useQueryClient();
     const [allMessages, setAllMessages] = useState<Message[]>([]);
     const [chatID, setChatID] = useState<string | null>(null);
+    const [selectedChatTitle, setSelectedChatTitle] = useState<string | null>(
+        null
+    );
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [streamingMessage, setStreamingMessage] = useState<string | null>(
         null
     );
     const [isSending, setIsSending] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
+    const [isLoadingChat, setIsLoadingChat] = useState(false);
+    const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
     const [draftInput, setDraftInput] = useState("");
     const [editingMessageId, setEditingMessageId] = useState<string | null>(
         null
@@ -115,7 +126,8 @@ export default function ChatPage() {
         branchSelectionByParent
     );
 
-    const isBusy = isSending || isStreaming;
+    const isBusy =
+        isSending || isStreaming || isLoadingChat || deletingChatId !== null;
 
     const displayMessages: Message[] =
         streamingMessage !== null
@@ -146,6 +158,28 @@ export default function ChatPage() {
         abortRef.current = null;
         replyMessageIdRef.current = null;
         setPendingReplyParentId(undefined);
+    };
+
+    const resetConversationState = () => {
+        abortRef.current?.abort();
+        clearPendingReplyState();
+        setAllMessages([]);
+        setEditingDraft("");
+        setEditingMessageId(null);
+        setDraftInput("");
+        setBranchSelectionByParent({});
+    };
+
+    const closeSidebarOnCompactScreen = () => {
+        if (window.matchMedia("(max-width: 40rem)").matches) {
+            setSidebarOpen(false);
+        }
+    };
+
+    const refreshChatHistory = () => {
+        void queryClient.invalidateQueries({
+            queryKey: CHAT_HISTORY_QUERY_KEY,
+        });
     };
 
     const ensureChatID = async () => {
@@ -225,6 +259,7 @@ export default function ChatPage() {
 
             setAllMessages((prev) => [...prev, message]);
             selectMessage(message);
+            refreshChatHistory();
             replyMessageIdRef.current = replyMessageID;
             setPendingReplyParentId(message.id);
             setStreamingMessage("");
@@ -276,6 +311,72 @@ export default function ChatPage() {
             clearDraft: true,
             clearEditing: true,
         });
+    };
+
+    const handleSelectChat = async (chat: ChatSummary) => {
+        if (isBusy) return;
+
+        setIsLoadingChat(true);
+        resetConversationState();
+        setChatID(chat.id);
+        chatIdRef.current = chat.id;
+        setSelectedChatTitle(chat.title);
+
+        try {
+            const latestMessages = await listMessages(chat.id);
+            setAllMessages(latestMessages.messages);
+            closeSidebarOnCompactScreen();
+        } catch (error) {
+            console.error("Load chat failed", error);
+            toast.error(
+                `載入對話失敗: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+        } finally {
+            setIsLoadingChat(false);
+        }
+    };
+
+    const handleNewChat = () => {
+        if (isBusy) return;
+
+        resetConversationState();
+        setChatID(null);
+        chatIdRef.current = null;
+        setSelectedChatTitle(null);
+        closeSidebarOnCompactScreen();
+    };
+
+    const handleDeleteChat = async (chat: ChatSummary) => {
+        if (isBusy) return;
+
+        setDeletingChatId(chat.id);
+
+        try {
+            await deleteChat(chat.id);
+            await queryClient.invalidateQueries({
+                queryKey: CHAT_HISTORY_QUERY_KEY,
+            });
+
+            if (chat.id === chatIdRef.current) {
+                resetConversationState();
+                setChatID(null);
+                chatIdRef.current = null;
+                setSelectedChatTitle(null);
+            }
+
+            toast.success("已刪除對話");
+        } catch (error) {
+            console.error("Delete chat failed", error);
+            toast.error(
+                `刪除對話失敗: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+        } finally {
+            setDeletingChatId(null);
+        }
     };
 
     const handleEditMessage = (messageId: string) => {
@@ -398,14 +499,35 @@ export default function ChatPage() {
 
     const hasMessages = allMessages.length > 0;
     const chatTitle =
+        selectedChatTitle ??
         allMessages.find((message) => message.role === "user")?.content ??
         "新的對話";
 
     return (
         <div className={styles.container}>
-            {/* Content area */}
+            {sidebarOpen ? (
+                <>
+                    <div
+                        className={styles.sidebarBackdrop}
+                        onClick={() => setSidebarOpen(false)}
+                        aria-hidden="true"
+                    />
+                    <ChatSidebar
+                        isOpen={sidebarOpen}
+                        currentChatId={chatID}
+                        disabled={isBusy}
+                        deletingChatId={deletingChatId}
+                        onSelectChat={handleSelectChat}
+                        onDeleteChat={handleDeleteChat}
+                        onNewChat={handleNewChat}
+                    />
+                </>
+            ) : null}
             <div className={styles.content}>
-                <ChatNavBar title={chatTitle} />
+                <ChatNavBar
+                    title={chatTitle}
+                    onMenuClick={() => setSidebarOpen((open) => !open)}
+                />
                 {hasMessages ? (
                     <>
                         <ChatMessageList

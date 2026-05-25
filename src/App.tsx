@@ -4,6 +4,7 @@ import { Theme } from "@radix-ui/themes";
 import { Toaster } from "sonner";
 
 import "@radix-ui/themes/styles.css";
+import "@fontsource/noto-serif-tc/700.css";
 
 import { router } from "./routes";
 

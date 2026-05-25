@@ -19,6 +19,15 @@ export type MaterialType = {
     };
 };
 
+export type MaterialPage = {
+    type: "material";
+    content: {
+        imageId: string;
+        descriptionId: string;
+    };
+    questionIds: string[];
+};
+
 export type OverviewType = {
     type: "overview";
     content: {
@@ -31,6 +40,12 @@ export type OverviewType = {
     };
 };
 
+export type OverviewPage = {
+    type: "overview";
+    headerId: string[];
+    contentId: string[][];
+};
+
 export type QuestionsType = {
     type: "questions";
     content: {
@@ -41,12 +56,27 @@ export type QuestionsType = {
     };
 };
 
+export type QuestionPage = {
+    type: "questions";
+    columns: {
+        labelId: string;
+        questionIds: string[];
+    }[];
+};
+
 export type NavbarType = {
     MainTitle: string;
     SubTitle: string[];
 };
 
 export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
+    activeNavbarTitles: number[];
+    secondaryTitle: string;
+};
+
+export type CoursePageRequest = {
+    pageIndex: number;
+    request: MaterialPage | OverviewPage | QuestionPage;
     activeNavbarTitles: number[];
     secondaryTitle: string;
 };

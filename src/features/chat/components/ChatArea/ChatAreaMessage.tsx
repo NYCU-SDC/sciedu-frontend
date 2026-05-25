@@ -1,12 +1,21 @@
+import { useMemo } from "react";
 import type { Message } from "../../types/chat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ChevronLeft, ChevronRight, Edit, RefreshCcw } from "lucide-react";
+import {
+    ChevronLeft,
+    ChevronRight,
+    Edit,
+    RefreshCcw,
+    TriangleAlert,
+} from "lucide-react";
 import styles from "./ChatAreaMessage.module.css";
 import type { MessageBranchState } from "./ChatArea.types";
+import { parseAssistantContent } from "../../utils/parseAssistantContent";
+import ThinkingSection from "./ThinkingSection";
 
 type ChatAreaMessageProps = {
     message: Message;
@@ -16,7 +25,7 @@ type ChatAreaMessageProps = {
     onResend?: (messageId: string) => void;
 };
 
-export default function AreaChatMessage({
+export default function ChatAreaMessage({
     message,
     branchState,
     onSwitchBranch,
@@ -24,6 +33,12 @@ export default function AreaChatMessage({
     onResend,
 }: ChatAreaMessageProps) {
     const isUser = message.role === "user";
+    const isFailed = message.status === "failed";
+
+    const assistantContent = useMemo(
+        () => (isUser ? null : parseAssistantContent(message.content)),
+        [isUser, message.content]
+    );
 
     const totalBranches = branchState?.total ?? 1;
     const currentBranchIndex = branchState?.currentIndex ?? 1;
@@ -41,20 +56,44 @@ export default function AreaChatMessage({
                 >
                     {isUser ? (
                         <span>{message.content}</span>
+                    ) : isFailed ? (
+                        <div className={styles.failedNotice}>
+                            <TriangleAlert className={styles.failedIcon} />
+                            <span>回覆失敗，請重試。</span>
+                        </div>
                     ) : (
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath]}
-                            rehypePlugins={[rehypeKatex]}
-                            components={{
-                                table: ({ node, ...props }) => (
-                                    <div className={styles.tableWrapper}>
-                                        <table {...props} />
-                                    </div>
-                                ),
-                            }}
-                        >
-                            {message.content}
-                        </ReactMarkdown>
+                        <>
+                            {assistantContent?.thought ||
+                            assistantContent?.isThinking ? (
+                                <ThinkingSection
+                                    key={
+                                        assistantContent.isThinking
+                                            ? "thinking"
+                                            : "complete"
+                                    }
+                                    thought={assistantContent.thought}
+                                    isThinking={assistantContent.isThinking}
+                                />
+                            ) : null}
+
+                            {assistantContent?.answer ? (
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeKatex]}
+                                    components={{
+                                        table: (props) => (
+                                            <div
+                                                className={styles.tableWrapper}
+                                            >
+                                                <table {...props} />
+                                            </div>
+                                        ),
+                                    }}
+                                >
+                                    {assistantContent.answer}
+                                </ReactMarkdown>
+                            ) : null}
+                        </>
                     )}
                 </div>
                 {isUser && (

@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { ChatArea } from "../../../chat/components/ChatArea/ChatArea";
 import useChat from "../../../chat/services/useChat";
 import styles from "./CourseChat.module.css";
 
 export default function CourseChat() {
+    const [chatId, setChatId] = useState<string | null>(null);
+
     const {
         messages,
         displayMessages,
@@ -19,7 +22,7 @@ export default function CourseChat() {
         onResendMessage,
         onSwitchBranch,
         getBranchState,
-    } = useChat();
+    } = useChat({ chatId, onChatCreated: setChatId });
 
     return (
         <div className={styles.container}>

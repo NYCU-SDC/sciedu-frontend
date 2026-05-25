@@ -1,17 +1,19 @@
 import { api } from "../../../shared/utils/api";
-import { USE_CHAT_MOCK } from "./chatServiceConfig";
-import { mockCreateChat } from "./mockChatApi";
+
+// Backend emits snake_case `chat_id` (per the API spec); translate to the
+// camelCase `chatID` we use everywhere on the frontend.
+type CreateChatRawResponse = {
+    chat_id: string;
+};
 
 type CreateChatResponse = {
     chatID: string;
 };
 
 export async function createChat(): Promise<CreateChatResponse> {
-    if (USE_CHAT_MOCK) {
-        return mockCreateChat();
-    }
-
-    return api<CreateChatResponse>("/api/chat", {
+    const { chat_id: chatID } = await api<CreateChatRawResponse>("/api/chat", {
         method: "POST",
     });
+
+    return { chatID };
 }

@@ -3,16 +3,17 @@ import styles from "./WelcomeScreen.module.css";
 
 type WelcomeScreenProps = {
     onSend: (message: string) => void;
+    disabled?: boolean;
 };
 
-export default function WelcomeScreen({ onSend }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onSend, disabled }: WelcomeScreenProps) {
     return (
         <div className={styles.container}>
             <div className={styles.content}>
                 <h1 className={styles.heading}>您好，歡迎回來</h1>
             </div>
             <div className={styles.input}>
-                <ChatInput onSend={onSend} />
+                <ChatInput onSend={onSend} disabled={disabled} />
             </div>
         </div>
     );

@@ -136,7 +136,6 @@ export default function ChatSidebar({
             <button
                 type="button"
                 className={styles.newChatButton}
-                disabled={actionsDisabled}
                 onClick={onNewChat}
             >
                 <Plus className={styles.newChatIcon} />

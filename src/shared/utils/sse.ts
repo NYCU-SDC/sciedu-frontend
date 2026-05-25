@@ -11,7 +11,7 @@ export async function parseSSE(
 
         buffer += decoder
             .decode(value, { stream: true })
-            .replace(/\r\n/g, "\n"); // also normalize CRLF -> LF
+            .replace(/\r\n/g, "\n");
 
         let sepIndex: number;
         while ((sepIndex = buffer.indexOf("\n\n")) != -1) {

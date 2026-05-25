@@ -1,20 +1,20 @@
 import { api } from "../../../shared/utils/api";
-import type { Message } from "../types/chat";
-import { USE_CHAT_MOCK } from "./chatServiceConfig";
-import { mockListMessages } from "./mockChatApi";
+import { normalizeMessage, type Message } from "../types/chat";
 
 type ListMessagesResponse = {
     messages: Message[];
 };
 
 export async function listMessages(
-    chatID: string
+    chatID: string,
+    signal?: AbortSignal
 ): Promise<ListMessagesResponse> {
-    if (USE_CHAT_MOCK) {
-        return mockListMessages(chatID);
-    }
-
-    return api<ListMessagesResponse>(`/api/chat/${chatID}`, {
+    const response = await api<ListMessagesResponse>(`/api/chat/${chatID}`, {
         method: "GET",
+        signal,
     });
+    return {
+        ...response,
+        messages: response.messages.map(normalizeMessage),
+    };
 }

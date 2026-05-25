@@ -24,6 +24,7 @@ type Props = {
     onCancelEditMessage?: () => void;
     onSubmitEditMessage?: () => void;
     onResendMessage?: (messageId: string) => void;
+    onRetryFailedAssistant?: (assistantMessageId: string) => void;
 };
 
 export default function ChatMessageList({
@@ -39,6 +40,7 @@ export default function ChatMessageList({
     onCancelEditMessage,
     onSubmitEditMessage,
     onResendMessage,
+    onRetryFailedAssistant,
 }: Props) {
     return (
         <div className={styles.scroll}>
@@ -57,6 +59,7 @@ export default function ChatMessageList({
                         onCancelEdit={onCancelEditMessage}
                         onSubmitEdit={onSubmitEditMessage}
                         onResend={onResendMessage}
+                        onRetryFailed={onRetryFailedAssistant}
                     />
                 ))}
 

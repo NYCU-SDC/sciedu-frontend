@@ -1,7 +1,5 @@
 import { api } from "../../../shared/utils/api";
-import type { Message } from "../types/chat";
-import { USE_CHAT_MOCK } from "./chatServiceConfig";
-import { mockCreateMessage } from "./mockChatApi";
+import { normalizeMessage, type Message } from "../types/chat";
 
 type CreateMessageResponse = {
     message: Message;
@@ -13,16 +11,9 @@ export async function createMessage(
     content: string,
     previousID?: string
 ): Promise<CreateMessageResponse> {
-    if (USE_CHAT_MOCK) {
-        return mockCreateMessage(chatID, content, previousID);
-    }
-
-    const payload = {
-        content,
-        previousID,
-    };
-    return api<CreateMessageResponse>(`/api/chat/${chatID}`, {
+    const response = await api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ content, previousID }),
     });
+    return { ...response, message: normalizeMessage(response.message) };
 }

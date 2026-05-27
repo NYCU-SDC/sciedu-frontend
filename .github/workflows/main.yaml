@@ -13,7 +13,6 @@ on:
 
 permissions:
     contents: read
-    packages: write
 
 jobs:
     Lint:
@@ -86,12 +85,11 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - name: Login to GHCR
+            - name: Login to Docker Hub
               uses: docker/login-action@v3
               with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+                  username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+                  password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
             - name: Build and Push Docker image
               uses: docker/build-push-action@v6
@@ -100,8 +98,8 @@ jobs:
                   cache-to: type=gha,mode=max
                   push: true
                   tags: |
-                      ghcr.io/nycu-sdc/sciedu-frontend:dev
-                      ghcr.io/nycu-sdc/sciedu-frontend:${{ github.sha }}
+                      nycusdc/sciedu-frontend:dev
+                      nycusdc/sciedu-frontend:${{ github.sha }}
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development

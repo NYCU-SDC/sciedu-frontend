@@ -1,6 +1,6 @@
 services:
     frontend:
-        image: "ghcr.io/nycu-sdc/sciedu-frontend:$VERSION"
+        image: "nycusdc/sciedu-frontend:$VERSION"
         container_name: sciedu-frontend-$VERSION
         networks:
             - traefik

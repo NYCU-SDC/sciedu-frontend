@@ -2,6 +2,12 @@ name: Lint, Build and Deploy
 
 on:
     pull_request:
+    workflow_dispatch:
+        inputs:
+            VITE_BACKEND_BASE_URL:
+                description: Backend API URL
+                required: false
+                default: https://api.dev.sciedu.sdc.nycu.club
 
 permissions:
     packages: write
@@ -120,6 +126,7 @@ jobs:
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development
+                      VITE_BACKEND_BASE_URL=${{ inputs.VITE_BACKEND_BASE_URL || 'https://api.dev.sciedu.sdc.nycu.club' }}
 
     Deploy:
         name: Deploy

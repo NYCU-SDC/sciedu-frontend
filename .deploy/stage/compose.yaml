@@ -1,6 +1,6 @@
 services:
     frontend:
-        image: ghcr.io/nycu-sdc/sciedu-frontend:stage
+        image: nycusdc/sciedu-frontend:stage
         container_name: sciedu-frontend-stage
         networks:
             - traefik

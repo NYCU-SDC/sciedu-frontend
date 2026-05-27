@@ -1,9 +1,13 @@
-name: Lint, Build and Deploy to Stage
+name: Deploy Stage Preview
 
 on:
     push:
         tags:
             - "v*"
+    workflow_dispatch:
+
+permissions:
+    contents: read
 
 jobs:
     Lint:
@@ -16,7 +20,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v4
               with:
-                  version: 9
+                  version: 11
 
             - name: Set up Node.js
               uses: actions/setup-node@v4
@@ -24,7 +28,7 @@ jobs:
                   node-version: 24
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Run ESLint
               run: pnpm lint
@@ -39,7 +43,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v4
               with:
-                  version: 9
+                  version: 11
 
             - name: Set up Node.js
               uses: actions/setup-node@v4
@@ -47,7 +51,7 @@ jobs:
                   node-version: 24
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Run Prettier
 
@@ -63,7 +67,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v4
               with:
-                  version: 9
+                  version: 11
 
             - name: Set up Node.js
               uses: actions/setup-node@v4
@@ -71,7 +75,7 @@ jobs:
                   node-version: 24
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Build Vite production
               run: pnpm build
@@ -87,7 +91,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v4
               with:
-                  version: 9
+                  version: 11
 
             - name: Set up Node.js
               uses: actions/setup-node@v4
@@ -98,14 +102,13 @@ jobs:
               uses: docker/setup-buildx-action@v3
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
-            - name: Login to GitHub Container Registry
+            - name: Login to Docker Hub
               uses: docker/login-action@v3
               with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+                  username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+                  password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
             - name: Build and Push Docker image
               uses: docker/build-push-action@v6
@@ -114,11 +117,12 @@ jobs:
                   cache-to: type=gha,mode=max
                   push: true
                   tags: |
-                      ghcr.io/nycu-sdc/sciedu-frontend:stage
-                      ghcr.io/nycu-sdc/sciedu-frontend:${{ github.sha }}
+                      nycusdc/sciedu-frontend:stage
+                      nycusdc/sciedu-frontend:${{ github.sha }}
                   context: .
                   build-args: |
-                      VITE_BUILD_MODE=staging
+                      VITE_BUILD_MODE=production
+                      VITE_BACKEND_BASE_URL=https://api.stage.sciedu.sdc.nycu.club
 
     Deploy:
         name: Deploy

@@ -6,12 +6,31 @@ type CreateChatResponse = {
     chatID: string;
 };
 
+type ApiCreateChatResponse = {
+    chatID?: string;
+    chat_id?: string;
+};
+
+function normalizeCreateChatResponse(
+    response: ApiCreateChatResponse
+): CreateChatResponse {
+    const chatID = response.chatID ?? response.chat_id;
+
+    if (!chatID) {
+        throw new Error("Create chat response missing chat ID");
+    }
+
+    return { chatID };
+}
+
 export async function createChat(): Promise<CreateChatResponse> {
     if (USE_CHAT_MOCK) {
         return mockCreateChat();
     }
 
-    return api<CreateChatResponse>("/api/chat", {
+    const response = await api<ApiCreateChatResponse>("/api/chat", {
         method: "POST",
     });
+
+    return normalizeCreateChatResponse(response);
 }

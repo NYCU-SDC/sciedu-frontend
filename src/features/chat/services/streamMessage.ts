@@ -1,5 +1,5 @@
 import { parseSSE } from "./SSEParser";
-import type { ApiChatChunk } from "../types/sse";
+import type { ApiChatChunk, ApiChatStreamEvent } from "../types/sse";
 import { USE_CHAT_MOCK } from "./chatServiceConfig";
 import { mockStreamMessage } from "./mockChatApi";
 
@@ -12,6 +12,13 @@ async function safeReadProblemDetail(res: Response) {
     } catch {
         return `HTTP ${res.status}`;
     }
+}
+
+function normalizeStreamEvent(event: ApiChatStreamEvent): ApiChatChunk {
+    return {
+        content: event.content ?? event.delta ?? "",
+        isFinished: event.isFinished,
+    };
 }
 
 // chatStream.ts is the old stream vercice. Now, streamMessage take care of it.
@@ -46,8 +53,8 @@ export function streamMessage(
             if (!reader) throw new Error("No response body");
 
             await parseSSE(reader, (data) => {
-                const chunk = JSON.parse(data) as ApiChatChunk;
-                onChunk(chunk);
+                const event = JSON.parse(data) as ApiChatStreamEvent;
+                onChunk(normalizeStreamEvent(event));
             });
 
             onComplete?.();

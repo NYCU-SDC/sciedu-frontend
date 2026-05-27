@@ -1,5 +1,5 @@
 export type MessageRole = "user" | "assistant";
-export type MessageStatus = "streaming" | "done" | "error";
+export type MessageStatus = "streaming" | "completed" | "failed";
 
 export type Message = {
     id: string;

@@ -88,7 +88,7 @@ function seedMockHistory() {
             id: userMessageID,
             content: title,
             role: "user",
-            status: "done",
+            status: "completed",
             createdAt,
         };
         const assistantMessage: Message = {
@@ -96,7 +96,7 @@ function seedMockHistory() {
             content: buildMockReply(title),
             role: "assistant",
             previousID: userMessageID,
-            status: "done",
+            status: "completed",
             createdAt,
         };
 
@@ -139,7 +139,7 @@ export async function mockCreateMessage(
         content,
         role: "user",
         previousID,
-        status: "done",
+        status: "completed",
         createdAt,
     };
 
@@ -248,7 +248,7 @@ export function mockStreamMessage(
             const finishedReply: Message = {
                 ...pending.replyMessage,
                 content: built,
-                status: "done",
+                status: "completed",
             };
 
             chats.set(pending.chatID, [...chatMessages, finishedReply]);

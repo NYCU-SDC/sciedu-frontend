@@ -25,9 +25,12 @@ type MessageBranchState = {
 };
 
 const ROOT_BRANCH_KEY = "__root__";
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
 function toBranchKey(previousID?: string) {
-    return previousID ?? ROOT_BRANCH_KEY;
+    return !previousID || previousID === NIL_UUID
+        ? ROOT_BRANCH_KEY
+        : previousID;
 }
 
 function buildChildrenMap(messages: Message[]) {
@@ -204,7 +207,7 @@ export default function ChatPage() {
             role: "assistant",
             content: fallbackContent,
             previousID: parentUserID,
-            status: "done",
+            status: "completed",
             createdAt: new Date().toISOString(),
         };
 

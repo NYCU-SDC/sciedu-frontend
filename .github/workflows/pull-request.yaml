@@ -53,9 +53,32 @@ jobs:
             - name: Run Prettier
               run: pnpm format
 
+    TypeCheck:
+        name: Type check with tsc
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 11
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run tsc
+              run: pnpm typecheck
+
     Build-Push-Image:
         name: Build Docker image
-        needs: [Lint, Format]
+        needs: [Lint, Format, TypeCheck]
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code

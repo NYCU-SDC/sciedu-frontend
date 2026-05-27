@@ -53,33 +53,10 @@ jobs:
             - name: Run Prettier
               run: pnpm format
 
-    Build:
-        name: Build Vite production
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-
-            - name: Install pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                  version: 11
-
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 24
-
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
-
-            - name: Build Vite production
-              run: pnpm build
-
-    Push-Image:
+    Build-Push-Image:
         name: Build Docker image
+        needs: [Lint, Format]
         runs-on: ubuntu-latest
-        needs: Build
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -118,11 +95,11 @@ jobs:
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development
-                      VITE_BACKEND_BASE_URL="https://api.dev.sciedu.sdc.nycu.club"
+                      VITE_BACKEND_BASE_URL=https://api.dev.sciedu.sdc.nycu.club
 
     Deploy:
         name: Deploy
-        needs: Push-Image
+        needs: Build-Push-Image
         runs-on: ubuntu-latest
         steps:
             - name: Extract PR body for webhook

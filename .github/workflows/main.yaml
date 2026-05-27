@@ -64,6 +64,7 @@ jobs:
 
     Build-Push-Image:
         name: Build Docker image
+        needs: [Lint, Format]
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code

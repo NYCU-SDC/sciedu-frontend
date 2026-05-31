@@ -50,7 +50,7 @@ export default function LoginPage() {
                     <h1 id="login-title" className={styles.heading}>
                         您好，歡迎回來
                     </h1>
-                    <p className={styles.subtitle}>繼續使用 SCIEDU 的學習</p>
+                    <p className={styles.subtitle}>繼續您與 SCIEDU 的學習</p>
 
                     <button
                         type="button"

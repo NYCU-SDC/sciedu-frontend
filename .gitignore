@@ -28,4 +28,4 @@ dist-ssr
 .env
 CLAUDE.md
 .claude/
-report/
+reports/

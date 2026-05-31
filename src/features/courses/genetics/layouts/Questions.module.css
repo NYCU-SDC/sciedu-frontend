@@ -47,6 +47,11 @@
     margin: 0 0.5rem;
 }
 
+.columnHeaderSkeleton {
+    width: min(13rem, 100%);
+    margin: 0 0.5rem;
+}
+
 .questionCard {
     border: 0.09375rem solid var(--color-genetics-brand-teal);
     border-radius: 0.75rem;
@@ -65,10 +70,16 @@
 }
 
 .questionTitle {
+    width: 100%;
     font-size: 0.875rem;
     color: #666;
     font-weight: bold;
     margin: 0 0 0.3rem 0;
+}
+
+.questionTitleSkeleton {
+    width: 100%;
+    margin-bottom: 0.3rem;
 }
 
 .errorText {

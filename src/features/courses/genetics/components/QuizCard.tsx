@@ -1,7 +1,8 @@
-import { Skeleton, CheckboxGroup, TextArea } from "@radix-ui/themes";
+import { CheckboxGroup, TextArea } from "@radix-ui/themes";
 import type { QuestionResponse } from "../types/types";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import styles from "./QuizCard.module.css";
+import { SkeletonQuizCard } from "./CourseSkeleton";
 
 type Props = {
     question: {
@@ -31,7 +32,7 @@ export default function QuizCard({ question, isLoading, error }: Props) {
                 <h3>{question.title}</h3>
             </div>
             {isLoading ? (
-                <Skeleton width="100%" height="1rem" />
+                <SkeletonQuizCard />
             ) : (
                 <>
                     <p>{question.data?.content}</p>

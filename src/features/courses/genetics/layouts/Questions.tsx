@@ -6,10 +6,11 @@ import type {
 } from "../types/types";
 import { useQueries } from "@tanstack/react-query";
 import { api } from "../../../../shared/utils/api";
-import { Skeleton, Button, TextArea } from "@radix-ui/themes";
+import { Button, TextArea } from "@radix-ui/themes";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
+import { SkeletonText } from "../components/CourseSkeleton";
 
 type Props = {
     data: CoursePageRequest;
@@ -83,6 +84,12 @@ export default function Questions({ data, onNext }: Props) {
                                     <h2 className={styles.errorText}>
                                         載入失敗
                                     </h2>
+                                ) : labelQuery?.isLoading ? (
+                                    <SkeletonText
+                                        lines={1}
+                                        widths={["48%"]}
+                                        className={styles.columnHeaderSkeleton}
+                                    />
                                 ) : (
                                     <h2>{`${labelQuery?.data?.content ?? ""}：`}</h2>
                                 )}
@@ -100,12 +107,24 @@ export default function Questions({ data, onNext }: Props) {
                                         className={styles.questionCard}
                                     >
                                         <div className={styles.titleRow}>
-                                            <h3
-                                                className={styles.questionTitle}
-                                            >
-                                                {titleQuery?.data?.content ??
-                                                    ""}
-                                            </h3>
+                                            {titleQuery?.isLoading ? (
+                                                <SkeletonText
+                                                    lines={1}
+                                                    widths={["62%"]}
+                                                    className={
+                                                        styles.questionTitleSkeleton
+                                                    }
+                                                />
+                                            ) : (
+                                                <h3
+                                                    className={
+                                                        styles.questionTitle
+                                                    }
+                                                >
+                                                    {titleQuery?.data
+                                                        ?.content ?? ""}
+                                                </h3>
+                                            )}
                                             {(isError || titleError) && (
                                                 <span
                                                     className={styles.errorText}
@@ -115,7 +134,10 @@ export default function Questions({ data, onNext }: Props) {
                                             )}
                                         </div>
                                         {isLoading ? (
-                                            <Skeleton minHeight="0.875rem" />
+                                            <SkeletonText
+                                                lines={3}
+                                                widths={["100%", "92%", "64%"]}
+                                            />
                                         ) : isError ? null : (
                                             <p className={styles.questionText}>
                                                 {result?.data?.content}

@@ -1,4 +1,4 @@
-import { Button, Skeleton } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import { useState } from "react";
 import type {
     CourseAnswer,
@@ -14,8 +14,14 @@ import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
 import type { CourseChatController } from "../components/useCourseChatController";
+import { SkeletonMedia, SkeletonText } from "../components/CourseSkeleton";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
+
+type ImageState = {
+    status: "loading" | "loaded" | "error";
+    url: string;
+};
 
 type Props = {
     data: CoursePageRequest;
@@ -47,7 +53,12 @@ export default function Material({
     });
 
     const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
-    const [imageError, setImageError] = useState(false);
+    const [imageState, setImageState] = useState<ImageState>({
+        status: "loading",
+        url: imageUrl,
+    });
+    const imageStatus =
+        imageState.url === imageUrl ? imageState.status : "loading";
 
     const quesTitleQueries = useQueries({
         queries: req.questionSections.map((section) => ({
@@ -73,23 +84,52 @@ export default function Material({
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        {imageError ? (
+                        {imageStatus === "error" ? (
                             <span className={styles.errorText}>
                                 圖片載入失敗
                             </span>
                         ) : (
-                            <img
-                                src={imageUrl}
-                                alt="教材"
-                                onError={() => setImageError(true)}
-                            />
+                            <>
+                                {imageStatus === "loading" && <SkeletonMedia />}
+                                <img
+                                    className={
+                                        imageStatus === "loading"
+                                            ? styles.imageHidden
+                                            : ""
+                                    }
+                                    src={imageUrl}
+                                    alt="教材"
+                                    onLoad={() =>
+                                        setImageState({
+                                            status: "loaded",
+                                            url: imageUrl,
+                                        })
+                                    }
+                                    onError={() =>
+                                        setImageState({
+                                            status: "error",
+                                            url: imageUrl,
+                                        })
+                                    }
+                                />
+                            </>
                         )}
                     </div>
 
                     <div className={styles.courseDescriptionWrapper}>
                         <div className={styles.courseDescription}>
                             {descriptionLoading ? (
-                                <Skeleton minHeight="4rem" />
+                                <SkeletonText
+                                    lines={5}
+                                    widths={[
+                                        "96%",
+                                        "100%",
+                                        "94%",
+                                        "88%",
+                                        "62%",
+                                    ]}
+                                    className={styles.descriptionSkeleton}
+                                />
                             ) : descriptionError ? (
                                 <p className={styles.errorText}>內容載入失敗</p>
                             ) : (
@@ -112,7 +152,10 @@ export default function Material({
                                         title: titleQuery.data?.content ?? "",
                                         data: contentQuery.data,
                                     }}
-                                    isLoading={contentQuery.isLoading}
+                                    isLoading={
+                                        titleQuery.isLoading ||
+                                        contentQuery.isLoading
+                                    }
                                     error={
                                         contentQuery.isError
                                             ? (contentQuery.error?.message ??

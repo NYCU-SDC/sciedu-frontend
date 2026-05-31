@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { Button, Skeleton } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import type { CoursePageRequest, OverviewPage } from "../types/types";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
 import CourseChat from "../components/CourseChat";
 import styles from "./Overview.module.css";
 import FooterStyles from "../components/Footer.module.css";
+import { SkeletonText } from "../components/CourseSkeleton";
 
 type Props = {
     data: CoursePageRequest;
@@ -47,7 +48,10 @@ export default function Overview({ data, chat, onNext }: Props) {
                                     return (
                                         <th key={id}>
                                             {query?.isLoading ? (
-                                                <Skeleton minHeight="1rem" />
+                                                <SkeletonText
+                                                    lines={1}
+                                                    widths={["72%"]}
+                                                />
                                             ) : query?.isError ? (
                                                 <span
                                                     className={styles.errorText}
@@ -74,7 +78,14 @@ export default function Overview({ data, chat, onNext }: Props) {
                                                 className={styles.tdContent}
                                             >
                                                 {query?.isLoading ? (
-                                                    <Skeleton minHeight="1rem" />
+                                                    <SkeletonText
+                                                        lines={3}
+                                                        widths={[
+                                                            "100%",
+                                                            "88%",
+                                                            "56%",
+                                                        ]}
+                                                    />
                                                 ) : query?.isError ? (
                                                     <span
                                                         className={

@@ -1,5 +1,5 @@
 import { api } from "../../../shared/utils/api";
-import type { Message } from "../types/chat";
+import { normalizeMessage, type Message } from "../types/chat";
 import { USE_CHAT_MOCK } from "./chatServiceConfig";
 import { mockListMessages } from "./mockChatApi";
 
@@ -14,7 +14,12 @@ export async function listMessages(
         return mockListMessages(chatID);
     }
 
-    return api<ListMessagesResponse>(`/api/chat/${chatID}`, {
+    const response = await api<ListMessagesResponse>(`/api/chat/${chatID}`, {
         method: "GET",
     });
+
+    return {
+        ...response,
+        messages: response.messages.map(normalizeMessage),
+    };
 }

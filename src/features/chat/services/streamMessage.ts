@@ -14,13 +14,6 @@ async function safeReadProblemDetail(res: Response) {
     }
 }
 
-function normalizeStreamEvent(event: ApiChatStreamEvent): ApiChatChunk {
-    return {
-        content: event.content ?? event.delta ?? "",
-        isFinished: event.isFinished,
-    };
-}
-
 // chatStream.ts is the old stream vercice. Now, streamMessage take care of it.
 export function streamMessage(
     messageID: string,
@@ -33,6 +26,13 @@ export function streamMessage(
     }
 
     const controller = new AbortController();
+    let didComplete = false;
+
+    const complete = () => {
+        if (didComplete) return;
+        didComplete = true;
+        onComplete?.();
+    };
 
     (async () => {
         try {
@@ -41,6 +41,9 @@ export function streamMessage(
                 {
                     method: "GET",
                     signal: controller.signal,
+                    headers: {
+                        Accept: "text/event-stream",
+                    },
                 }
             );
 
@@ -54,10 +57,19 @@ export function streamMessage(
 
             await parseSSE(reader, (data) => {
                 const event = JSON.parse(data) as ApiChatStreamEvent;
-                onChunk(normalizeStreamEvent(event));
+                const content = event.content ?? event.delta ?? "";
+
+                if (content) {
+                    onChunk({ content });
+                }
+
+                if (event.isFinished) {
+                    complete();
+                    controller.abort();
+                }
             });
 
-            onComplete?.();
+            complete();
         } catch (e: unknown) {
             if (e instanceof Error && e.name === "AbortError") return;
 

@@ -80,6 +80,15 @@ function appendIfMissing(messages: Message[], message: Message) {
         : [...messages, message];
 }
 
+function upsertMessage(messages: Message[], message: Message) {
+    const index = messages.findIndex((item) => item.id === message.id);
+    if (index === -1) return [...messages, message];
+
+    return messages.map((item, itemIndex) =>
+        itemIndex === index ? message : item
+    );
+}
+
 export default function ChatPage() {
     const queryClient = useQueryClient();
     const [allMessages, setAllMessages] = useState<Message[]>([]);
@@ -213,7 +222,7 @@ export default function ChatPage() {
 
         try {
             const latestMessages = await listMessages(currentChatID);
-            const assistantMessage =
+            const persistedAssistantMessage =
                 latestMessages.messages.find(
                     (message) => message.id === replyMessageID
                 ) ??
@@ -221,12 +230,20 @@ export default function ChatPage() {
                     (message) =>
                         message.role === "assistant" &&
                         message.previousID === parentUserID
-                ) ??
-                fallbackAssistantMessage;
+                );
+            const assistantMessage =
+                persistedAssistantMessage &&
+                persistedAssistantMessage.content.trim().length > 0
+                    ? persistedAssistantMessage
+                    : fallbackAssistantMessage;
 
-            setAllMessages(
-                appendIfMissing(latestMessages.messages, assistantMessage)
-            );
+            setAllMessages((prev) => {
+                const base =
+                    latestMessages.messages.length > 0
+                        ? latestMessages.messages
+                        : prev;
+                return upsertMessage(base, assistantMessage);
+            });
             selectMessage(assistantMessage);
         } catch (error) {
             console.error("List messages failed", error);

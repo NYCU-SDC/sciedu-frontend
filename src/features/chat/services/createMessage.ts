@@ -1,5 +1,5 @@
 import { api } from "../../../shared/utils/api";
-import type { Message } from "../types/chat";
+import { normalizeMessage, type Message } from "../types/chat";
 import { USE_CHAT_MOCK } from "./chatServiceConfig";
 import { mockCreateMessage } from "./mockChatApi";
 
@@ -21,8 +21,16 @@ export async function createMessage(
         content,
         previousID,
     };
-    return api<CreateMessageResponse>(`/api/chat/${chatID}`, {
+    const response = await api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
         body: JSON.stringify(payload),
     });
+
+    return {
+        ...response,
+        message: normalizeMessage({
+            ...response.message,
+            previousID: response.message.previousID ?? previousID,
+        }),
+    };
 }

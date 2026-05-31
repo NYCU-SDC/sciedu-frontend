@@ -2,6 +2,10 @@ import { parseSSE } from "./SSEParser";
 import type { ApiChatChunk } from "../types/sse";
 import { USE_CHAT_MOCK } from "./chatServiceConfig";
 import { mockStreamMessage } from "./mockChatApi";
+import {
+    notifyAuthUnauthorized,
+    refreshAuthForStreamingRequest,
+} from "../../../shared/utils/api";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -29,13 +33,24 @@ export function streamMessage(
 
     (async () => {
         try {
-            const res = await fetch(
-                `${BASE_URL}/api/chat/stream/${messageID}`,
-                {
+            let res = await fetch(`${BASE_URL}/api/chat/stream/${messageID}`, {
+                method: "GET",
+                credentials: "include",
+                signal: controller.signal,
+            });
+
+            if (res.status === 401) {
+                await refreshAuthForStreamingRequest();
+                res = await fetch(`${BASE_URL}/api/chat/stream/${messageID}`, {
                     method: "GET",
+                    credentials: "include",
                     signal: controller.signal,
+                });
+
+                if (res.status === 401) {
+                    notifyAuthUnauthorized();
                 }
-            );
+            }
 
             if (!res.ok) {
                 const msg = await safeReadProblemDetail(res);

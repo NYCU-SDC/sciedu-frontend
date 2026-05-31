@@ -1,4 +1,5 @@
 import { TestTubeDiagonal } from "lucide-react";
+import { useAuth } from "../context/useAuth";
 import styles from "./LoginPage.module.css";
 
 function GoogleIcon() {
@@ -29,6 +30,8 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
+    const { login, status } = useAuth();
+
     return (
         <div className={styles.page}>
             <header className={styles.brand}>
@@ -49,7 +52,12 @@ export default function LoginPage() {
                     </h1>
                     <p className={styles.subtitle}>繼續使用 SCIEDU 的學習</p>
 
-                    <button type="button" className={styles.googleButton}>
+                    <button
+                        type="button"
+                        className={styles.googleButton}
+                        disabled={status === "loading"}
+                        onClick={() => login("google")}
+                    >
                         <GoogleIcon />
                         <span>使用 Google 帳號繼續</span>
                     </button>

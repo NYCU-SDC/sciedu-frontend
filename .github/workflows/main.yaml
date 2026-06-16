@@ -127,7 +127,7 @@ jobs:
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development
-                      VITE_BACKEND_BASE_URL=${{ inputs.VITE_BACKEND_BASE_URL || 'https://api.dev.sciedu.sdc.nycu.club' }}
+                      VITE_BACKEND_BASE_URL=${{ inputs.VITE_BACKEND_BASE_URL || 'https://dev.sciedu.sdc.nycu.club' }}
 
     Deploy:
         name: Deploy

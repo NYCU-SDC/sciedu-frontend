@@ -15,7 +15,7 @@ import CourseChat from "../components/CourseChat";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
-import { SkeletonText } from "../components/CourseSkeleton";
+import { Skeleton } from "../../../../shared/components/Skeleton";
 
 type Props = {
     data: CoursePageRequest;
@@ -141,9 +141,9 @@ export default function Questions({
                                             載入失敗
                                         </h2>
                                     ) : labelQuery?.isLoading ? (
-                                        <SkeletonText
-                                            lines={1}
-                                            widths={["48%"]}
+                                        <Skeleton
+                                            height="0.875rem"
+                                            radius="999rem"
                                             className={
                                                 styles.columnHeaderSkeleton
                                             }
@@ -171,9 +171,10 @@ export default function Questions({
                                         >
                                             <div className={styles.titleRow}>
                                                 {titleQuery?.isLoading ? (
-                                                    <SkeletonText
-                                                        lines={1}
-                                                        widths={["62%"]}
+                                                    <Skeleton
+                                                        width="62%"
+                                                        height="0.875rem"
+                                                        radius="999rem"
                                                         className={
                                                             styles.questionTitleSkeleton
                                                         }
@@ -199,14 +200,27 @@ export default function Questions({
                                                 )}
                                             </div>
                                             {isLoading ? (
-                                                <SkeletonText
-                                                    lines={3}
-                                                    widths={[
-                                                        "100%",
-                                                        "92%",
-                                                        "64%",
-                                                    ]}
-                                                />
+                                                <div
+                                                    className={
+                                                        styles.skeletonStack
+                                                    }
+                                                >
+                                                    <Skeleton
+                                                        width="100%"
+                                                        height="0.875rem"
+                                                        radius="999rem"
+                                                    />
+                                                    <Skeleton
+                                                        width="92%"
+                                                        height="0.875rem"
+                                                        radius="999rem"
+                                                    />
+                                                    <Skeleton
+                                                        width="64%"
+                                                        height="0.875rem"
+                                                        radius="999rem"
+                                                    />
+                                                </div>
                                             ) : isError ? null : (
                                                 <p
                                                     className={

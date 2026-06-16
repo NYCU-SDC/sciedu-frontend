@@ -14,7 +14,19 @@ import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
 import type { CourseChatController } from "../components/useCourseChatController";
-import { SkeletonMedia, SkeletonText } from "../components/CourseSkeleton";
+import { Skeleton } from "../../../../shared/components/Skeleton";
+
+function SkeletonMedia() {
+    return (
+        <div aria-hidden="true" className={styles.mediaSkeleton}>
+            <div className={styles.playButton} />
+            <div className={styles.mediaMeta}>
+                <Skeleton width="42%" height="0.875rem" radius="999rem" />
+                <Skeleton width="64%" height="0.875rem" radius="999rem" />
+            </div>
+        </div>
+    );
+}
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
@@ -119,17 +131,33 @@ export default function Material({
                     <div className={styles.courseDescriptionWrapper}>
                         <div className={styles.courseDescription}>
                             {descriptionLoading ? (
-                                <SkeletonText
-                                    lines={5}
-                                    widths={[
-                                        "96%",
-                                        "100%",
-                                        "94%",
-                                        "88%",
-                                        "62%",
-                                    ]}
-                                    className={styles.descriptionSkeleton}
-                                />
+                                <div className={styles.descriptionSkeleton}>
+                                    <Skeleton
+                                        width="96%"
+                                        height="0.875rem"
+                                        radius="999rem"
+                                    />
+                                    <Skeleton
+                                        width="100%"
+                                        height="0.875rem"
+                                        radius="999rem"
+                                    />
+                                    <Skeleton
+                                        width="94%"
+                                        height="0.875rem"
+                                        radius="999rem"
+                                    />
+                                    <Skeleton
+                                        width="88%"
+                                        height="0.875rem"
+                                        radius="999rem"
+                                    />
+                                    <Skeleton
+                                        width="62%"
+                                        height="0.875rem"
+                                        radius="999rem"
+                                    />
+                                </div>
                             ) : descriptionError ? (
                                 <p className={styles.errorText}>內容載入失敗</p>
                             ) : (

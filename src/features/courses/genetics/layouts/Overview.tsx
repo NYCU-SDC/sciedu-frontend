@@ -7,7 +7,7 @@ import { api } from "../../../../shared/utils/api";
 import CourseChat from "../components/CourseChat";
 import styles from "./Overview.module.css";
 import FooterStyles from "../components/Footer.module.css";
-import { SkeletonText } from "../components/CourseSkeleton";
+import { Skeleton } from "../../../../shared/components/Skeleton";
 
 type Props = {
     data: CoursePageRequest;
@@ -48,9 +48,10 @@ export default function Overview({ data, chat, onNext }: Props) {
                                     return (
                                         <th key={id}>
                                             {query?.isLoading ? (
-                                                <SkeletonText
-                                                    lines={1}
-                                                    widths={["72%"]}
+                                                <Skeleton
+                                                    width="72%"
+                                                    height="0.875rem"
+                                                    radius="999rem"
                                                 />
                                             ) : query?.isError ? (
                                                 <span
@@ -78,14 +79,27 @@ export default function Overview({ data, chat, onNext }: Props) {
                                                 className={styles.tdContent}
                                             >
                                                 {query?.isLoading ? (
-                                                    <SkeletonText
-                                                        lines={3}
-                                                        widths={[
-                                                            "100%",
-                                                            "88%",
-                                                            "56%",
-                                                        ]}
-                                                    />
+                                                    <div
+                                                        className={
+                                                            styles.skeletonStack
+                                                        }
+                                                    >
+                                                        <Skeleton
+                                                            width="100%"
+                                                            height="0.875rem"
+                                                            radius="999rem"
+                                                        />
+                                                        <Skeleton
+                                                            width="88%"
+                                                            height="0.875rem"
+                                                            radius="999rem"
+                                                        />
+                                                        <Skeleton
+                                                            width="56%"
+                                                            height="0.875rem"
+                                                            radius="999rem"
+                                                        />
+                                                    </div>
                                                 ) : query?.isError ? (
                                                     <span
                                                         className={

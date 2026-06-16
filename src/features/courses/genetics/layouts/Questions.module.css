@@ -104,6 +104,12 @@
     color: var(--red-9);
 }
 
+.skeletonStack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 .questionText {
     font-size: 0.875rem;
     line-height: 1.6;

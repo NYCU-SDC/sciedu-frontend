@@ -88,6 +88,12 @@
     color: var(--red-9);
 }
 
+.skeletonStack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 .footerNav {
     flex-shrink: 0;
     padding: 1rem 0;

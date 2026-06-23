@@ -19,6 +19,7 @@ export async function api<T>(
     };
 
     const res = await fetch(`${BASE_URL}${path}`, {
+        credentials: "include",
         ...options,
         headers,
     });

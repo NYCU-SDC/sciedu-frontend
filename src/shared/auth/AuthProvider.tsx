@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Outlet, useNavigate } from "react-router";
 import { toast } from "sonner";
 
+import { ApiError } from "../utils/api";
 import { AuthContext } from "./AuthContext";
 import { getSession, refreshAuthToken, requestLogout } from "./requests";
 import type {
@@ -28,8 +29,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const sessionQuery = useQuery({
         queryKey: ["auth", "session"],
         queryFn: getSession,
-        // Retry once on transient network errors; 401 will fail twice harmlessly.
-        retry: 1,
+        // Don't retry on 401 (unauthenticated); retry once on transient network errors.
+        retry: (count, error) =>
+            !(error instanceof ApiError && error.status === 401) && count < 1,
         staleTime: Infinity,
     });
 

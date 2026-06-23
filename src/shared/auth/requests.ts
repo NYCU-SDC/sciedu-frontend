@@ -1,19 +1,14 @@
 import { api } from "../utils/api";
-import type { AuthTokens } from "./types";
+import type { SessionResponse } from "./types";
 
-export async function refreshAuthToken(
-    refreshToken?: string
-): Promise<AuthTokens> {
-    if (!refreshToken) {
-        throw new Error("Cannot refresh auth token without a refresh token");
-    }
+export async function getSession(): Promise<SessionResponse> {
+    return api<SessionResponse>("/auth/session");
+}
 
-    return api<AuthTokens>("/api/refreshToken", {
-        method: "POST",
-        body: JSON.stringify({ refreshToken }),
-    });
+export async function refreshAuthToken(): Promise<SessionResponse> {
+    return api<SessionResponse>("/auth/refresh", { method: "POST" });
 }
 
 export async function requestLogout(): Promise<void> {
-    await api("/api/logout");
+    await api("/auth/logout", { method: "POST" });
 }

@@ -69,6 +69,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         onError: logout,
     });
 
+    // Keep a ref so scheduleRefresh can access the latest mutation without
+    // being listed as a dep (useMutation returns a new object every render).
+    const refreshMutationRef = useRef(refreshMutation);
+    refreshMutationRef.current = refreshMutation;
+
     const scheduleRefresh = useCallback(() => {
         clearRefreshTimer();
 
@@ -77,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         if (!cookies.accessToken) {
-            refreshMutation.mutate();
+            refreshMutationRef.current.mutate();
             return;
         }
 
@@ -91,14 +96,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 MAX_TIMEOUT
             );
         } catch {
-            refreshMutation.mutate();
+            refreshMutationRef.current.mutate();
             return;
         }
 
         refreshTimerRef.current = window.setTimeout(
             () => {
-                if (!refreshMutation.isPending) {
-                    refreshMutation.mutate();
+                if (!refreshMutationRef.current.isPending) {
+                    refreshMutationRef.current.mutate();
                 }
             },
             Math.max(timeout, 0)
@@ -107,7 +112,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         clearRefreshTimer,
         cookies.accessToken,
         cookies.refreshToken,
-        refreshMutation,
     ]);
 
     const login = useCallback((provider: AuthProviderName) => {
@@ -128,8 +132,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
 
     const refresh = useCallback(() => {
-        refreshMutation.mutate();
-    }, [refreshMutation]);
+        refreshMutationRef.current.mutate();
+    }, []);
 
     useEffect(() => {
         scheduleRefresh();

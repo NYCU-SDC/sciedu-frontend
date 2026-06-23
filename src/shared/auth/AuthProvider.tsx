@@ -65,7 +65,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Keep a ref so scheduleRefresh can access the latest mutation without
     // being listed as a dep (useMutation returns a new object every render).
     const refreshMutationRef = useRef(refreshMutation);
-    refreshMutationRef.current = refreshMutation;
+    useEffect(() => {
+        refreshMutationRef.current = refreshMutation;
+    });
 
     const scheduleRefresh = useCallback(
         (session: SessionResponse | undefined) => {

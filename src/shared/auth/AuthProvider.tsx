@@ -6,7 +6,11 @@ import { toast } from "sonner";
 
 import { AuthContext } from "./AuthContext";
 import { getSession, refreshAuthToken, requestLogout } from "./requests";
-import type { AuthContextValue, AuthProviderName, SessionResponse } from "./types";
+import type {
+    AuthContextValue,
+    AuthProviderName,
+    SessionResponse,
+} from "./types";
 
 // 2^31 - 1: maximum safe setTimeout delay (browser 32-bit limit)
 const MAX_TIMEOUT = 2_147_483_647;

@@ -8,7 +8,10 @@ export async function refreshAuthToken(
         throw new Error("Cannot refresh auth token without a refresh token");
     }
 
-    return api<AuthTokens>(`/api/refreshToken/${refreshToken}`);
+    return api<AuthTokens>("/api/refreshToken", {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+    });
 }
 
 export async function requestLogout(): Promise<void> {

@@ -24,7 +24,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const sessionQuery = useQuery({
         queryKey: ["auth", "session"],
         queryFn: getSession,
-        retry: false,
+        // Retry once on transient network errors; 401 will fail twice harmlessly.
+        retry: 1,
         staleTime: Infinity,
     });
 
@@ -35,11 +36,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     }, []);
 
-    const logout = useCallback(() => {
+    const logout = useCallback(async () => {
         clearRefreshTimer();
-        void requestLogout().catch((error: Error) => {
-            console.warn(error.message);
-        });
+        try {
+            await requestLogout();
+        } catch {
+            toast.error(
+                "Sign-out request failed. Close your browser to ensure you are fully signed out."
+            );
+        }
         queryClient.removeQueries({ queryKey: ["auth"] });
         toast.info("Logged out");
         navigate("/login");
@@ -66,10 +71,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 return;
             }
 
+            const expiresAt = new Date(session.accessTokenExpiresAt).getTime();
+            if (isNaN(expiresAt)) {
+                // Server returned an invalid date — skip scheduling to avoid an
+                // immediate-fire loop.
+                return;
+            }
+
             const timeout = Math.min(
-                new Date(session.accessTokenExpiresAt).getTime() -
-                    Date.now() -
-                    REFRESH_BEFORE_EXPIRATION_MS,
+                expiresAt - Date.now() - REFRESH_BEFORE_EXPIRATION_MS,
                 MAX_TIMEOUT
             );
 
@@ -108,11 +118,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         () => ({
             session: sessionQuery.data ?? null,
             isAuthenticated: sessionQuery.isSuccess,
+            isLoading: sessionQuery.isPending,
             login,
             logout,
             refresh,
         }),
-        [sessionQuery.data, sessionQuery.isSuccess, login, logout, refresh]
+        [
+            sessionQuery.data,
+            sessionQuery.isSuccess,
+            sessionQuery.isPending,
+            login,
+            logout,
+            refresh,
+        ]
     );
 
     return (

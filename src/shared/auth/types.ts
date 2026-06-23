@@ -10,7 +10,8 @@ export type SessionResponse = {
 export type AuthContextValue = {
     session: SessionResponse | null;
     isAuthenticated: boolean;
+    isLoading: boolean;
     login: (provider: AuthProviderName) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
     refresh: () => void;
 };

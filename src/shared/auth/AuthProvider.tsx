@@ -105,7 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const login = useCallback((provider: AuthProviderName) => {
         const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
-        const redirectUrl = `${window.location.origin}/`;
+        const redirectUrl = encodeURIComponent(`${window.location.origin}/`);
         const urlMap: Record<AuthProviderName, string> = {
             google: `${baseUrl}/login/oauth/google?r=${redirectUrl}`,
         };

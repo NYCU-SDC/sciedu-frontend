@@ -107,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
         const redirectUrl = encodeURIComponent(`${window.location.origin}/`);
         const urlMap: Record<AuthProviderName, string> = {
-            google: `${baseUrl}/login/oauth/google?r=${redirectUrl}`,
+            google: `${baseUrl}/api/login/oauth/google?r=${redirectUrl}`,
         };
 
         window.location.href = urlMap[provider];

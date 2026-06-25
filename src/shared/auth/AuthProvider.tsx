@@ -1,0 +1,149 @@
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Outlet, useNavigate } from "react-router";
+import { toast } from "sonner";
+
+import { ApiError } from "../utils/api";
+import { AuthContext } from "./AuthContext";
+import { getSession, refreshAuthToken, requestLogout } from "./requests";
+import type {
+    AuthContextValue,
+    AuthProviderName,
+    SessionResponse,
+} from "./types";
+
+// 2^31 - 1: maximum safe setTimeout delay (browser 32-bit limit)
+const MAX_TIMEOUT = 2_147_483_647;
+const REFRESH_BEFORE_EXPIRATION_MS = 60 * 1000;
+
+type AuthProviderProps = {
+    children?: ReactNode;
+};
+
+export function AuthProvider({ children }: AuthProviderProps) {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const refreshTimerRef = useRef<number | null>(null);
+
+    const sessionQuery = useQuery({
+        queryKey: ["auth", "session"],
+        queryFn: getSession,
+        // Don't retry on 401 (unauthenticated); retry once on transient network errors.
+        retry: (count, error) =>
+            !(error instanceof ApiError && error.status === 401) && count < 1,
+        staleTime: Infinity,
+    });
+
+    const clearRefreshTimer = useCallback(() => {
+        if (refreshTimerRef.current) {
+            window.clearTimeout(refreshTimerRef.current);
+            refreshTimerRef.current = null;
+        }
+    }, []);
+
+    const logout = useCallback(async () => {
+        clearRefreshTimer();
+        try {
+            await requestLogout();
+        } catch {
+            toast.error(
+                "Sign-out request failed. Close your browser to ensure you are fully signed out."
+            );
+        }
+        queryClient.removeQueries({ queryKey: ["auth"] });
+        toast.info("Logged out");
+        navigate("/login");
+    }, [clearRefreshTimer, navigate, queryClient]);
+
+    const refreshMutation = useMutation<SessionResponse, Error, void>({
+        mutationFn: refreshAuthToken,
+        onSuccess: (session) => {
+            queryClient.setQueryData(["auth", "session"], session);
+        },
+        onError: logout,
+    });
+
+    // Keep a ref so scheduleRefresh can access the latest mutation without
+    // being listed as a dep (useMutation returns a new object every render).
+    const refreshMutationRef = useRef(refreshMutation);
+    useEffect(() => {
+        refreshMutationRef.current = refreshMutation;
+    });
+
+    const scheduleRefresh = useCallback(
+        (session: SessionResponse | undefined) => {
+            clearRefreshTimer();
+
+            if (!session) {
+                return;
+            }
+
+            const expiresAt = new Date(session.accessTokenExpiresAt).getTime();
+            if (isNaN(expiresAt)) {
+                // Server returned an invalid date — skip scheduling to avoid an
+                // immediate-fire loop.
+                return;
+            }
+
+            const timeout = Math.min(
+                expiresAt - Date.now() - REFRESH_BEFORE_EXPIRATION_MS,
+                MAX_TIMEOUT
+            );
+
+            refreshTimerRef.current = window.setTimeout(
+                () => {
+                    if (!refreshMutationRef.current.isPending) {
+                        refreshMutationRef.current.mutate();
+                    }
+                },
+                Math.max(timeout, 0)
+            );
+        },
+        [clearRefreshTimer]
+    );
+
+    const login = useCallback((provider: AuthProviderName) => {
+        const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
+        const redirectUrl = encodeURIComponent(`${window.location.origin}/`);
+        const urlMap: Record<AuthProviderName, string> = {
+            google: `${baseUrl}/api/login/oauth/google?r=${redirectUrl}`,
+        };
+
+        window.location.href = urlMap[provider];
+    }, []);
+
+    const refresh = useCallback(() => {
+        refreshMutationRef.current.mutate();
+    }, []);
+
+    useEffect(() => {
+        scheduleRefresh(sessionQuery.data);
+        return clearRefreshTimer;
+    }, [clearRefreshTimer, scheduleRefresh, sessionQuery.data]);
+
+    const value = useMemo<AuthContextValue>(
+        () => ({
+            session: sessionQuery.data ?? null,
+            isAuthenticated: sessionQuery.isSuccess,
+            isLoading: sessionQuery.isPending,
+            login,
+            logout,
+            refresh,
+        }),
+        [
+            sessionQuery.data,
+            sessionQuery.isSuccess,
+            sessionQuery.isPending,
+            login,
+            logout,
+            refresh,
+        ]
+    );
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children ?? <Outlet />}
+        </AuthContext.Provider>
+    );
+}

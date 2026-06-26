@@ -8,7 +8,11 @@ import styles from "./RouteErrorBoundary.module.css";
 
 function getErrorMessage(error: unknown): string {
     if (isRouteErrorResponse(error)) {
-        return error.statusText || error.data || "Something went wrong.";
+        if (error.statusText) return error.statusText;
+        if (typeof error.data === "string") return error.data;
+        // If error.data is not string, ensure it's returned as string
+        if (error.data != null) return String(error.data);
+        return "Something went wrong.";
     }
     if (error instanceof Error) {
         return error.message;
@@ -16,7 +20,7 @@ function getErrorMessage(error: unknown): string {
     if (typeof error === "string") {
         return error;
     }
-    return "An unexpected error occurred.";
+    return "發生了未預期的錯誤";
 }
 
 export default function RouteErrorBoundary() {

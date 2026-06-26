@@ -1,4 +1,9 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import { TestTubeDiagonal } from "lucide-react";
+
+import { useAuth } from "../../../shared/auth";
+import { useDocumentTitle } from "../../../shared/hooks";
 import styles from "./LoginPage.module.css";
 
 function GoogleIcon() {
@@ -29,6 +34,17 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
+    const { login, isAuthenticated, isLoading } = useAuth();
+    const navigate = useNavigate();
+
+    useDocumentTitle("登入");
+
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            navigate("/", { replace: true });
+        }
+    }, [isAuthenticated, isLoading, navigate]);
+
     return (
         <div className={styles.page}>
             <header className={styles.brand}>
@@ -49,7 +65,11 @@ export default function LoginPage() {
                     </h1>
                     <p className={styles.subtitle}>繼續使用 SCIEDU 的學習</p>
 
-                    <button type="button" className={styles.googleButton}>
+                    <button
+                        type="button"
+                        className={styles.googleButton}
+                        onClick={() => login("google")}
+                    >
                         <GoogleIcon />
                         <span>使用 Google 帳號繼續</span>
                     </button>

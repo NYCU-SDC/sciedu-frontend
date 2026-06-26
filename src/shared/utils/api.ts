@@ -1,5 +1,14 @@
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
+export class ApiError extends Error {
+    readonly status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.status = status;
+    }
+}
+
 export async function api<T>(
     path: string,
     options: RequestInit = {}
@@ -10,6 +19,7 @@ export async function api<T>(
     };
 
     const res = await fetch(`${BASE_URL}${path}`, {
+        credentials: "include",
         ...options,
         headers,
     });
@@ -22,7 +32,7 @@ export async function api<T>(
         } catch {
             errorMessage = `API Error (${res.status})`;
         }
-        throw new Error(errorMessage);
+        throw new ApiError(errorMessage, res.status);
     }
 
     // 204 means no content, so it will cause error when return res.json()

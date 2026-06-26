@@ -33,6 +33,7 @@ export function streamMessage(
                 `${BASE_URL}/api/chat/stream/${messageID}`,
                 {
                     method: "GET",
+                    credentials: "include",
                     signal: controller.signal,
                 }
             );

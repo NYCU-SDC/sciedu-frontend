@@ -60,10 +60,14 @@ export default function LoginPage() {
                     className={styles.loginPanel}
                     aria-labelledby="login-title"
                 >
-                    <h1 id="login-title" className={styles.heading}>
-                        您好，歡迎回來
-                    </h1>
-                    <p className={styles.subtitle}>繼續使用 SCIEDU 的學習</p>
+                    <div className={styles.intro}>
+                        <h1 id="login-title" className={styles.heading}>
+                            您好，歡迎回來
+                        </h1>
+                        <p className={styles.subtitle}>
+                            繼續使用 SCIEDU 的學習
+                        </p>
+                    </div>
 
                     <button
                         type="button"
@@ -75,9 +79,8 @@ export default function LoginPage() {
                     </button>
 
                     <p className={styles.legalText}>
-                        登入即表示您同意{" "}
-                        <span className={styles.legalLink}>服務條款</span> 與{" "}
-                        <span className={styles.legalLink}>隱私權政策</span>
+                        登入即表示您同意<span>服務條款</span>與
+                        <span>隱私權政策</span>
                     </p>
                 </section>
             </main>

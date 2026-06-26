@@ -22,7 +22,7 @@
     width: 100%;
     flex: 1;
     min-height: 0;
-    font-family: "GenYoGothic2 TW", sans-serif;
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
 }
 
 .copyrightFooter {

@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { TestTubeDiagonal } from "lucide-react";
 
 import { useAuth } from "../../../shared/auth";
 import { useDocumentTitle } from "../../../shared/hooks";
+import Logo from "../../../shared/components/Logo";
 import styles from "./LoginPage.module.css";
 
 function GoogleIcon() {
@@ -48,10 +48,7 @@ export default function LoginPage() {
     return (
         <div className={styles.page}>
             <header className={styles.brand}>
-                <TestTubeDiagonal
-                    className={styles.brandIcon}
-                    aria-hidden="true"
-                />
+                <Logo className={styles.brandIcon} />
                 <span className={styles.brandName}>SCIEDU</span>
             </header>
 

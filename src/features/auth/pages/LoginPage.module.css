@@ -24,7 +24,7 @@
 }
 
 .brandName {
-    font-family: "Noto Serif TC", serif;
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
 }

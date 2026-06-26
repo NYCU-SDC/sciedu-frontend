@@ -7,6 +7,7 @@ import ChatNavBar from "../components/ChatNavBar";
 import ChatMessageList from "../components/ChatMessageList";
 import ChatSidebar from "../components/ChatSidebar";
 import WelcomeScreen from "../components/WelcomeScreen";
+import { useDocumentTitle } from "../../../shared/hooks";
 import { createChat } from "../services/createChat";
 import { createMessage } from "../services/createMessage";
 import { deleteChat } from "../services/deleteChat";
@@ -502,6 +503,8 @@ export default function ChatPage() {
         selectedChatTitle ??
         allMessages.find((message) => message.role === "user")?.content ??
         "新的對話";
+
+    useDocumentTitle(hasMessages || selectedChatTitle ? chatTitle : "新的對話");
 
     return (
         <div className={styles.container}>

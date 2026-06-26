@@ -1,9 +1,12 @@
 import { Atom } from "lucide-react";
 import { Link } from "react-router";
 
+import { useDocumentTitle } from "../hooks";
 import styles from "./NotFoundPage.module.css";
 
 export default function NotFoundPage() {
+    useDocumentTitle("找不到頁面");
+
     return (
         <div className={styles.page}>
             <div className={styles.digits}>

@@ -3,6 +3,7 @@ import { ChevronDown, TriangleAlert } from "lucide-react";
 import { isRouteErrorResponse, useRouteError } from "react-router";
 
 import NotFoundPage from "./NotFoundPage";
+import { useDocumentTitle } from "../hooks";
 import styles from "./RouteErrorBoundary.module.css";
 
 function getErrorMessage(error: unknown): string {
@@ -22,8 +23,13 @@ export default function RouteErrorBoundary() {
     const error = useRouteError();
     const [showDetails, setShowDetails] = useState(false);
 
+    const is404 = isRouteErrorResponse(error) && error.status === 404;
+
+    // Match the title NotFoundPage sets so the delegated render stays consistent.
+    useDocumentTitle(is404 ? "找不到頁面" : "發生錯誤");
+
     // A thrown 404 response should render the same page as an unmatched route.
-    if (isRouteErrorResponse(error) && error.status === 404) {
+    if (is404) {
         return <NotFoundPage />;
     }
 

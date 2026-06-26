@@ -4,6 +4,7 @@ import { AuthProvider } from "./shared/auth";
 
 import GeneticsCourse from "./features/courses/genetics/GeneticsCourse";
 import ChatPage from "./features/chat/pages/ChatPage";
+import ExampleChatPage from "./features/chat/pages/ExampleChatPage";
 import LoginPage from "./features/auth/pages/LoginPage";
 import RedirectToLogin from "./features/auth/pages/RedirectToLogin";
 import NotFoundPage from "./shared/components/NotFoundPage";
@@ -13,6 +14,10 @@ const chatRoutes: RouteObject[] = [
     {
         path: "/chat",
         element: <ChatPage />,
+    },
+    {
+        path: "/examplechat",
+        element: <ExampleChatPage />,
     },
 ];
 

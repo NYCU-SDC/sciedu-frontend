@@ -6,6 +6,8 @@ import GeneticsCourse from "./features/courses/genetics/GeneticsCourse";
 import ChatPage from "./features/chat/pages/ChatPage";
 import LoginPage from "./features/auth/pages/LoginPage";
 import RedirectToLogin from "./features/auth/pages/RedirectToLogin";
+import NotFoundPage from "./shared/components/NotFoundPage";
+import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 
 const chatRoutes: RouteObject[] = [
     {
@@ -28,6 +30,7 @@ const enableCourseRoutes =
 export const router = createBrowserRouter([
     {
         element: <AuthProvider />,
+        errorElement: <RouteErrorBoundary />,
         children: [
             {
                 path: "/",
@@ -39,6 +42,10 @@ export const router = createBrowserRouter([
             },
             ...(enableChatRoutes ? chatRoutes : []),
             ...(enableCourseRoutes ? courseRoutes : []),
+            {
+                path: "*",
+                element: <NotFoundPage />,
+            },
         ],
     },
 ]);

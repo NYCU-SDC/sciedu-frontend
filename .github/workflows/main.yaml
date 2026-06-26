@@ -9,7 +9,7 @@ on:
             VITE_BACKEND_BASE_URL:
                 description: Backend API URL
                 required: false
-                default: https://api.dev.sciedu.sdc.nycu.club
+                default: https://dev.sciedu.sdc.nycu.club
 
 permissions:
     contents: read

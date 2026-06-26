@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../../../shared/utils/api";
+import { useDocumentTitle } from "../../../shared/hooks";
 import { generateRQRequestFromPage } from "./services/fetchPageContent";
 
 import styles from "./GeneticsCourse.module.css";
@@ -40,6 +41,8 @@ export default function GeneticsCourse() {
         []
     );
     const currentPage = pageRequests[currentIndex];
+
+    useDocumentTitle("基因");
 
     const currentYear = new Date().getFullYear();
 

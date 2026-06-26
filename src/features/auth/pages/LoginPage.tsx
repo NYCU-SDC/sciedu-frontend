@@ -3,10 +3,13 @@ import { useNavigate } from "react-router";
 import { Button, Flex, Heading } from "@radix-ui/themes";
 
 import { useAuth } from "../../../shared/auth";
+import { useDocumentTitle } from "../../../shared/hooks";
 
 export default function LoginPage() {
     const { login, isAuthenticated, isLoading } = useAuth();
     const navigate = useNavigate();
+
+    useDocumentTitle("登入");
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {

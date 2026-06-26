@@ -1,0 +1,88 @@
+.page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.digits {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    color: var(--color-neutral-900);
+    font-size: clamp(6rem, 18vw, 10rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.atom {
+    width: clamp(5rem, 15vw, 8.5rem);
+    height: clamp(5rem, 15vw, 8.5rem);
+    flex-shrink: 0;
+    color: var(--color-orange-500);
+    animation: atom-spin 8s linear infinite;
+}
+
+.title {
+    margin-top: 1.5rem;
+    color: var(--color-neutral-900);
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.subtitle {
+    margin-top: 0.75rem;
+    color: var(--color-neutral-500);
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    line-height: 1.5;
+}
+
+.homeButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    padding: 0 1.75rem;
+    border: 0;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    background-color: var(--color-neutral-900);
+    color: var(--color-white);
+    cursor: pointer;
+    font: inherit;
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+.homeButton:hover,
+.homeButton:focus-visible {
+    background-color: var(--color-neutral-700);
+}
+
+.homeButton:focus-visible {
+    outline: 2px solid var(--color-sky-500);
+    outline-offset: 2px;
+}
+
+@keyframes atom-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .atom {
+        animation: none;
+    }
+}

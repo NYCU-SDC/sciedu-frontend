@@ -1,366 +1,162 @@
-import { useEffect, useRef, useState } from "react";
-import type { Message } from "../types/chat";
-import { createChat } from "./createChat";
-import { createMessage } from "./createMessage";
-import { streamMessage } from "./streamMessage";
+import { useCallback, useMemo, useState } from "react";
 import type {
     BranchDirection,
+    Chat,
+    Message,
     MessageBranchState,
-} from "../components/ChatArea/ChatArea.types";
+} from "../types/chat";
+import { createMessage } from "../../../shared/network/chat";
+import { useBranchSelection } from "./useBranchSelection";
+import { useChatMessages } from "./useChatMessages";
+import { useMessageStream } from "./useMessageStream";
 
-const ROOT_BRANCH_KEY = "__root__";
+export type ChatStatus = "loading" | "idle" | "streaming" | "error";
 
-function toBranchKey(previousID?: string) {
-    return previousID ?? ROOT_BRANCH_KEY;
-}
+export type SendMessageInput = {
+    content: string;
+    /** Parent to branch from. Defaults to the last visible message. */
+    previousID?: string;
+};
 
-function buildChildrenMap(messages: Message[]) {
-    const map = new Map<string, Message[]>();
+export type UseChatResult = {
+    // Server state (React Query cache).
+    chat: Chat | undefined;
+    messages: Message[];
+    status: ChatStatus;
+    error: Error | null;
 
-    for (const message of messages) {
-        const key = toBranchKey(message.previousID);
-        const siblings = map.get(key);
+    // The single write primitive
+    sendMessage: (input: SendMessageInput) => Promise<void>;
+    // Thin wrappers around sendMessage
+    resend: (messageId: string) => Promise<void>;
+    editAndSend: (messageId: string, content: string) => Promise<void>;
 
-        if (siblings) {
-            siblings.push(message);
-        } else {
-            map.set(key, [message]);
-        }
-    }
+    // Branch navigation (pure derivation + tiny selection state).
+    switchBranch: (messageId: string, dir: BranchDirection) => void;
+    getBranchState: (messageId: string) => MessageBranchState;
 
-    return map;
-}
+    // Stream lifecycle.
+    streamingMessageId: string | null;
+    streamingContent: string | null;
+    abort: () => void;
+};
 
-function buildVisibleMessages(
-    messages: Message[],
-    branchSelectionByParent: Record<string, string>
-) {
-    const childrenMap = buildChildrenMap(messages);
-    const visible: Message[] = [];
-    let currentKey = ROOT_BRANCH_KEY;
+/**
+ * The chat facade. Composes three focused hooks into one API for a chat view:
+ *   - `useChatMessages`  — server state for the chat (React Query cache).
+ *   - `useBranchSelection` — which child branch is selected at each parent.
+ *   - `useMessageStream` — the live SSE lifecycle for the streaming reply.
+ *
+ * On top of these it layers the write path: `sendMessage` (the single write
+ * primitive) plus the `resend` / `editAndSend` wrappers, and unifies the
+ * streaming message id from its two origins (a just-sent reply and a message
+ * already streaming on load) into one field.
+ */
+export function useChat(chatID: string): UseChatResult {
+    const query = useChatMessages(chatID);
+    const allMessages = useMemo(() => query.data?.messages ?? [], [query.data]);
 
-    while (true) {
-        const children = childrenMap.get(currentKey);
-        if (!children || children.length === 0) break;
+    const { visible, switchBranch, getBranchState, selectBranch } =
+        useBranchSelection(allMessages);
 
-        const selectedID = branchSelectionByParent[currentKey];
-        const selectedMessage =
-            children.find((message) => message.id === selectedID) ??
-            children[children.length - 1];
+    // streamingMessageId has two origins, unified into one field:
+    //   - the just-sent reply id (set by sendMessage), and
+    //   - the resume case: a message already streaming on load.
+    const [sentReplyId, setSentReplyId] = useState<string | null>(null);
+    const resumeId =
+        allMessages.find((m) => m.status === "streaming")?.id ?? null;
+    const streamingMessageId = sentReplyId ?? resumeId;
 
-        visible.push(selectedMessage);
-        currentKey = selectedMessage.id;
-    }
-
-    return visible;
-}
-
-export default function useChat() {
-    const [allMessages, setAllMessages] = useState<Message[]>([]);
-    const [streamingMessage, setStreamingMessage] = useState<string | null>(
-        null
+    // Once the stream settles, drop the local handle so the field falls back to
+    // pure server-derived state.
+    const { state: stream, abort: abortStream } = useMessageStream(
+        streamingMessageId,
+        chatID,
+        () => setSentReplyId(null)
     );
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [status, setStatus] = useState<
-        "idle" | "submitting" | "streaming" | "error"
-    >("idle");
-    const [draftInput, setDraftInput] = useState("");
-    const [editingMessageId, setEditingMessageId] = useState<string | null>(
-        null
-    );
-    const [pendingReplyParentId, setPendingReplyParentId] = useState<
-        string | undefined
-    >(undefined);
-    const [branchSelectionByParent, setBranchSelectionByParent] = useState<
-        Record<string, string>
-    >({});
 
-    const abortRef = useRef<AbortController | null>(null);
-    const messageRef = useRef<Message[]>([]);
-    const chatIdRef = useRef<string | null>(null);
-    const replyMessageIdRef = useRef<string | null>(null);
+    const sendMessage = useCallback(
+        async (input: SendMessageInput) => {
+            const trimmed = input.content.trim();
+            if (!trimmed) return;
 
-    useEffect(() => {
-        messageRef.current = allMessages;
-    }, [allMessages]);
-
-    useEffect(() => {
-        return () => abortRef.current?.abort();
-    }, []);
-
-    const messages = buildVisibleMessages(allMessages, branchSelectionByParent);
-    const displayMessages =
-        streamingMessage !== null
-            ? [
-                  ...messages,
-                  {
-                      id: "streaming-temp-id",
-                      role: "assistant",
-                      content: streamingMessage,
-                      previousID: pendingReplyParentId,
-                      status: "streaming",
-                      createdAt: new Date().toISOString(),
-                  } satisfies Message,
-              ]
-            : messages;
-
-    const sendMessageBranch = async (
-        content: string,
-        branchPreviousID?: string,
-        options?: { clearDraft?: boolean; clearEditing?: boolean }
-    ) => {
-        const trimmed = content.trim();
-        if (!trimmed) return;
-
-        if (status === "submitting" || status === "streaming") {
-            abortRef.current?.abort();
-        }
-
-        setErrorMessage(null);
-        setStatus("submitting");
-        setStreamingMessage("");
-        let fullResponse = "";
-
-        try {
-            if (!chatIdRef.current) {
-                const { chatID } = await createChat();
-                chatIdRef.current = chatID;
-            }
-
+            // A present `previousID` — even `undefined` — is an explicit branch
+            // anchor and must be honored as-is: editing the first message anchors
+            // to the root (`undefined`), which is not the same as "not specified".
+            // Only when the key is absent do we default to appending at the tail.
+            const parentID =
+                "previousID" in input ? input.previousID : visible.at(-1)?.id;
             const { message, replyMessageID } = await createMessage(
-                chatIdRef.current,
+                chatID,
                 trimmed,
-                branchPreviousID
+                parentID
             );
 
-            setAllMessages((prev) => [...prev, message]);
-            setBranchSelectionByParent((prev) => ({
-                ...prev,
-                [toBranchKey(message.previousID)]: message.id,
-            }));
-            replyMessageIdRef.current = replyMessageID;
-            setPendingReplyParentId(message.id);
-            setStatus("streaming");
+            // Pin the freshly created sibling so it is the visible branch.
+            selectBranch(message.previousID, message.id);
+            setSentReplyId(replyMessageID);
+            await query.refetch();
+        },
+        [chatID, visible, selectBranch, query]
+    );
 
-            if (options?.clearDraft ?? true) {
-                setDraftInput("");
-            }
-            if (options?.clearEditing ?? true) {
-                setEditingMessageId(null);
-            }
+    const resend = useCallback(
+        async (messageId: string) => {
+            const target = allMessages.find((m) => m.id === messageId);
+            if (!target) return;
+            await sendMessage({
+                content: target.content,
+                previousID: target.previousID,
+            });
+        },
+        [allMessages, sendMessage]
+    );
 
-            abortRef.current = streamMessage(
-                replyMessageID,
-                (chunk) => {
-                    fullResponse += chunk.content;
-                    setStreamingMessage((prev) => (prev || "") + chunk.content);
-                },
-                () => {
-                    const assistantMsg: Message = {
-                        id: replyMessageID,
-                        role: "assistant",
-                        content: fullResponse,
-                        previousID: message.id,
-                        status: "done",
-                        createdAt: new Date().toISOString(),
-                    };
+    const editAndSend = useCallback(
+        async (messageId: string, content: string) => {
+            const target = allMessages.find((m) => m.id === messageId);
+            if (!target) return;
+            await sendMessage({ content, previousID: target.previousID });
+        },
+        [allMessages, sendMessage]
+    );
 
-                    setAllMessages((prev) => [...prev, assistantMsg]);
-                    setBranchSelectionByParent((prev) => ({
-                        ...prev,
-                        [toBranchKey(assistantMsg.previousID)]: assistantMsg.id,
-                    }));
-                    setStreamingMessage(null);
-                    setStatus("idle");
-                    abortRef.current = null;
-                    replyMessageIdRef.current = null;
-                    setPendingReplyParentId(undefined);
-                },
-                (error) => {
-                    console.error("Chat error", error);
-                    setStatus("error");
-                    setErrorMessage(error.message);
-                    setStreamingMessage(null);
-                    abortRef.current = null;
-                    replyMessageIdRef.current = null;
-                    setPendingReplyParentId(undefined);
-                }
-            );
-        } catch (error) {
-            const message =
-                error instanceof Error ? error.message : String(error);
-            setStatus("error");
-            setErrorMessage(message);
-            setStreamingMessage(null);
-            setPendingReplyParentId(undefined);
-        }
-    };
+    const abort = useCallback(() => {
+        abortStream();
+        setSentReplyId(null);
+    }, [abortStream]);
 
-    const onSend = async (content: string) => {
-        const editingTarget = editingMessageId
-            ? messageRef.current.find(
-                  (message) => message.id === editingMessageId
-              )
-            : undefined;
+    const status: ChatStatus = query.isLoading
+        ? "loading"
+        : streamingMessageId !== null || stream.phase === "streaming"
+          ? "streaming"
+          : query.isError
+            ? "error"
+            : "idle";
 
-        const branchPreviousID = editingTarget
-            ? editingTarget.previousID
-            : messages.at(-1)?.id;
-
-        await sendMessageBranch(content, branchPreviousID, {
-            clearDraft: true,
-            clearEditing: true,
-        });
-    };
-
-    const onAbort = () => {
-        abortRef.current?.abort();
-        abortRef.current = null;
-
-        if (streamingMessage && replyMessageIdRef.current) {
-            const assistantMsg: Message = {
-                id: replyMessageIdRef.current,
-                role: "assistant",
-                content: streamingMessage,
-                previousID: pendingReplyParentId,
-                status: "done",
-                createdAt: new Date().toISOString(),
-            };
-
-            setAllMessages((prev) => [...prev, assistantMsg]);
-            setBranchSelectionByParent((prev) => ({
-                ...prev,
-                [toBranchKey(assistantMsg.previousID)]: assistantMsg.id,
-            }));
-        }
-
-        setStreamingMessage(null);
-        setStatus("idle");
-        setErrorMessage(null);
-        replyMessageIdRef.current = null;
-        setPendingReplyParentId(undefined);
-    };
-
-    const onRefresh = () => {
-        abortRef.current?.abort();
-        abortRef.current = null;
-
-        setAllMessages([]);
-        setStreamingMessage(null);
-        setErrorMessage(null);
-        setStatus("idle");
-        setDraftInput("");
-        setEditingMessageId(null);
-        setBranchSelectionByParent({});
-        chatIdRef.current = null;
-        replyMessageIdRef.current = null;
-        setPendingReplyParentId(undefined);
-    };
-
-    const onDraftChange = (text: string) => {
-        setDraftInput(text);
-    };
-
-    const onEditMessage = (messageId: string) => {
-        const target = messageRef.current.find(
-            (message) => message.id === messageId && message.role === "user"
-        );
-        if (!target) return;
-
-        setDraftInput(target.content);
-        setEditingMessageId(messageId);
-    };
-
-    const onResendMessage = async (messageId: string) => {
-        const target = messageRef.current.find(
-            (message) => message.id === messageId && message.role === "user"
-        );
-        if (!target) return;
-
-        await sendMessageBranch(target.content, target.previousID, {
-            clearDraft: false,
-            clearEditing: true,
-        });
-    };
-
-    const onSwitchBranch = (messageId: string, direction: BranchDirection) => {
-        const target = messageRef.current.find(
-            (message) => message.id === messageId
-        );
-        if (!target) return;
-
-        const siblings = messageRef.current.filter(
-            (message) =>
-                message.role === target.role &&
-                message.previousID === target.previousID
-        );
-
-        if (siblings.length <= 1) return;
-
-        const currentIndex = siblings.findIndex(
-            (message) => message.id === messageId
-        );
-        if (currentIndex < 0) return;
-
-        const nextIndex =
-            direction === "prev" ? currentIndex - 1 : currentIndex + 1;
-        const nextMessage = siblings[nextIndex];
-        if (!nextMessage) return;
-
-        setBranchSelectionByParent((prev) => ({
-            ...prev,
-            [toBranchKey(target.previousID)]: nextMessage.id,
-        }));
-        setEditingMessageId(null);
-    };
-
-    const getBranchState = (messageId: string): MessageBranchState => {
-        const target = messageRef.current.find(
-            (message) => message.id === messageId
-        );
-        if (!target || target.role !== "user") {
-            return {
-                currentIndex: 1,
-                total: 1,
-                canGoPrev: false,
-                canGoNext: false,
-            };
-        }
-
-        const siblings = messageRef.current.filter(
-            (message) =>
-                message.role === "user" &&
-                message.previousID === target.previousID
-        );
-
-        const currentIndex = siblings.findIndex(
-            (message) => message.id === messageId
-        );
-        const safeIndex = currentIndex >= 0 ? currentIndex : 0;
-
-        return {
-            currentIndex: safeIndex + 1,
-            total: siblings.length || 1,
-            canGoPrev: safeIndex > 0,
-            canGoNext: safeIndex < siblings.length - 1,
-        };
-    };
+    const chat: Chat | undefined = query.data
+        ? {
+              id: query.data.id,
+              title: query.data.title,
+              createdAt: query.data.createdAt,
+              updatedAt: query.data.updatedAt,
+          }
+        : undefined;
 
     return {
-        messages,
-        displayMessages,
-        streamingMessage,
-        draftInput,
-        editingMessageId,
-        errorMessage,
+        chat,
+        messages: visible,
         status,
-        onSend,
-        onDraftChange,
-        onAbort,
-        onRefresh,
-        onEditMessage,
-        onResendMessage,
-        onSwitchBranch,
+        error: query.error,
+        sendMessage,
+        resend,
+        editAndSend,
+        switchBranch,
         getBranchState,
+        streamingMessageId,
+        streamingContent: stream.phase === "streaming" ? stream.buffer : null,
+        abort,
     };
 }
+
+export default useChat;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, TriangleAlert } from "lucide-react";
 import { isRouteErrorResponse, useRouteError } from "react-router";
 import { usePostHog } from "@posthog/react";
@@ -34,9 +34,11 @@ export default function RouteErrorBoundary() {
     // Match the title NotFoundPage sets so the delegated render stays consistent.
     useDocumentTitle(is404 ? "找不到頁面" : "發生錯誤");
 
-    if (!is404 && error) {
-        posthog.captureException(error);
-    }
+    useEffect(() => {
+        if (!is404 && error) {
+            posthog.captureException(error);
+        }
+    }, [is404, error, posthog]);
 
     // A thrown 404 response should render the same page as an unmatched route.
     if (is404) {

@@ -3,21 +3,33 @@ import type { RouteObject } from "react-router";
 import { AuthProvider } from "./shared/auth";
 
 import GeneticsCourse from "./features/courses/genetics/GeneticsCourse";
-import ChatPage from "./features/chat/pages/ChatPage";
-import ExampleChatPage from "./features/chat/pages/ExampleChatPage";
+import ChatLayout from "./features/chat/pages/ChatLayout";
+import NewChatPage from "./features/chat/pages/NewChatPage";
+import ChatConversationPage from "./features/chat/pages/ChatConversationPage";
 import LoginPage from "./features/auth/pages/LoginPage";
-import RedirectToLogin from "./features/auth/pages/RedirectToLogin";
 import NotFoundPage from "./shared/components/NotFoundPage";
 import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
+import RequireAuth from "./shared/auth/RequireAuth";
+
+const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
 const chatRoutes: RouteObject[] = [
     {
-        path: "/chat",
-        element: <ChatPage />,
-    },
-    {
-        path: "/examplechat",
-        element: <ExampleChatPage />,
+        element: (
+            <RequireAuth>
+                <ChatLayout />
+            </RequireAuth>
+        ),
+        children: [
+            {
+                path: "/",
+                element: <NewChatPage />,
+            },
+            {
+                path: "/chat/:chatID",
+                element: <ChatConversationPage />,
+            },
+        ],
     },
 ];
 
@@ -28,19 +40,14 @@ const courseRoutes: RouteObject[] = [
     },
 ];
 
-const enableChatRoutes = import.meta.env?.VITE_FEATURE_ENABLE_CHAT === "true";
-const enableCourseRoutes =
-    import.meta.env?.VITE_FEATURE_ENABLE_COURSE === "true";
+const enableChatRoutes = ["llm", "dev"].includes(APP_MODE);
+const enableCourseRoutes = ["edu", "dev"].includes(APP_MODE);
 
 export const router = createBrowserRouter([
     {
         element: <AuthProvider />,
         errorElement: <RouteErrorBoundary />,
         children: [
-            {
-                path: "/",
-                element: <RedirectToLogin />,
-            },
             {
                 path: "/login",
                 element: <LoginPage />,

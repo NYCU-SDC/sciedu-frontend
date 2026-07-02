@@ -1,0 +1,48 @@
+.root {
+    /* Feature-namespaced accent tints derived from the shared orange token. */
+    --color-chat-accent: var(--color-orange-500);
+    --color-chat-accent-tint: color-mix(
+        in srgb,
+        var(--color-chat-accent) 8%,
+        var(--color-white)
+    );
+    --color-chat-accent-soft: color-mix(
+        in srgb,
+        var(--color-chat-accent) 16%,
+        var(--color-white)
+    );
+    --color-chat-accent-line: color-mix(
+        in srgb,
+        var(--color-chat-accent) 38%,
+        var(--color-white)
+    );
+
+    display: flex;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--color-white);
+    color: var(--color-neutral-900);
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
+    font-size: 1rem;
+}
+
+.root ::selection {
+    background: var(--color-chat-accent-soft);
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    background: var(--color-white);
+}
+
+.outlet {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}

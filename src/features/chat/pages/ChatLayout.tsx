@@ -67,7 +67,7 @@ export default function ChatLayout() {
                 queryKey: CHAT_HISTORY_QUERY_KEY,
             });
             toast.success("已刪除對話");
-            if (target.id === chatID) navigate("/chat");
+            if (target.id === chatID) navigate("/");
         } catch (error) {
             toast.error(
                 `刪除對話失敗: ${

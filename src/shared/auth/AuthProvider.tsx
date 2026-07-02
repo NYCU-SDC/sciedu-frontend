@@ -49,7 +49,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } catch {
             toast.error("自動登出失敗，請重整頁面來確認登出已完成");
         }
-        queryClient.removeQueries({ queryKey: ["auth"] });
+        // Remove cache on all existing queries to prevent auth state from leaking
+        queryClient.removeQueries();
         navigate("/login");
     }, [clearRefreshTimer, navigate, queryClient]);
 

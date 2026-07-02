@@ -187,10 +187,9 @@ export default function Sidebar({
                                     <span className={styles.histTitle}>
                                         {chat.title}
                                     </span>
-                                    <span
+                                    <button
                                         className={styles.histDel}
                                         role="button"
-                                        tabIndex={-1}
                                         title="刪除"
                                         aria-label={`刪除對話 ${chat.title}`}
                                         data-busy={deletingChatId === chat.id}
@@ -200,7 +199,7 @@ export default function Sidebar({
                                         }}
                                     >
                                         <Trash2 size={15} strokeWidth={1.6} />
-                                    </span>
+                                    </button>
                                 </button>
                             ))}
                         </div>

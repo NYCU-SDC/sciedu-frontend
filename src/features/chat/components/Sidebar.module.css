@@ -219,6 +219,12 @@
     opacity: 1;
 }
 
+/*Ensure element appears upon focus during keyboard navigation*/
+.histDel:focus {
+    opacity: 1;
+    color: var(--color-chat-accent);
+}
+
 .histDel:hover {
     color: var(--color-chat-accent);
 }

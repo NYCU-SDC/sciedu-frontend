@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { usePostHog } from "@posthog/react";
 import type { Message } from "../types/chat";
 import useChat from "../services/useChat";
 import Thread from "../components/Thread";
@@ -9,6 +10,7 @@ import styles from "./ChatConversationPage.module.css";
 export default function ChatConversationPage() {
     const { chatID = "" } = useParams<{ chatID: string }>();
     const chat = useChat(chatID);
+    const posthog = usePostHog();
 
     const [draft, setDraft] = useState("");
     const [editingMessageId, setEditingMessageId] = useState<string | null>(
@@ -57,6 +59,7 @@ export default function ChatConversationPage() {
     }, [baseMessages, streamingMessageId, streamingContent]);
 
     const handleSend = (text: string) => {
+        posthog.capture("message_sent", { chat_id: chatID });
         void chat.sendMessage({ content: text });
         setDraft("");
     };
@@ -71,6 +74,10 @@ export default function ChatConversationPage() {
 
     const handleSubmitEdit = () => {
         if (!editingMessageId) return;
+        posthog.capture("message_edited", {
+            chat_id: chatID,
+            message_id: editingMessageId,
+        });
         void chat.editAndSend(editingMessageId, editingDraft);
         setEditingMessageId(null);
         setEditingDraft("");
@@ -82,6 +89,10 @@ export default function ChatConversationPage() {
     };
 
     const handleRegenerate = (userMessageId: string) => {
+        posthog.capture("message_regenerated", {
+            chat_id: chatID,
+            message_id: userMessageId,
+        });
         void chat.resend(userMessageId);
     };
 

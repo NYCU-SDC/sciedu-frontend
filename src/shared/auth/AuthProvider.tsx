@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Outlet, useNavigate } from "react-router";
 import { toast } from "sonner";
+import { usePostHog } from "@posthog/react";
 
 import { ApiError } from "../utils/api";
 import { AuthContext } from "./AuthContext";
@@ -24,6 +25,7 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const posthog = usePostHog();
     const refreshTimerRef = useRef<number | null>(null);
 
     const sessionQuery = useQuery({
@@ -44,6 +46,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const logout = useCallback(async () => {
         clearRefreshTimer();
+        posthog.capture("user_logged_out");
+        posthog.reset();
         try {
             await requestLogout();
         } catch {
@@ -52,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Remove cache on all existing queries to prevent auth state from leaking
         queryClient.removeQueries();
         navigate("/login");
-    }, [clearRefreshTimer, navigate, queryClient]);
+    }, [clearRefreshTimer, navigate, posthog, queryClient]);
 
     const refreshMutation = useMutation<SessionResponse, Error, void>({
         mutationFn: refreshAuthToken,
@@ -119,6 +123,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         scheduleRefresh(sessionQuery.data);
         return clearRefreshTimer;
     }, [clearRefreshTimer, scheduleRefresh, sessionQuery.data]);
+
+    useEffect(() => {
+        if (sessionQuery.data) {
+            posthog.identify(sessionQuery.data.email, {
+                email: sessionQuery.data.email,
+                name: sessionQuery.data.username,
+            });
+        }
+    }, [posthog, sessionQuery.data]);
 
     const value = useMemo<AuthContextValue>(
         () => ({

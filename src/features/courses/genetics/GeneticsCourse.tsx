@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePostHog } from "@posthog/react";
 
 import { api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -35,6 +36,7 @@ function PageContent({ data, onNext }: PageContentProps) {
 export default function GeneticsCourse() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const queryClient = useQueryClient();
+    const posthog = usePostHog();
 
     const pageRequests = useMemo(
         () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
@@ -61,6 +63,12 @@ export default function GeneticsCourse() {
 
     const handleNext = () => {
         const nextIndex = Math.min(currentIndex + 1, pageRequests.length - 1);
+        posthog.capture("course_page_advanced", {
+            from_page_index: currentIndex,
+            to_page_index: nextIndex,
+            page_type: currentPage.request.type,
+            total_pages: pageRequests.length,
+        });
         setCurrentIndex(nextIndex);
     };
 

@@ -1,5 +1,5 @@
-import { ChatArea } from "../../../chat/components/ChatArea/ChatArea";
-import useChat from "../../../chat/services/useChat";
+import { ChatArea } from "../../../legacy_chat/components/ChatArea/ChatArea";
+import useChat from "../../../legacy_chat/services/useChat";
 import styles from "./CourseChat.module.css";
 
 export default function CourseChat() {

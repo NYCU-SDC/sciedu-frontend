@@ -11,8 +11,7 @@ import NotFoundPage from "./shared/components/NotFoundPage";
 import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
 
-const APP_MODE: "edu" | "llm" = import.meta.env.VITE_APP_MODE;
-const DEV_MODE = import.meta.env.VITE_DEV_ENABLE_ALL_FEATURES === "true";
+const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
 const chatRoutes: RouteObject[] = [
     {
@@ -41,8 +40,8 @@ const courseRoutes: RouteObject[] = [
     },
 ];
 
-const enableChatRoutes = APP_MODE === "llm" || DEV_MODE;
-const enableCourseRoutes = APP_MODE === "edu" || DEV_MODE;
+const enableChatRoutes = ["llm", "dev"].includes(APP_MODE);
+const enableCourseRoutes = ["edu", "dev"].includes(APP_MODE);
 
 export const router = createBrowserRouter([
     {

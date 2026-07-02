@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -11,6 +11,7 @@ import type {
     MessageBranchState,
 } from "../types/chat";
 import { parseAssistantContent } from "./parseAssistantContent";
+import { normalizeMath } from "./normalizeMath";
 import ThinkingBlock from "./ThinkingBlock";
 import styles from "./MessageTurn.module.css";
 
@@ -175,6 +176,7 @@ function AssistantMessage({
     const { answer, thought, isThinking } = parseAssistantContent(
         message.content
     );
+    const mathAnswer = useMemo(() => normalizeMath(answer), [answer]);
 
     return (
         <div className={styles.botWrap}>
@@ -195,7 +197,7 @@ function AssistantMessage({
                             ),
                         }}
                     >
-                        {answer}
+                        {mathAnswer}
                     </ReactMarkdown>
                 </div>
             ) : null}

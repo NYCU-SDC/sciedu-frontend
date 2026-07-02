@@ -119,6 +119,8 @@ jobs:
                   build-args: |
                       VITE_BUILD_MODE=development
                       VITE_BACKEND_BASE_URL=https://dev.sciedu.sdc.nycu.club
+                      VITE_APP_MODE=llm
+                      VITE_DEV_ENABLE_ALL_FEATURES=true
 
     Deploy:
         name: Deploy

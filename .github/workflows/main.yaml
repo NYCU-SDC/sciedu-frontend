@@ -129,6 +129,8 @@ jobs:
                       VITE_BUILD_MODE=development
                       VITE_BACKEND_BASE_URL=${{ inputs.VITE_BACKEND_BASE_URL || 'https://dev.sciedu.sdc.nycu.club' }}
                       VITE_APP_MODE=dev
+                      VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=${{ vars.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN }}
+                      VITE_PUBLIC_POSTHOG_HOST=${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
 
     Deploy:
         name: Deploy

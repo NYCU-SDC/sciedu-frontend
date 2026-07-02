@@ -6,6 +6,8 @@ services:
             - traefik
         environment:
             HOST: 0.0.0.0
+            VITE_APP_MODE: "llm"
+            VITE_DEV_ENABLE_ALL_FEATURES: true
         labels:
             - "vector.enable=true"
             - "traefik.enable=true"

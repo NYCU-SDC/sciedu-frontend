@@ -1,0 +1,346 @@
+.row {
+    display: block;
+}
+
+/* user → assistant within a turn: small gap; assistant → next turn: large gap. */
+.rowUser {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+}
+
+.rowBot {
+    margin-bottom: 2.125rem;
+}
+
+/* ----- user message ----- */
+.userWrap {
+    max-width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.bubble {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-900);
+    padding: 0.8125rem 1.0625rem;
+    border-radius: 1.125rem;
+    border-bottom-right-radius: 0.375rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 1rem;
+}
+
+.userMeta {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.userWrap:hover .userMeta,
+.userWrap:focus-within .userMeta {
+    opacity: 1;
+}
+
+.branch {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    color: var(--color-neutral-500);
+}
+
+.branchCount {
+    font-size: 0.78125rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 1.625rem;
+    text-align: center;
+}
+
+/* ----- inline editor ----- */
+.editor {
+    width: 100%;
+    max-width: 80%;
+    margin-left: auto;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 1.125rem;
+    padding: 0.875rem 1rem;
+}
+
+.editorArea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-neutral-900);
+    display: block;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.editorActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+}
+
+.btn {
+    padding: 0.4375rem 1rem;
+    border-radius: 0.5625rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.btnGhost {
+    background: var(--color-white);
+    border: 1px solid var(--color-neutral-200);
+    color: var(--color-neutral-700);
+}
+
+.btnGhost:hover {
+    background: var(--color-neutral-50);
+}
+
+.btnDark {
+    background: var(--color-neutral-900);
+    border: 1px solid var(--color-neutral-900);
+    color: var(--color-white);
+}
+
+.btnDark:hover {
+    background: var(--color-neutral-800);
+}
+
+.btnDark:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* ----- assistant message ----- */
+.botWrap {
+    max-width: 100%;
+}
+
+.rich {
+    color: var(--color-neutral-800);
+    line-height: 1.78;
+}
+
+.rich :global(p) {
+    margin: 0 0 0.875rem;
+}
+
+.rich :global(p:last-child) {
+    margin-bottom: 0;
+}
+
+.rich :global(strong) {
+    font-weight: 700;
+    color: var(--color-neutral-900);
+}
+
+.rich :global(h1),
+.rich :global(h2),
+.rich :global(h3),
+.rich :global(h4),
+.rich :global(h5),
+.rich :global(h6) {
+    font-size: 1.1875rem;
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    margin: 1.25rem 0 0.625rem;
+    line-height: 1.4;
+}
+
+.rich :global(ul),
+.rich :global(ol) {
+    margin: 0 0 0.875rem;
+    padding-left: 1.375rem;
+}
+
+.rich :global(li) {
+    margin-bottom: 0.4375rem;
+    line-height: 1.78;
+}
+
+.rich :global(ul li::marker) {
+    color: var(--color-chat-accent);
+}
+
+.rich :global(ol li::marker) {
+    color: var(--color-neutral-400);
+    font-weight: 600;
+}
+
+.rich :global(blockquote) {
+    margin: 0.375rem 0 1rem;
+    padding: 0.75rem 0.875rem;
+    border-left: 3px solid var(--color-chat-accent);
+    border-radius: 0.75rem;
+    background: var(--color-chat-accent-tint);
+    color: var(--color-neutral-700);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+}
+
+.rich :global(blockquote) :global(p:last-child) {
+    margin-bottom: 0;
+}
+
+.rich :global(code) {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.875em;
+    background: var(--color-neutral-100);
+    padding: 0.1em 0.35em;
+    border-radius: 0.3125rem;
+}
+
+.rich :global(pre) {
+    background: var(--color-neutral-50);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 0.625rem;
+    padding: 0.875rem 1rem;
+    overflow-x: auto;
+    margin: 0 0 0.875rem;
+}
+
+.rich :global(pre code) {
+    background: transparent;
+    padding: 0;
+}
+
+.rich :global(a) {
+    color: var(--color-chat-accent);
+    text-decoration: underline;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    margin: 0 0 0.875rem;
+}
+
+.tableWrapper :global(table) {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9375rem;
+}
+
+.tableWrapper :global(th),
+.tableWrapper :global(td) {
+    border: 1px solid var(--color-neutral-200);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.tableWrapper :global(th) {
+    background: var(--color-neutral-50);
+    font-weight: 600;
+}
+
+/* streaming dots */
+.dots {
+    display: inline-flex;
+    gap: 5px;
+    margin-top: 0.25rem;
+}
+
+.dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-neutral-400);
+    animation: blink 1.3s infinite;
+}
+
+.dots span:nth-child(2) {
+    animation-delay: 0.18s;
+}
+
+.dots span:nth-child(3) {
+    animation-delay: 0.36s;
+}
+
+@keyframes blink {
+    0%,
+    75%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+    35% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+}
+
+/* assistant action row */
+.botActions {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    margin-top: 0.625rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.rowBot:hover .botActions,
+.rowBot:focus-within .botActions {
+    opacity: 1;
+}
+
+/* shared icon button */
+.iconbtn {
+    width: 2.125rem;
+    height: 2.125rem;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 0.5625rem;
+    background: transparent;
+    color: var(--color-neutral-500);
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.iconbtn:hover {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-800);
+}
+
+.iconbtn:disabled {
+    opacity: 0.3;
+    cursor: default;
+    background: transparent;
+}
+
+.iconbtnSm {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.4375rem;
+}
+
+@media (max-width: 53.75rem) {
+    .userWrap,
+    .editor {
+        max-width: 92%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dots span {
+        animation: none;
+    }
+}

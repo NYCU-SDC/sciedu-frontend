@@ -1,0 +1,92 @@
+.thinking {
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    background: var(--color-neutral-50);
+    overflow: hidden;
+}
+
+.active {
+    border-color: var(--color-chat-accent-line);
+    background: var(--color-chat-accent-tint);
+}
+
+.head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5625rem;
+    padding: 0.6875rem 0.8125rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.84375rem;
+    font-family: inherit;
+}
+
+.head:disabled {
+    cursor: default;
+}
+
+.spark {
+    color: var(--color-chat-accent);
+    display: grid;
+    place-items: center;
+}
+
+.spin {
+    animation: sparkpulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkpulse {
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+}
+
+.label {
+    font-weight: 600;
+    color: var(--color-neutral-700);
+    white-space: nowrap;
+}
+
+.chevron {
+    margin-left: auto;
+    color: var(--color-neutral-400);
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s;
+}
+
+.up {
+    transform: rotate(180deg);
+}
+
+.body {
+    padding: 0 0.875rem 0.75rem;
+    border-top: 1px solid var(--color-neutral-200);
+}
+
+.active .body {
+    border-top-color: var(--color-chat-accent-line);
+}
+
+.reason {
+    font-size: 0.8125rem;
+    color: var(--color-neutral-500);
+    line-height: 1.72;
+    margin: 0.6875rem 0 0;
+    white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spin {
+        animation: none;
+    }
+}

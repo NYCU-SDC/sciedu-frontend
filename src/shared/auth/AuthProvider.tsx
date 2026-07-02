@@ -47,12 +47,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             await requestLogout();
         } catch {
-            toast.error(
-                "Sign-out request failed. Close your browser to ensure you are fully signed out."
-            );
+            toast.error("自動登出失敗，請重整頁面來確認登出已完成");
         }
-        queryClient.removeQueries({ queryKey: ["auth"] });
-        toast.info("Logged out");
+        // Remove cache on all existing queries to prevent auth state from leaking
+        queryClient.removeQueries();
         navigate("/login");
     }, [clearRefreshTimer, navigate, queryClient]);
 

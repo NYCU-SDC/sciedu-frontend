@@ -49,7 +49,7 @@ export default function LoginPage() {
         <div className={styles.page}>
             <header className={styles.brand}>
                 <Logo className={styles.brandIcon} />
-                <span className={styles.brandName}>SCIEDU</span>
+                <span className={styles.brandName}>SciLLM</span>
             </header>
 
             <main className={styles.loginArea}>
@@ -62,7 +62,7 @@ export default function LoginPage() {
                             您好，歡迎回來
                         </h1>
                         <p className={styles.subtitle}>
-                            繼續使用 SCIEDU 的學習
+                            繼續使用 SciLLM 的學習
                         </p>
                     </div>
 

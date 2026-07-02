@@ -1,0 +1,41 @@
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 3.375rem;
+    padding: 0 0.875rem;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 0.875rem;
+    color: var(--color-neutral-600);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+    padding-left: 0.25rem;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.iconbtn {
+    width: 2.125rem;
+    height: 2.125rem;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 0.5625rem;
+    background: transparent;
+    color: var(--color-neutral-500);
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.iconbtn:hover {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-800);
+}

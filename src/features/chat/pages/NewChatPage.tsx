@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { usePostHog } from "@posthog/react";
 import Home from "../components/Home";
 import { startChat } from "../services/startChat";
 import { CHAT_HISTORY_QUERY_KEY } from "../../../shared/network/chat";
@@ -9,6 +10,7 @@ import { CHAT_HISTORY_QUERY_KEY } from "../../../shared/network/chat";
 export default function NewChatPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const posthog = usePostHog();
     const [draft, setDraft] = useState("");
     const [creating, setCreating] = useState(false);
 
@@ -19,6 +21,7 @@ export default function NewChatPage() {
         setCreating(true);
         try {
             const { chatID } = await startChat(queryClient, trimmed);
+            posthog.capture("chat_started", { chat_id: chatID });
             void queryClient.invalidateQueries({
                 queryKey: CHAT_HISTORY_QUERY_KEY,
             });

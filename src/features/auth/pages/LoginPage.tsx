@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import { usePostHog } from "@posthog/react";
 
 import { useAuth } from "../../../shared/auth";
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -36,6 +37,7 @@ function GoogleIcon() {
 export default function LoginPage() {
     const { login, isAuthenticated, isLoading } = useAuth();
     const navigate = useNavigate();
+    const posthog = usePostHog();
 
     useDocumentTitle("登入");
 
@@ -69,7 +71,12 @@ export default function LoginPage() {
                     <button
                         type="button"
                         className={styles.googleButton}
-                        onClick={() => login("google")}
+                        onClick={() => {
+                            posthog.capture("user_login_initiated", {
+                                provider: "google",
+                            });
+                            login("google");
+                        }}
                     >
                         <GoogleIcon />
                         <span>使用 Google 帳號繼續</span>

@@ -7,6 +7,7 @@ import type {
 import { useQueries } from "@tanstack/react-query";
 import { api } from "../../../../shared/utils/api";
 import { Skeleton, Button, TextArea } from "@radix-ui/themes";
+import { usePostHog } from "@posthog/react";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
@@ -18,6 +19,7 @@ type Props = {
 
 export default function Questions({ data, onNext }: Props) {
     const req = data.request as QuestionPage;
+    const posthog = usePostHog();
 
     const labelQueries = useQueries({
         queries: req.columns.map((col) => ({
@@ -141,7 +143,13 @@ export default function Questions({ data, onNext }: Props) {
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={onNext}
+                        onClick={() => {
+                            posthog.capture("course_questions_submitted", {
+                                page_index: data.pageIndex,
+                                question_count: allQuestionIds.length,
+                            });
+                            onNext();
+                        }}
                         radius="full"
                     >
                         送出並前往下一頁

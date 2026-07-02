@@ -276,6 +276,20 @@
     color: var(--color-neutral-500);
 }
 
-.user > svg {
+.userMenu {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    padding: 0.25rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--color-neutral-500);
     cursor: pointer;
+    transition: all 0.12s;
+}
+
+.userMenu:hover {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-800);
 }

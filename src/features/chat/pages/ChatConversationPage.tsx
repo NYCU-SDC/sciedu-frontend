@@ -111,7 +111,7 @@ export default function ChatConversationPage() {
                     />
                 </div>
                 <div className={styles.dockNote}>
-                    SCIEDU 有可能出錯，重要內容請對照課本。
+                    SciLLM 有可能出錯，重要內容請對照課本。
                 </div>
             </div>
         </div>

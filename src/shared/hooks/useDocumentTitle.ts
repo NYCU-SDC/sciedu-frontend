@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 
-const APP_NAME = "SciEdu";
+const APP_MODE: "edu" | "llm" = import.meta.env.VITE_APP_MODE;
+
+const APP_NAME = APP_MODE === "llm" ? "SciLLM" : "SciEdu";
 
 /**
  * Sets `document.title` to `"<title> - SciEdu"` while the component is mounted.

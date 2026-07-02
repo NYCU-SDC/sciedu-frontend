@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { MoreHorizontal, PanelLeft, Plus, Search, Trash2 } from "lucide-react";
+import {
+    LogOut,
+    MoreHorizontal,
+    PanelLeft,
+    Plus,
+    Search,
+    Trash2,
+} from "lucide-react";
+import { DropdownMenu } from "@radix-ui/themes";
 import { useAuth } from "../../../shared/auth";
 import Logo from "../../../shared/components/Logo";
 import {
@@ -59,7 +67,7 @@ export default function Sidebar({
     onNewChat,
     onClose,
 }: Props) {
-    const { session } = useAuth();
+    const { session, logout } = useAuth();
     const [query, setQuery] = useState("");
     const { ref, inView } = useInView({ rootMargin: "80px 0px" });
 
@@ -96,7 +104,7 @@ export default function Sidebar({
         !isLoading && !isError && groups.every((group) => !group.items.length);
 
     const username = session?.username ?? "訪客";
-    const email = session?.email ?? "請登入以使用 SciEdu";
+    const email = session?.email ?? "請登入以使用 SciLLM";
     const initial = username.slice(0, 1) || "客";
 
     return (
@@ -117,7 +125,7 @@ export default function Sidebar({
                 <div className={styles.top}>
                     <span className={styles.brand}>
                         <Logo className={styles.brandIcon} />
-                        <span className={styles.brandWord}>SCIEDU</span>
+                        <span className={styles.brandWord}>SciLLM</span>
                     </span>
                     <button
                         type="button"
@@ -211,7 +219,31 @@ export default function Sidebar({
                         <span className={styles.userName}>{username}</span>
                         <span className={styles.userPlan}>{email}</span>
                     </span>
-                    <MoreHorizontal size={18} strokeWidth={1.6} />
+                    {session ? (
+                        <DropdownMenu.Root>
+                            <DropdownMenu.Trigger>
+                                <button
+                                    type="button"
+                                    className={styles.userMenu}
+                                    aria-label="使用者選單"
+                                >
+                                    <MoreHorizontal
+                                        size={18}
+                                        strokeWidth={1.6}
+                                    />
+                                </button>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Content align="end" size="1">
+                                <DropdownMenu.Item
+                                    color="red"
+                                    onSelect={() => void logout()}
+                                >
+                                    <LogOut size={15} strokeWidth={1.6} />
+                                    登出
+                                </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                        </DropdownMenu.Root>
+                    ) : null}
                 </div>
             </aside>
         </>

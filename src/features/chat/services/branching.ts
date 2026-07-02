@@ -82,8 +82,7 @@ export function getBranchState(
 
     const siblings = messages.filter(
         (message) =>
-            message.role === "user" &&
-            message.previousID === target.previousID
+            message.role === "user" && message.previousID === target.previousID
     );
 
     const currentIndex = siblings.findIndex(

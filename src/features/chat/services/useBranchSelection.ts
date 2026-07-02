@@ -30,8 +30,7 @@ export function useBranchSelection(messages: Message[]) {
 
             const siblings = messages.filter(
                 (m) =>
-                    m.role === target.role &&
-                    m.previousID === target.previousID
+                    m.role === target.role && m.previousID === target.previousID
             );
             if (siblings.length <= 1) return;
 
@@ -58,9 +57,15 @@ export function useBranchSelection(messages: Message[]) {
     );
 
     /** Pin a parent's selection to a specific child (e.g. a just-sent branch). */
-    const selectBranch = useCallback((parentID: string | undefined, childID: string) => {
-        setSelection((prev) => ({ ...prev, [toBranchKey(parentID)]: childID }));
-    }, []);
+    const selectBranch = useCallback(
+        (parentID: string | undefined, childID: string) => {
+            setSelection((prev) => ({
+                ...prev,
+                [toBranchKey(parentID)]: childID,
+            }));
+        },
+        []
+    );
 
     return { visible, switchBranch, getBranchState, selectBranch };
 }

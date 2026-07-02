@@ -28,7 +28,8 @@ export default function CourseChat() {
         streamingContent,
     } = chat;
 
-    const busy = creating || chat.status === "streaming" || chat.status === "loading";
+    const busy =
+        creating || chat.status === "streaming" || chat.status === "loading";
 
     // Overlay the live stream buffer onto its message (or append a placeholder
     // if the cache hasn't caught up to the streaming reply yet).

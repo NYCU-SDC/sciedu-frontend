@@ -26,9 +26,8 @@ function readStoredModel(): string {
  */
 export function ModelSelectionProvider({ children }: { children: ReactNode }) {
     const flag = useFeatureFlagVariantKey(FLAG_KEY);
-    const forcedModelId = typeof flag === "string" && isKnownModelId(flag)
-        ? flag
-        : undefined;
+    const forcedModelId =
+        typeof flag === "string" && isKnownModelId(flag) ? flag : undefined;
     const showSelector = flag === "none";
 
     const [selectedModelId, setSelectedModelIdState] =

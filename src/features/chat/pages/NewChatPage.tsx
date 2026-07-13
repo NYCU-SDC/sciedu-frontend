@@ -22,7 +22,11 @@ export default function NewChatPage() {
 
         setCreating(true);
         try {
-            const { chatID } = await startChat(queryClient, trimmed, modelToSend);
+            const { chatID } = await startChat(
+                queryClient,
+                trimmed,
+                modelToSend
+            );
             posthog.capture("chat_started", { chat_id: chatID });
             void queryClient.invalidateQueries({
                 queryKey: CHAT_HISTORY_QUERY_KEY,

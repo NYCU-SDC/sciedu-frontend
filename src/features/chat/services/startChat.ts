@@ -15,10 +15,16 @@ export type StartChatResult = {
  */
 export async function startChat(
     queryClient: QueryClient,
-    content: string
+    content: string,
+    model?: string
 ): Promise<StartChatResult> {
     const { chatID } = await createChat();
-    const { message, replyMessageID } = await createMessage(chatID, content);
+    const { message, replyMessageID } = await createMessage(
+        chatID,
+        content,
+        undefined,
+        model
+    );
 
     const now = new Date().toISOString();
     const optimistic: GetChatResponse = {

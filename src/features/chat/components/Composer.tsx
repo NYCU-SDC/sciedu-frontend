@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ArrowUp } from "lucide-react";
+import ModelSelector from "./ModelSelector";
 import styles from "./Composer.module.css";
 
 type Props = {
@@ -63,6 +64,7 @@ export default function Composer({
             />
             <div className={styles.bar}>
                 <div className={styles.left}>
+                    <ModelSelector />
                     <span className={styles.hint}>
                         由國中自然教科書輔助回答
                     </span>

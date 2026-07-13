@@ -9,6 +9,7 @@ import { createMessage } from "../../../shared/network/chat";
 import { useBranchSelection } from "./useBranchSelection";
 import { useChatMessages } from "./useChatMessages";
 import { useMessageStream } from "./useMessageStream";
+import { useModelSelection } from "./ModelSelectionContext";
 
 export type ChatStatus = "loading" | "idle" | "streaming" | "error";
 
@@ -55,6 +56,7 @@ export type UseChatResult = {
 export function useChat(chatID: string): UseChatResult {
     const query = useChatMessages(chatID);
     const allMessages = useMemo(() => query.data?.messages ?? [], [query.data]);
+    const { modelToSend } = useModelSelection();
 
     const { visible, switchBranch, getBranchState, selectBranch } =
         useBranchSelection(allMessages);
@@ -89,7 +91,8 @@ export function useChat(chatID: string): UseChatResult {
             const { message, replyMessageID } = await createMessage(
                 chatID,
                 trimmed,
-                parentID
+                parentID,
+                modelToSend
             );
 
             // Pin the freshly created sibling so it is the visible branch.
@@ -97,7 +100,7 @@ export function useChat(chatID: string): UseChatResult {
             setSentReplyId(replyMessageID);
             await query.refetch();
         },
-        [chatID, visible, selectBranch, query]
+        [chatID, visible, selectBranch, query, modelToSend]
     );
 
     const resend = useCallback(

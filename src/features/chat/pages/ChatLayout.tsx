@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
+import { ModelSelectionProvider } from "../services/ModelSelectionProvider";
 import { useChatMessages } from "../services/useChatMessages";
 import { useDocumentTitle } from "../../../shared/hooks";
 import {
@@ -80,27 +81,29 @@ export default function ChatLayout() {
     };
 
     return (
-        <div className={styles.root}>
-            <Sidebar
-                open={sidebarOpen}
-                mobile={isMobile}
-                activeChatId={chatID ?? null}
-                deletingChatId={deletingChatId}
-                onSelect={handleSelect}
-                onDelete={handleDelete}
-                onNewChat={handleNewChat}
-                onClose={() => setSidebarOpen(false)}
-            />
-            <main className={styles.main}>
-                <TopBar
-                    title={title}
-                    showExpand={!sidebarOpen || isMobile}
-                    onExpandSidebar={() => setSidebarOpen(true)}
+        <ModelSelectionProvider>
+            <div className={styles.root}>
+                <Sidebar
+                    open={sidebarOpen}
+                    mobile={isMobile}
+                    activeChatId={chatID ?? null}
+                    deletingChatId={deletingChatId}
+                    onSelect={handleSelect}
+                    onDelete={handleDelete}
+                    onNewChat={handleNewChat}
+                    onClose={() => setSidebarOpen(false)}
                 />
-                <div className={styles.outlet}>
-                    <Outlet />
-                </div>
-            </main>
-        </div>
+                <main className={styles.main}>
+                    <TopBar
+                        title={title}
+                        showExpand={!sidebarOpen || isMobile}
+                        onExpandSidebar={() => setSidebarOpen(true)}
+                    />
+                    <div className={styles.outlet}>
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
+        </ModelSelectionProvider>
     );
 }

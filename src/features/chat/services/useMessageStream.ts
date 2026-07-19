@@ -52,6 +52,9 @@ export function useMessageStream(
     // synchronously, without depending on the latest `state` in this closure.
     const bufferRef = useRef("");
 
+    // Pending animation frame for the coalesced streaming flush.
+    const frameRef = useRef<number | null>(null);
+
     // Keep the latest settle callback without re-subscribing the stream.
     const onSettledRef = useRef(onSettled);
     useEffect(() => {
@@ -63,7 +66,25 @@ export function useMessageStream(
 
         bufferRef.current = "";
 
+        // Coalesce delta bursts: deltas only append to the ref, and a single
+        // animation frame publishes the buffer to React state. Rendering cost
+        // is then bounded by the frame rate instead of the SSE event rate.
+        const cancelFlush = () => {
+            if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+                frameRef.current = null;
+            }
+        };
+
+        const scheduleFlush = () => {
+            frameRef.current ??= requestAnimationFrame(() => {
+                frameRef.current = null;
+                setState({ phase: "streaming", buffer: bufferRef.current });
+            });
+        };
+
         const settle = (phase: "done" | "ended") => {
+            cancelFlush();
             // On a clean finish, push the completed reply into the cache *before*
             // clearing the ephemeral stream state and refetching. The UI renders
             // the live buffer only while streaming, so without this the finished
@@ -96,7 +117,7 @@ export function useMessageStream(
         const close = openStream(messageID, {
             onDelta: (delta) => {
                 bufferRef.current += delta;
-                setState({ phase: "streaming", buffer: bufferRef.current });
+                scheduleFlush();
             },
             onFinish: () => settle("done"),
             onEnded: () => settle("ended"),
@@ -106,6 +127,7 @@ export function useMessageStream(
         // Reset to idle on teardown — when `messageID` changes or clears, this
         // runs before the next stream opens, discarding the ephemeral buffer.
         return () => {
+            cancelFlush();
             close();
             closeRef.current = null;
             bufferRef.current = "";

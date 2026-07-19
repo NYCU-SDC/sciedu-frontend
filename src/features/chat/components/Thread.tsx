@@ -51,10 +51,14 @@ export default function Thread({
                     <MessageTurn
                         key={message.id}
                         message={message}
-                        branchState={getBranchState(message.id)}
+                        getBranchState={getBranchState}
                         actionsDisabled={actionsDisabled}
                         isEditing={editingMessageId === message.id}
-                        editingDraft={editingDraft}
+                        // Scoped to the turn being edited so keystrokes don't
+                        // invalidate every other memoized turn.
+                        editingDraft={
+                            editingMessageId === message.id ? editingDraft : ""
+                        }
                         onSwitchBranch={onSwitchBranch}
                         onEdit={onEdit}
                         onEditingDraftChange={onEditingDraftChange}

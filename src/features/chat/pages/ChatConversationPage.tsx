@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { usePostHog } from "@posthog/react";
 import type { Message } from "../types/chat";
@@ -64,37 +64,51 @@ export default function ChatConversationPage() {
         setDraft("");
     };
 
-    // Seed the editor draft when entering edit mode.
-    const handleEdit = (messageId: string) => {
-        const target = baseMessages.find((message) => message.id === messageId);
-        if (!target) return;
-        setEditingDraft(target.content);
-        setEditingMessageId(messageId);
-    };
+    // Handlers are memoized so their identities survive streaming frames —
+    // MessageTurn is memoized on shallow prop equality, and an inline handler
+    // would force every turn to re-render each frame.
 
-    const handleSubmitEdit = () => {
+    // Seed the editor draft when entering edit mode.
+    const handleEdit = useCallback(
+        (messageId: string) => {
+            const target = baseMessages.find(
+                (message) => message.id === messageId
+            );
+            if (!target) return;
+            setEditingDraft(target.content);
+            setEditingMessageId(messageId);
+        },
+        [baseMessages]
+    );
+
+    const { editAndSend, resend } = chat;
+
+    const handleSubmitEdit = useCallback(() => {
         if (!editingMessageId) return;
         posthog.capture("message_edited", {
             chat_id: chatID,
             message_id: editingMessageId,
         });
-        void chat.editAndSend(editingMessageId, editingDraft);
+        void editAndSend(editingMessageId, editingDraft);
         setEditingMessageId(null);
         setEditingDraft("");
-    };
+    }, [editingMessageId, editingDraft, editAndSend, posthog, chatID]);
 
-    const handleCancelEdit = () => {
+    const handleCancelEdit = useCallback(() => {
         setEditingMessageId(null);
         setEditingDraft("");
-    };
+    }, []);
 
-    const handleRegenerate = (userMessageId: string) => {
-        posthog.capture("message_regenerated", {
-            chat_id: chatID,
-            message_id: userMessageId,
-        });
-        void chat.resend(userMessageId);
-    };
+    const handleRegenerate = useCallback(
+        (userMessageId: string) => {
+            posthog.capture("message_regenerated", {
+                chat_id: chatID,
+                message_id: userMessageId,
+            });
+            void resend(userMessageId);
+        },
+        [resend, posthog, chatID]
+    );
 
     return (
         <div className={styles.conversation}>

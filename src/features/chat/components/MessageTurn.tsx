@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import ReactMarkdown from "react-markdown";
+import { memo, useEffect, useMemo, useRef } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -17,7 +17,7 @@ import styles from "./MessageTurn.module.css";
 
 type Props = {
     message: Message;
-    branchState: MessageBranchState;
+    getBranchState: (messageId: string) => MessageBranchState;
     actionsDisabled: boolean;
     isEditing: boolean;
     editingDraft: string;
@@ -29,6 +29,23 @@ type Props = {
     onRegenerate: (userMessageId: string) => void;
 };
 
+// Hoisted so their identities are stable across renders — inline arrays/objects
+// would defeat `MemoMarkdown` below, forcing a full remark/rehype re-parse of
+// every message on every streaming frame.
+const REMARK_PLUGINS = [remarkGfm, remarkMath];
+const REHYPE_PLUGINS = [rehypeKatex];
+const MARKDOWN_COMPONENTS: Components = {
+    table: ({ node: _node, ...props }) => (
+        <div className={styles.tableWrapper}>
+            <table {...props} />
+        </div>
+    ),
+};
+
+// Skips the markdown + KaTeX pipeline entirely when the content string is
+// unchanged, so historical messages cost nothing while a reply streams.
+const MemoMarkdown = memo(ReactMarkdown);
+
 function UserMeta({
     message,
     branchState,
@@ -38,13 +55,8 @@ function UserMeta({
     onRegenerate,
 }: Pick<
     Props,
-    | "message"
-    | "branchState"
-    | "actionsDisabled"
-    | "onSwitchBranch"
-    | "onEdit"
-    | "onRegenerate"
->) {
+    "message" | "actionsDisabled" | "onSwitchBranch" | "onEdit" | "onRegenerate"
+> & { branchState: MessageBranchState }) {
     const { currentIndex, total, canGoPrev, canGoNext } = branchState;
     return (
         <div className={styles.userMeta}>
@@ -173,8 +185,9 @@ function AssistantMessage({
     message,
 }: Pick<Props, "message" | "actionsDisabled" | "onRegenerate">) {
     const streaming = message.status === "streaming";
-    const { answer, thought, isThinking } = parseAssistantContent(
-        message.content
+    const { answer, thought, isThinking } = useMemo(
+        () => parseAssistantContent(message.content),
+        [message.content]
     );
     const mathAnswer = useMemo(() => normalizeMath(answer), [answer]);
 
@@ -186,19 +199,13 @@ function AssistantMessage({
 
             {answer ? (
                 <div className={styles.rich}>
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeKatex]}
-                        components={{
-                            table: ({ node: _node, ...props }) => (
-                                <div className={styles.tableWrapper}>
-                                    <table {...props} />
-                                </div>
-                            ),
-                        }}
+                    <MemoMarkdown
+                        remarkPlugins={REMARK_PLUGINS}
+                        rehypePlugins={REHYPE_PLUGINS}
+                        components={MARKDOWN_COMPONENTS}
                     >
                         {mathAnswer}
-                    </ReactMarkdown>
+                    </MemoMarkdown>
                 </div>
             ) : null}
 
@@ -213,8 +220,8 @@ function AssistantMessage({
     );
 }
 
-export default function MessageTurn(props: Props) {
-    const { message, isEditing } = props;
+function MessageTurn(props: Props) {
+    const { message, isEditing, getBranchState } = props;
 
     if (message.role === "user") {
         return (
@@ -224,7 +231,10 @@ export default function MessageTurn(props: Props) {
                 ) : (
                     <div className={styles.userWrap}>
                         <div className={styles.bubble}>{message.content}</div>
-                        <UserMeta {...props} />
+                        <UserMeta
+                            {...props}
+                            branchState={getBranchState(message.id)}
+                        />
                     </div>
                 )}
             </div>
@@ -237,3 +247,9 @@ export default function MessageTurn(props: Props) {
         </div>
     );
 }
+
+// Memoized so a streaming frame only re-renders the turn whose content
+// changed. Requires every prop to be referentially stable across frames —
+// `Thread` / `ChatConversationPage` guarantee this (stable callbacks, and
+// `editingDraft` scoped to the turn being edited).
+export default memo(MessageTurn);

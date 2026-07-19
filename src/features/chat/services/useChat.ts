@@ -75,6 +75,11 @@ export function useChat(chatID: string): UseChatResult {
         () => setSentReplyId(null)
     );
 
+    // `query` itself is a fresh object every render; `refetch` is stable, and
+    // depending on it (not `query`) keeps `sendMessage` — and everything built
+    // on it — referentially stable so memoized turns aren't invalidated.
+    const { refetch } = query;
+
     const sendMessage = useCallback(
         async (input: SendMessageInput) => {
             const trimmed = input.content.trim();
@@ -95,9 +100,9 @@ export function useChat(chatID: string): UseChatResult {
             // Pin the freshly created sibling so it is the visible branch.
             selectBranch(message.previousID, message.id);
             setSentReplyId(replyMessageID);
-            await query.refetch();
+            await refetch();
         },
-        [chatID, visible, selectBranch, query]
+        [chatID, visible, selectBranch, refetch]
     );
 
     const resend = useCallback(

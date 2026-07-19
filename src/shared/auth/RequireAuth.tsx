@@ -3,14 +3,16 @@ import { useAuth } from "./AuthContext";
 import { useLayoutEffect, type JSX } from "react";
 
 export default function RequireAuth({ children }: { children: JSX.Element }) {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const navigate = useNavigate();
 
     useLayoutEffect(() => {
-        if (!isAuthenticated) navigate("/login");
-    }, [isAuthenticated, navigate]);
+        if (!isLoading && !isAuthenticated) {
+            navigate("/login", { replace: true });
+        }
+    }, [isAuthenticated, isLoading, navigate]);
 
-    if (!isAuthenticated) return null;
+    if (isLoading || !isAuthenticated) return null;
 
     return children;
 }

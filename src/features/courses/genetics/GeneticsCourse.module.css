@@ -25,6 +25,17 @@
     font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
 }
 
+.pageSlot {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.pageSlot[hidden] {
+    display: none;
+}
+
 .copyrightFooter {
     flex-shrink: 0;
     margin-top: 0;

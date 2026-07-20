@@ -46,16 +46,20 @@ function CoursePage({
     // independent chat session and retains it while the student navigates.
     const chat = useCourseChatController();
 
-    if (!isActive) return null;
-
     return (
-        <PageContent
-            data={data}
-            chat={chat}
-            answers={answers}
-            onNext={onNext}
-            onAnswerChange={onAnswerChange}
-        />
+        <section
+            className={styles.pageSlot}
+            hidden={!isActive}
+            aria-hidden={!isActive}
+        >
+            <PageContent
+                data={data}
+                chat={chat}
+                answers={answers}
+                onNext={onNext}
+                onAnswerChange={onAnswerChange}
+            />
+        </section>
     );
 }
 

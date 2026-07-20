@@ -64,7 +64,7 @@ export default function Navbar({
                                         key={step}
                                         type="button"
                                         className={`${styles.pageButton} ${isActive ? styles.activeNum : ""} ${isLocked ? styles.lockedNum : ""}`}
-                                        disabled={isLocked}
+                                        aria-disabled={isLocked}
                                         aria-current={
                                             isActive ? "page" : undefined
                                         }
@@ -76,7 +76,9 @@ export default function Navbar({
                                         title={
                                             isLocked ? lockedMessage : undefined
                                         }
-                                        onClick={() => onStepChange(step)}
+                                        onClick={() => {
+                                            if (!isLocked) onStepChange(step);
+                                        }}
                                     >
                                         <span>{pageNumber}</span>
                                         {isLocked && (

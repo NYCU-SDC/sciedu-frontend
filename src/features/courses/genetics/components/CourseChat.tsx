@@ -61,19 +61,26 @@ export default function CourseChat({ controller }: Props) {
                     )}
                 </div>
             ) : (
-                <Thread
-                    messages={messages}
-                    actionsDisabled={busy}
-                    editingMessageId={editingMessageId}
-                    editingDraft={editingDraft}
-                    getBranchState={chat.getBranchState}
-                    onSwitchBranch={chat.switchBranch}
-                    onEdit={handleEdit}
-                    onEditingDraftChange={setEditingDraft}
-                    onCancelEdit={handleCancelEdit}
-                    onSubmitEdit={handleSubmitEdit}
-                    onRegenerate={handleRegenerate}
-                />
+                <>
+                    <Thread
+                        messages={messages}
+                        actionsDisabled={busy}
+                        editingMessageId={editingMessageId}
+                        editingDraft={editingDraft}
+                        getBranchState={chat.getBranchState}
+                        onSwitchBranch={chat.switchBranch}
+                        onEdit={handleEdit}
+                        onEditingDraftChange={setEditingDraft}
+                        onCancelEdit={handleCancelEdit}
+                        onSubmitEdit={handleSubmitEdit}
+                        onRegenerate={handleRegenerate}
+                    />
+                    {errorMessage && (
+                        <p className={styles.error} role="alert">
+                            {errorMessage}
+                        </p>
+                    )}
+                </>
             )}
 
             <div className={styles.dock}>

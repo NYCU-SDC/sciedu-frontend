@@ -31,6 +31,34 @@ type PageContentProps = {
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
 };
 
+type CoursePageProps = PageContentProps & {
+    isActive: boolean;
+};
+
+function CoursePage({
+    isActive,
+    data,
+    answers,
+    onNext,
+    onAnswerChange,
+}: Omit<CoursePageProps, "chat">) {
+    // Keep one controller mounted for each page so every page owns an
+    // independent chat session and retains it while the student navigates.
+    const chat = useCourseChatController();
+
+    if (!isActive) return null;
+
+    return (
+        <PageContent
+            data={data}
+            chat={chat}
+            answers={answers}
+            onNext={onNext}
+            onAnswerChange={onAnswerChange}
+        />
+    );
+}
+
 function PageContent({
     data,
     chat,
@@ -72,7 +100,6 @@ export default function GeneticsCourse() {
     const [answersByPage, setAnswersByPage] = useState<
         Record<number, CourseAnswers>
     >({});
-    const chat = useCourseChatController();
     const queryClient = useQueryClient();
     const posthog = usePostHog();
 
@@ -133,11 +160,15 @@ export default function GeneticsCourse() {
         setCurrentIndex(step);
     };
 
-    const handleAnswerChange = (questionId: string, answer: CourseAnswer) => {
+    const handleAnswerChange = (
+        pageIndex: number,
+        questionId: string,
+        answer: CourseAnswer
+    ) => {
         setAnswersByPage((previousAnswersByPage) => ({
             ...previousAnswersByPage,
-            [currentPage.pageIndex]: {
-                ...previousAnswersByPage[currentPage.pageIndex],
+            [pageIndex]: {
+                ...previousAnswersByPage[pageIndex],
                 [questionId]: answer,
             },
         }));
@@ -171,13 +202,22 @@ export default function GeneticsCourse() {
                     secondaryTitle={currentPage.secondaryTitle}
                     onStepChange={handleStepChange}
                 />
-                <PageContent
-                    data={currentPage}
-                    chat={chat}
-                    answers={answersByPage[currentPage.pageIndex] ?? {}}
-                    onNext={handleNext}
-                    onAnswerChange={handleAnswerChange}
-                />
+                {pageRequests.map((page, index) => (
+                    <CoursePage
+                        key={page.pageIndex}
+                        isActive={index === currentIndex}
+                        data={page}
+                        answers={answersByPage[page.pageIndex] ?? {}}
+                        onNext={handleNext}
+                        onAnswerChange={(questionId, answer) =>
+                            handleAnswerChange(
+                                page.pageIndex,
+                                questionId,
+                                answer
+                            )
+                        }
+                    />
+                ))}
                 {/* copyright footer */}
                 <footer className={styles.copyrightFooter}>
                     ©{currentYear} Institute of Education, Science Education

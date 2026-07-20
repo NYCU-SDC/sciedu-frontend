@@ -126,8 +126,8 @@
     background-color: #fff;
 }
 
-.pageButton:not(:disabled):hover,
-.pageButton:not(:disabled):focus-visible {
+.pageButton:not([aria-disabled="true"]):hover,
+.pageButton:not([aria-disabled="true"]):focus-visible {
     color: black;
 }
 

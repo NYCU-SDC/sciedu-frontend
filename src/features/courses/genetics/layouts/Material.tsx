@@ -1,5 +1,5 @@
 import { Button, Skeleton } from "@radix-ui/themes";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type {
     CourseAnswer,
     CourseAnswers,
@@ -14,6 +14,7 @@ import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
 import type { CourseChatController } from "../components/useCourseChatController";
+import { useAnswerSubmission } from "../components/useAnswerSubmission";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
@@ -21,6 +22,7 @@ type Props = {
     data: CoursePageRequest;
     chat: CourseChatController;
     answers: CourseAnswers;
+    isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
 };
@@ -29,6 +31,7 @@ export default function Material({
     data,
     chat,
     answers,
+    isCompleted,
     onNext,
     onAnswerChange,
 }: Props) {
@@ -48,7 +51,6 @@ export default function Material({
 
     const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
     const [imageError, setImageError] = useState(false);
-
     const quesTitleQueries = useQueries({
         queries: req.questionSections.map((section) => ({
             queryKey: ["content", "text", section.titleId],
@@ -66,6 +68,39 @@ export default function Material({
                 api<QuestionResponse>(`/api/questions/${section.questionId}`),
         })),
     });
+
+    const submittableQuestions = useMemo(
+        () =>
+            req.questionSections.map((section, index) => {
+                const query = quesContentQueries[index];
+                return {
+                    questionId: section.questionId,
+                    question: query.data,
+                    isUnavailable:
+                        query.isLoading || query.isError || !query.data,
+                };
+            }),
+        [quesContentQueries, req.questionSections]
+    );
+
+    const {
+        clearAnswerError,
+        isSubmitting,
+        submissionError,
+        submit,
+        submittedQuestionIds,
+        validationErrors,
+    } = useAnswerSubmission({
+        questions: submittableQuestions,
+        answers,
+        isCompleted,
+        onSuccess: onNext,
+    });
+
+    const handleAnswerChange = (questionId: string, answer: string) => {
+        clearAnswerError(questionId);
+        onAnswerChange(questionId, answer);
+    };
 
     return (
         <div className={styles.pageContainer}>
@@ -120,8 +155,18 @@ export default function Material({
                                             : null
                                     }
                                     answer={answers[section.questionId] ?? ""}
+                                    disabled={
+                                        isCompleted ||
+                                        isSubmitting ||
+                                        submittedQuestionIds.has(
+                                            section.questionId
+                                        )
+                                    }
+                                    validationError={
+                                        validationErrors[section.questionId]
+                                    }
                                     onAnswerChange={(answer) =>
-                                        onAnswerChange(
+                                        handleAnswerChange(
                                             section.questionId,
                                             answer
                                         )
@@ -134,14 +179,29 @@ export default function Material({
                 {/* right sidebar */}
                 <aside className={styles.chatSidebar}>
                     <CourseChat controller={chat} />
+                    {submissionError && (
+                        <p
+                            className={FooterStyles.submissionMessage}
+                            role="alert"
+                        >
+                            {submissionError}
+                        </p>
+                    )}
                     <Button
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={onNext}
+                        onClick={submit}
+                        disabled={isSubmitting}
                         radius="full"
                     >
-                        送出並前往下一頁
+                        {isSubmitting
+                            ? "答案送出中…"
+                            : submissionError
+                              ? "重試送出"
+                              : isCompleted
+                                ? "前往下一頁"
+                                : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </main>

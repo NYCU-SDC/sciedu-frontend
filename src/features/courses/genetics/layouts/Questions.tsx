@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
-import { Button, Skeleton, TextArea } from "@radix-ui/themes";
+import { Button, RadioGroup, Skeleton, TextArea } from "@radix-ui/themes";
 import type {
     CourseAnswer,
     CourseAnswers,
@@ -15,11 +15,13 @@ import CourseChat from "../components/CourseChat";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
+import { useAnswerSubmission } from "../components/useAnswerSubmission";
 
 type Props = {
     data: CoursePageRequest;
     chat: CourseChatController;
     answers: CourseAnswers;
+    isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
 };
@@ -28,6 +30,7 @@ export default function Questions({
     data,
     chat,
     answers,
+    isCompleted,
     onNext,
     onAnswerChange,
 }: Props) {
@@ -109,17 +112,48 @@ export default function Questions({
         [questionQueries, uniqueQuestionIds]
     );
 
-    const getTextAnswer = (questionId: string) => {
-        const answer = answers[questionId];
-        return typeof answer === "string" ? answer : "";
-    };
+    const submittableQuestions = useMemo(
+        () =>
+            uniqueQuestionIds.map((questionId) => {
+                const query = questionById.get(questionId);
+                return {
+                    questionId,
+                    question: query?.data,
+                    isUnavailable:
+                        !query ||
+                        query.isLoading ||
+                        query.isError ||
+                        !query.data,
+                };
+            }),
+        [questionById, uniqueQuestionIds]
+    );
 
-    const handleSubmit = () => {
+    const handleSubmissionSuccess = () => {
         posthog.capture("course_questions_submitted", {
             page_index: data.pageIndex,
             question_count: uniqueQuestionIds.length,
         });
         onNext();
+    };
+
+    const {
+        clearAnswerError,
+        isSubmitting,
+        submissionError,
+        submit,
+        submittedQuestionIds,
+        validationErrors,
+    } = useAnswerSubmission({
+        questions: submittableQuestions,
+        answers,
+        isCompleted,
+        onSuccess: handleSubmissionSuccess,
+    });
+
+    const handleAnswerChange = (questionId: string, answer: string) => {
+        clearAnswerError(questionId);
+        onAnswerChange(questionId, answer);
     };
 
     return (
@@ -182,32 +216,121 @@ export default function Questions({
                                             {isLoading ? (
                                                 <Skeleton minHeight="0.875rem" />
                                             ) : isError ? null : (
-                                                <p
-                                                    className={
-                                                        styles.questionText
-                                                    }
-                                                >
-                                                    {result?.data?.content}
-                                                </p>
+                                                <>
+                                                    <p
+                                                        className={
+                                                            styles.questionText
+                                                        }
+                                                    >
+                                                        {result?.data?.content}
+                                                    </p>
+                                                    {result?.data?.type ===
+                                                    "CHOICE" ? (
+                                                        <RadioGroup.Root
+                                                            className={
+                                                                styles.radioGroup
+                                                            }
+                                                            value={
+                                                                answers[
+                                                                    question
+                                                                        .questionId
+                                                                ] ?? ""
+                                                            }
+                                                            disabled={
+                                                                isCompleted ||
+                                                                isSubmitting ||
+                                                                submittedQuestionIds.has(
+                                                                    question.questionId
+                                                                )
+                                                            }
+                                                            aria-invalid={Boolean(
+                                                                validationErrors[
+                                                                    question
+                                                                        .questionId
+                                                                ]
+                                                            )}
+                                                            onValueChange={(
+                                                                answer
+                                                            ) =>
+                                                                handleAnswerChange(
+                                                                    question.questionId,
+                                                                    answer
+                                                                )
+                                                            }
+                                                        >
+                                                            {result.data.options.map(
+                                                                (option) => (
+                                                                    <RadioGroup.Item
+                                                                        key={
+                                                                            option.id
+                                                                        }
+                                                                        value={
+                                                                            option.id
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            option.label
+                                                                        }
+                                                                        .{" "}
+                                                                        {
+                                                                            option.content
+                                                                        }
+                                                                    </RadioGroup.Item>
+                                                                )
+                                                            )}
+                                                        </RadioGroup.Root>
+                                                    ) : (
+                                                        <TextArea
+                                                            className={
+                                                                TextAreaStyle.textInput
+                                                            }
+                                                            placeholder="在此輸入答案..."
+                                                            variant="soft"
+                                                            color="gray"
+                                                            value={
+                                                                answers[
+                                                                    question
+                                                                        .questionId
+                                                                ] ?? ""
+                                                            }
+                                                            disabled={
+                                                                isCompleted ||
+                                                                isSubmitting ||
+                                                                submittedQuestionIds.has(
+                                                                    question.questionId
+                                                                )
+                                                            }
+                                                            aria-invalid={Boolean(
+                                                                validationErrors[
+                                                                    question
+                                                                        .questionId
+                                                                ]
+                                                            )}
+                                                            onChange={(event) =>
+                                                                handleAnswerChange(
+                                                                    question.questionId,
+                                                                    event.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                        />
+                                                    )}
+                                                </>
                                             )}
-                                            <TextArea
-                                                className={
-                                                    TextAreaStyle.textInput
-                                                }
-                                                placeholder="在此輸入答案..."
-                                                variant="soft"
-                                                color="gray"
-                                                value={getTextAnswer(
-                                                    question.questionId
-                                                )}
-                                                disabled={isLoading || isError}
-                                                onChange={(event) =>
-                                                    onAnswerChange(
-                                                        question.questionId,
-                                                        event.target.value
-                                                    )
-                                                }
-                                            />
+                                            {validationErrors[
+                                                question.questionId
+                                            ] && (
+                                                <span
+                                                    className={styles.errorText}
+                                                    role="alert"
+                                                >
+                                                    {
+                                                        validationErrors[
+                                                            question.questionId
+                                                        ]
+                                                    }
+                                                </span>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -217,14 +340,29 @@ export default function Questions({
                 </main>
                 <aside className={styles.chatSidebar}>
                     <CourseChat controller={chat} />
+                    {submissionError && (
+                        <p
+                            className={FooterStyles.submissionMessage}
+                            role="alert"
+                        >
+                            {submissionError}
+                        </p>
+                    )}
                     <Button
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={handleSubmit}
+                        onClick={submit}
+                        disabled={isSubmitting}
                         radius="full"
                     >
-                        送出並前往下一頁
+                        {isSubmitting
+                            ? "答案送出中…"
+                            : submissionError
+                              ? "重試送出"
+                              : isCompleted
+                                ? "前往下一頁"
+                                : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </div>

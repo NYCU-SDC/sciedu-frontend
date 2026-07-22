@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Local-only Genetics Course publication artifacts
+content/genetics/publish-state.local.json
+src/features/courses/genetics/assets/courseResource.generated.local.ts
 .vite/
 
 # Editor directories and files

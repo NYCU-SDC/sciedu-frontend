@@ -92,3 +92,11 @@ export type CoursePageRequest = {
     activeNavbarTitles: number[];
     secondaryTitle: string;
 };
+
+export type CourseUnit = {
+    id: string;
+    title: string;
+    category: string;
+    order: number;
+    pages: CoursePageRequest[];
+};

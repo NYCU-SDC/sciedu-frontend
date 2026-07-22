@@ -6,12 +6,18 @@ type Props = {
     activeTitles: number[];
     activeStep: number;
     secondaryTitle: string;
+    totalSteps: number;
+    unlockedStep: number;
+    onStepSelect: (step: number) => void;
 };
 
 export default function Navbar({
     activeTitles,
     activeStep,
     secondaryTitle,
+    totalSteps,
+    unlockedStep,
+    onStepSelect,
 }: Props): JSX.Element {
     return (
         <nav className={styles.courseNavbar}>
@@ -42,27 +48,25 @@ export default function Navbar({
                         </div>
                         {/* number of pages */}
                         <div className={styles.pageProgress}>
-                            <span
-                                className={
-                                    activeStep === 0 ? styles.activeNum : ""
-                                }
-                            >
-                                01
-                            </span>
-                            <span
-                                className={
-                                    activeStep === 1 ? styles.activeNum : ""
-                                }
-                            >
-                                02
-                            </span>
-                            <span
-                                className={
-                                    activeStep === 2 ? styles.activeNum : ""
-                                }
-                            >
-                                03
-                            </span>
+                            {Array.from({ length: totalSteps }, (_, step) => (
+                                <button
+                                    key={step}
+                                    type="button"
+                                    className={
+                                        activeStep === step
+                                            ? styles.activeNum
+                                            : ""
+                                    }
+                                    disabled={step > unlockedStep}
+                                    aria-label={`前往第 ${step + 1} 頁`}
+                                    aria-current={
+                                        activeStep === step ? "page" : undefined
+                                    }
+                                    onClick={() => onStepSelect(step)}
+                                >
+                                    {String(step + 1).padStart(2, "0")}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>

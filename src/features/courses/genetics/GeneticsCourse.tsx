@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
+import { useNavigate, useParams } from "react-router";
 
 import { api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -12,8 +13,13 @@ import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
 
-import { coursePageRequests } from "./assets/courseResource";
+import { courseUnits } from "./assets/courseResource";
 import type { CoursePageRequest } from "./types/types";
+import {
+    canNavigateToPage,
+    nextCourseLocation,
+    selectCourseUnit,
+} from "./services/courseNavigation";
 
 type PageContentProps = {
     data: CoursePageRequest;
@@ -34,15 +40,45 @@ function PageContent({ data, onNext }: PageContentProps) {
 }
 
 export default function GeneticsCourse() {
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [pageSelection, setPageSelection] = useState({
+        unitId: "",
+        index: 0,
+    });
+    const [unlockedByUnit, setUnlockedByUnit] = useState<
+        Record<string, number>
+    >({});
     const queryClient = useQueryClient();
     const posthog = usePostHog();
+    const navigate = useNavigate();
+    const { id: routeId } = useParams<{ id: string }>();
 
-    const pageRequests = useMemo(
-        () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
+    const orderedUnits = useMemo(
+        () => [...courseUnits].sort((a, b) => a.order - b.order),
         []
     );
-    const currentPage = pageRequests[currentIndex];
+    const currentUnit = useMemo(
+        () => selectCourseUnit(orderedUnits, routeId),
+        [orderedUnits, routeId]
+    );
+    const pageRequests = useMemo(
+        () =>
+            currentUnit
+                ? [...currentUnit.pages].sort(
+                      (a, b) => a.pageIndex - b.pageIndex
+                  )
+                : [],
+        [currentUnit]
+    );
+    const currentIndex =
+        pageSelection.unitId === currentUnit?.id ? pageSelection.index : 0;
+    const safeIndex = Math.min(
+        currentIndex,
+        Math.max(pageRequests.length - 1, 0)
+    );
+    const currentPage = pageRequests[safeIndex];
+    const unlockedStep = currentUnit
+        ? (unlockedByUnit[currentUnit.id] ?? 0)
+        : 0;
 
     useDocumentTitle("基因");
 
@@ -50,7 +86,7 @@ export default function GeneticsCourse() {
 
     // Prefetch next page content when currentIndex changes
     useEffect(() => {
-        const nextPage = pageRequests[currentIndex + 1];
+        const nextPage = pageRequests[safeIndex + 1];
         if (!nextPage) return;
         const nextPageRequests = generateRQRequestFromPage(nextPage);
         nextPageRequests.forEach((req) =>
@@ -59,22 +95,58 @@ export default function GeneticsCourse() {
                 queryFn: () => api<unknown>(req.queryPath),
             })
         );
-    }, [pageRequests, currentIndex, queryClient]);
+    }, [pageRequests, safeIndex, queryClient]);
 
     const handleNext = () => {
-        const nextIndex = Math.min(currentIndex + 1, pageRequests.length - 1);
+        if (!currentUnit || !currentPage) return;
+        const nextIndex = Math.min(safeIndex + 1, pageRequests.length - 1);
         posthog.capture("course_page_advanced", {
-            from_page_index: currentIndex,
+            unit_id: currentUnit.id,
+            from_page_index: safeIndex,
             to_page_index: nextIndex,
             page_type: currentPage.request.type,
             total_pages: pageRequests.length,
         });
-        setCurrentIndex(nextIndex);
+        if (safeIndex < pageRequests.length - 1) {
+            setUnlockedByUnit((current) => ({
+                ...current,
+                [currentUnit.id]: Math.max(
+                    current[currentUnit.id] ?? 0,
+                    nextIndex
+                ),
+            }));
+            setPageSelection({ unitId: currentUnit.id, index: nextIndex });
+            return;
+        }
+        const nextLocation = nextCourseLocation(
+            orderedUnits,
+            currentUnit.id,
+            safeIndex
+        );
+        if (nextLocation) navigate(nextLocation);
     };
+
+    const handleStepSelect = (step: number) => {
+        if (currentUnit && canNavigateToPage(step, unlockedStep)) {
+            setPageSelection({ unitId: currentUnit.id, index: step });
+        }
+    };
+
+    if (!currentUnit || !currentPage) {
+        return (
+            <div className={styles.courseError} role="alert">
+                <h1>找不到教材單元</h1>
+                <p>
+                    Route「{routeId ?? ""}」沒有對應的 Genetics Course
+                    unit，或教材 UUID mapping 尚未產生。
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div
-            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
+            className={`${styles.courseContainer} ${safeIndex === 0 ? styles.hasGradient : ""}`}
         >
             {/*mobile blocker*/}
             <div className={styles.mobileBlocker}>
@@ -95,8 +167,11 @@ export default function GeneticsCourse() {
             <div className={styles.courseWrapper}>
                 <Navbar
                     activeTitles={currentPage.activeNavbarTitles}
-                    activeStep={currentIndex}
+                    activeStep={safeIndex}
                     secondaryTitle={currentPage.secondaryTitle}
+                    totalSteps={pageRequests.length}
+                    unlockedStep={unlockedStep}
+                    onStepSelect={handleStepSelect}
                 />
                 <PageContent data={currentPage} onNext={handleNext} />
                 {/* copyright footer */}

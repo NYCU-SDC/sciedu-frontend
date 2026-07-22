@@ -10,6 +10,11 @@
 
         /* Bundler mode */
         "moduleResolution": "bundler",
+        "paths": {
+            "@genetics-course-resource": [
+                "./src/features/courses/genetics/assets/courseResource.generated.dev.ts"
+            ]
+        },
         "allowImportingTsExtensions": true,
         "verbatimModuleSyntax": true,
         "moduleDetection": "force",

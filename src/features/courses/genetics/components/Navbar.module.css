@@ -106,12 +106,25 @@
     opacity: 0.8;
 }
 
-.pageProgress span {
+.pageProgress button {
     display: flex;
     align-items: center;
+    appearance: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    opacity: 1;
 }
 
-.pageProgress span:not(:last-child)::after {
+.pageProgress button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.pageProgress button:not(:last-child)::after {
     content: "";
     width: 0.1rem;
     height: 1.4rem;
@@ -121,7 +134,7 @@
 
 .activeNum {
     font-weight: 700;
-    color: black;
+    color: black !important;
 }
 
 @media (min-width: 64rem) {

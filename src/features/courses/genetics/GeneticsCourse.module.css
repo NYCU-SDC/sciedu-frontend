@@ -9,6 +9,24 @@
     transition: background 0.3s ease;
 }
 
+.courseError {
+    min-height: 100vh;
+    display: grid;
+    place-content: center;
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(to bottom, #fdfefe, #d2e1e4);
+}
+
+.courseError h1 {
+    margin-bottom: 0.5rem;
+}
+
+.courseError p {
+    max-width: 42rem;
+    color: #52636a;
+}
+
 .courseContainer.hasGradient {
     background: linear-gradient(to bottom, #fdfefe, #d2e1e4);
 }

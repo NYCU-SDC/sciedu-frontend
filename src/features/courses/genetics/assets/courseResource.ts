@@ -1,4 +1,6 @@
-import type { CoursePageRequest } from "../types/types";
+import { courseUnits as generatedCourseUnits } from "@genetics-course-resource";
+
+import type { CoursePageRequest, CourseUnit } from "../types/types";
 
 const IMAGE_ID = "a0c2e005-ba0a-4e33-8c09-3c34e29510be";
 
@@ -100,3 +102,16 @@ export const coursePageRequests: CoursePageRequest[] = [
         },
     },
 ];
+
+const legacyCourseUnit: CourseUnit = {
+    id: "1",
+    title: "豌豆－種皮形狀",
+    category: "single-gene",
+    order: 0,
+    pages: coursePageRequests,
+};
+
+// Keep the current three-page course usable until reviewed SCIEDU-100
+// publication artifacts replace the generated module.
+export const courseUnits: CourseUnit[] =
+    generatedCourseUnits.length > 0 ? generatedCourseUnits : [legacyCourseUnit];

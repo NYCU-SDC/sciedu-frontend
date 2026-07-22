@@ -1,0 +1,120 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://sciedu.sdc.nycu.club/schemas/genetics-manifest-v1.json",
+    "title": "SciEdu Genetics Course Manifest",
+    "type": "object",
+    "required": ["version", "course", "source", "units"],
+    "properties": {
+        "version": { "const": 1 },
+        "course": {
+            "type": "object",
+            "required": ["id", "title", "unitOrder"],
+            "properties": {
+                "id": { "const": "genetics" },
+                "title": { "type": "string", "minLength": 1 },
+                "unitOrder": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "minItems": 12,
+                    "maxItems": 12
+                }
+            },
+            "additionalProperties": false
+        },
+        "source": {
+            "type": "object",
+            "required": [
+                "archiveName",
+                "archiveSha256",
+                "imageWidth",
+                "imageHeight"
+            ],
+            "properties": {
+                "archiveName": { "type": "string", "minLength": 1 },
+                "archiveSha256": { "type": "string", "minLength": 1 },
+                "imageWidth": { "const": 1920 },
+                "imageHeight": { "const": 1080 }
+            },
+            "additionalProperties": false
+        },
+        "units": {
+            "type": "array",
+            "minItems": 12,
+            "maxItems": 12,
+            "items": {
+                "type": "object",
+                "required": ["id", "title", "category", "order", "pages"],
+                "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "title": { "type": "string", "minLength": 1 },
+                    "category": { "type": "string", "minLength": 1 },
+                    "order": { "type": "integer", "minimum": 0 },
+                    "pages": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 3,
+                        "items": { "$ref": "#/$defs/page" }
+                    }
+                },
+                "additionalProperties": false
+            }
+        }
+    },
+    "additionalProperties": false,
+    "$defs": {
+        "approval": {
+            "type": "object",
+            "required": ["reviewer", "reviewedAt", "approvalHash"],
+            "properties": {
+                "reviewer": { "type": "string", "minLength": 1 },
+                "reviewedAt": { "type": "string", "format": "date-time" },
+                "approvalHash": {
+                    "type": "string",
+                    "minLength": 64,
+                    "maxLength": 64
+                }
+            },
+            "additionalProperties": false
+        },
+        "page": {
+            "type": "object",
+            "required": [
+                "id",
+                "type",
+                "sourceImage",
+                "sourceHash",
+                "secondaryTitle",
+                "activeNavbarTitles",
+                "approvals"
+            ],
+            "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "type": { "enum": ["material", "questions", "overview"] },
+                "sourceImage": { "type": "string", "pattern": "^[^/]+\\.jpg$" },
+                "sourceHash": { "type": "string", "minLength": 1 },
+                "secondaryTitle": { "type": "string", "minLength": 1 },
+                "activeNavbarTitles": {
+                    "type": "array",
+                    "items": { "type": "integer", "minimum": 0, "maximum": 2 }
+                },
+                "ocrDraft": { "type": "array" },
+                "approvals": {
+                    "type": "object",
+                    "properties": {
+                        "content": { "$ref": "#/$defs/approval" },
+                        "frontend": { "$ref": "#/$defs/approval" }
+                    },
+                    "additionalProperties": false
+                },
+                "crop": { "type": "object" },
+                "imageKey": { "type": "string" },
+                "description": { "type": "object" },
+                "questionSections": { "type": "array" },
+                "columns": { "type": "array" },
+                "headers": { "type": "array" },
+                "rows": { "type": "array" }
+            },
+            "additionalProperties": false
+        }
+    }
+}

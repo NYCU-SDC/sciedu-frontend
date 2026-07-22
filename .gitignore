@@ -11,6 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Genetics course importer local workspace
+tools/genetics-importer/.data/
+tools/genetics-importer/dist/
+tools/genetics-importer/coverage/
+tools/genetics-importer/*.tsbuildinfo
 .vite/
 
 # Editor directories and files

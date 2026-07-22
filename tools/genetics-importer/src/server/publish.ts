@@ -21,7 +21,7 @@ export type PublishResource = {
               content: string;
               options?: { label: string; content: string }[];
           }
-        | { pageId: string; sourceHash: string };
+        | { pageId: string; imageHash: string };
 };
 
 export type PublishReadiness = {
@@ -61,16 +61,21 @@ function resourcesForPage(page: ManifestPage): PublishResource[] {
     switch (page.type) {
         case "material":
             return [
-                {
-                    key: page.imageKey,
-                    kind: "media",
-                    payload: { pageId: page.id, sourceHash: page.sourceHash },
-                    contentHash: hash({
-                        sourceHash: page.sourceHash,
-                        crop: page.crop,
-                        quality: 95,
-                    }),
-                },
+                ...(page.image
+                    ? [
+                          {
+                              key: page.imageKey,
+                              kind: "media" as const,
+                              payload: {
+                                  pageId: page.id,
+                                  imageHash: page.image.sha256,
+                              },
+                              contentHash: hash({
+                                  imageHash: page.image.sha256,
+                              }),
+                          },
+                      ]
+                    : []),
                 textResource(page.description),
                 ...page.questionSections.flatMap((section) => [
                     textResource(section.title),
@@ -113,6 +118,7 @@ function validateText(field: TextField, errors: string[]): void {
 }
 
 function validateQuestion(field: QuestionField, errors: string[]): void {
+    if (!field.tag.trim()) errors.push(`${field.key} requires a question tag`);
     const length = field.content.trim().length;
     if (length === 0) errors.push(`${field.key} is empty`);
     if (length > 2000) errors.push(`${field.key} exceeds 2000 characters`);
@@ -138,6 +144,8 @@ function validateQuestion(field: QuestionField, errors: string[]): void {
 function validatePageContent(page: ManifestPage, errors: string[]): void {
     switch (page.type) {
         case "material":
+            if (!page.image)
+                errors.push(`${page.id} requires an uploaded image`);
             validateText(page.description, errors);
             for (const section of page.questionSections) {
                 validateText(section.title, errors);

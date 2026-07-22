@@ -1,12 +1,12 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import YAML from "yaml";
 
 import type { GeneticsManifest, PublishState } from "../shared/types";
 
 async function atomicWrite(path: string, content: string): Promise<void> {
-    await mkdir(join(path, ".."), { recursive: true });
+    await mkdir(dirname(path), { recursive: true });
     const temporary = `${path}.tmp`;
     await writeFile(temporary, content, "utf8");
     await rename(temporary, path);

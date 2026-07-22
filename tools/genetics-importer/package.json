@@ -11,7 +11,6 @@
         "typecheck": "tsc -b"
     },
     "dependencies": {
-        "adm-zip": "^0.5.16",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "express": "^5.1.0",
@@ -23,7 +22,6 @@
         "yaml": "^2.8.2"
     },
     "devDependencies": {
-        "@types/adm-zip": "^0.5.7",
         "@types/express": "^5.0.5",
         "@types/multer": "^2.0.0",
         "@types/node": "^26.0.0",

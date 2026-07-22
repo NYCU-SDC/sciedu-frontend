@@ -73,10 +73,12 @@ p {
     text-transform: uppercase;
     margin-bottom: 0.3rem;
 }
-.importForm {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
+.warning {
+    background: #fff2cf;
+    border-left: 5px solid #c27a00;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    padding: 1rem;
 }
 .message,
 .publishPanel pre {
@@ -161,83 +163,108 @@ p {
 }
 .approvalActions input,
 .formGrid input,
-.formGrid select {
+.formGrid select,
+.editor input,
+.editor select,
+.editor textarea {
     border: 1px solid #9bb4ad;
     border-radius: 7px;
     padding: 0.65rem;
     background: white;
 }
-.cropGrid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1rem;
-    margin: 1rem 0;
-    align-items: start;
-}
-.sourceFrame {
-    position: relative;
-    user-select: none;
-    line-height: 0;
-}
-.sourceFrame > img,
-.fullSource {
-    width: 100%;
-    display: block;
-    border-radius: 8px;
-}
-.cropBox {
-    position: absolute;
-    border: 3px solid #ffcf4a;
-    background: #ffcf4a22;
-    cursor: move;
-    touch-action: none;
-}
-.resizeHandle {
-    position: absolute;
-    right: -8px;
-    bottom: -8px;
-    width: 18px;
-    height: 18px;
-    min-width: 0;
-    padding: 0;
-    background: #ffcf4a;
-    border: 2px solid #17312d;
-    border-radius: 50%;
-    cursor: nwse-resize;
-}
-.cropPreview {
-    width: 100%;
-    border: 1px solid #a8beb8;
-    border-radius: 8px;
-    display: block;
-    margin-bottom: 0.5rem;
-}
-.ocrNotice {
-    margin: 1rem 0;
-    padding: 0.7rem;
-    border-radius: 8px;
-    background: #fff6d8;
-}
-.yamlEditor {
-    display: block;
-    margin: 1rem 0;
-}
-.yamlEditor span,
+.editor label,
 .formGrid label {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
     font-weight: 650;
 }
-.yamlEditor textarea {
+.editor textarea {
     width: 100%;
-    min-height: 420px;
+    min-height: 90px;
     resize: vertical;
-    border: 1px solid #9bb4ad;
-    border-radius: 8px;
+}
+.wideField {
+    display: flex;
+    margin: 1rem 0;
+}
+.imageUpload {
+    display: grid;
+    grid-template-columns: 1fr minmax(260px, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
     padding: 1rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.82rem;
+    border: 1px solid #b8cec8;
+    border-radius: 10px;
+    background: #f5faf8;
+}
+.imageUpload img {
+    width: 100%;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #dce9e5;
+}
+.imageUpload code {
+    display: block;
+    margin-top: 0.75rem;
+}
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1rem 0 0.5rem;
+}
+.sectionHeader h3,
+.sectionHeader h4 {
+    margin: 0;
+}
+.contentCard {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #c7d9d4;
+    border-radius: 10px;
+}
+.questionEditor {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+.optionList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.optionRow {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 0.5rem;
+}
+.columnGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.nestedQuestion {
+    border-top: 1px solid #d9e5e1;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+.overviewRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.saveButton {
+    position: sticky;
+    bottom: 1rem;
+    margin-top: 1rem;
+    background: #174f47;
+    color: white;
 }
 .publishPanel {
     margin-top: 1.5rem;
@@ -272,7 +299,9 @@ details pre {
     }
     .statusRow,
     .formGrid,
-    .cropGrid {
+    .imageUpload,
+    .columnGrid,
+    .questionEditor {
         grid-template-columns: 1fr;
     }
     .workspace {

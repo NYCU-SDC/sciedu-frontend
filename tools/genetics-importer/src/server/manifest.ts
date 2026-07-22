@@ -15,13 +15,6 @@ import type {
 } from "../shared/types";
 import { UNIT_ORDER } from "../shared/types";
 
-export type SourceImage = {
-    name: string;
-    sha256: string;
-    width: number;
-    height: number;
-};
-
 export type ValidationResult = {
     valid: boolean;
     errors: string[];
@@ -65,70 +58,56 @@ function textField(key: string): TextField {
     return { key, text: "" };
 }
 
+function questionField(key: string) {
+    return { key, tag: "", type: "TEXT" as const, content: "" };
+}
+
 function createMaterialPage(
     unitId: string,
-    suffix: string,
-    source: SourceImage
+    suffix: string
 ): MaterialManifestPage {
     const pageId = `${unitId}${suffix}`;
     return {
         id: pageId,
         type: "material",
-        sourceImage: source.name,
-        sourceHash: source.sha256,
         secondaryTitle: UNIT_TITLES[unitId],
         activeNavbarTitles: activeNavbarTitles(unitId),
-        crop: { x: 0.063, y: 0.16, width: 0.59, height: 0.39 },
         imageKey: `genetics.${pageId}.image`,
         description: textField(`genetics.${pageId}.description`),
         questionSections: Array.from({ length: 3 }, (_, index) => ({
             title: textField(`genetics.${pageId}.question.${index + 1}.title`),
-            question: {
-                key: `genetics.${pageId}.question.${index + 1}`,
-                type: "TEXT" as const,
-                content: "",
-            },
+            question: questionField(`genetics.${pageId}.question.${index + 1}`),
         })),
         approvals: {},
     };
 }
 
-function createQuestionsPage(
-    pageId: "1S" | "2S",
-    source: SourceImage
-): QuestionsManifestPage {
+function createQuestionsPage(pageId: "1S" | "2S"): QuestionsManifestPage {
     return {
         id: pageId,
         type: "questions",
-        sourceImage: source.name,
-        sourceHash: source.sha256,
         secondaryTitle: UNIT_TITLES[pageId],
         activeNavbarTitles: activeNavbarTitles(pageId),
         columns: Array.from({ length: 2 }, (_, columnIndex) => ({
             label: textField(
                 `genetics.${pageId}.column.${columnIndex + 1}.label`
             ),
-            questions: Array.from({ length: 2 }, (_, questionIndex) => ({
-                title: textField(
-                    `genetics.${pageId}.column.${columnIndex + 1}.question.${questionIndex + 1}.title`
-                ),
-                question: {
-                    key: `genetics.${pageId}.column.${columnIndex + 1}.question.${questionIndex + 1}`,
-                    type: "TEXT" as const,
-                    content: "",
-                },
-            })),
+            questions: Array.from({ length: 2 }, (_, questionIndex) => {
+                const key = `genetics.${pageId}.column.${columnIndex + 1}.question.${questionIndex + 1}`;
+                return {
+                    title: textField(`${key}.title`),
+                    question: questionField(key),
+                };
+            }),
         })),
         approvals: {},
     };
 }
 
-function createOverviewPage(source: SourceImage): OverviewManifestPage {
+function createOverviewPage(): OverviewManifestPage {
     return {
         id: "F",
         type: "overview",
-        sourceImage: source.name,
-        sourceHash: source.sha256,
         secondaryTitle: UNIT_TITLES.F,
         activeNavbarTitles: [],
         headers: Array.from({ length: 3 }, (_, index) =>
@@ -145,56 +124,15 @@ function createOverviewPage(source: SourceImage): OverviewManifestPage {
     };
 }
 
-export function expectedSourceNames(): string[] {
-    return [
-        "TA.jpg",
-        "TB.jpg",
-        "TC.jpg",
-        ...Array.from({ length: 8 }, (_, index) =>
-            ["A", "B", "C"].map((suffix) => `${index + 1}${suffix}.jpg`)
-        ).flat(),
-        "1S.jpg",
-        "2S.jpg",
-        "F.jpg",
-    ];
-}
-
-export function buildDraftManifest(input: {
-    archiveName: string;
-    archiveSha256: string;
-    files: SourceImage[];
-}): GeneticsManifest {
-    const filesByName = new Map<string, SourceImage>();
-    for (const file of input.files) {
-        if (filesByName.has(file.name)) {
-            throw new Error(`duplicate source image ${file.name}`);
-        }
-        filesByName.set(file.name, file);
-    }
-
-    for (const name of expectedSourceNames()) {
-        const file = filesByName.get(name);
-        if (!file) throw new Error(`missing ${name}`);
-        if (file.width !== 1920 || file.height !== 1080) {
-            throw new Error(`${name} must be 1920x1080`);
-        }
-    }
-
+export function buildManualManifest(): GeneticsManifest {
     const units: CourseUnit[] = UNIT_ORDER.map((id, order) => {
         let pages: ManifestPage[];
-        if (id === "1S" || id === "2S") {
-            pages = [createQuestionsPage(id, filesByName.get(`${id}.jpg`)!)];
-        } else if (id === "F") {
-            pages = [createOverviewPage(filesByName.get("F.jpg")!)];
-        } else {
+        if (id === "1S" || id === "2S") pages = [createQuestionsPage(id)];
+        else if (id === "F") pages = [createOverviewPage()];
+        else
             pages = ["A", "B", "C"].map((suffix) =>
-                createMaterialPage(
-                    id,
-                    suffix,
-                    filesByName.get(`${id}${suffix}.jpg`)!
-                )
+                createMaterialPage(id, suffix)
             );
-        }
         return {
             id,
             title: UNIT_TITLES[id],
@@ -205,18 +143,13 @@ export function buildDraftManifest(input: {
     });
 
     return {
-        version: 1,
+        version: 2,
         course: {
             id: "genetics",
             title: "生物遺傳機制推理學習",
             unitOrder: [...UNIT_ORDER],
         },
-        source: {
-            archiveName: input.archiveName,
-            archiveSha256: input.archiveSha256,
-            imageWidth: 1920,
-            imageHeight: 1080,
-        },
+        authoring: { mode: "manual" },
         units,
     };
 }
@@ -241,6 +174,15 @@ export function manifestHash(manifest: GeneticsManifest): string {
 
 export function validateManifest(manifest: GeneticsManifest): ValidationResult {
     const errors: string[] = [];
+    const version = (manifest as { version?: number }).version;
+    if (version !== 2) {
+        return {
+            valid: false,
+            errors: [
+                `saved manifest version ${version ?? "unknown"} is incompatible with manual authoring version 2`,
+            ],
+        };
+    }
     if (!validateSchema(manifest)) {
         errors.push(
             ...(validateSchema.errors ?? []).map(
@@ -249,7 +191,6 @@ export function validateManifest(manifest: GeneticsManifest): ValidationResult {
             )
         );
     }
-    if (manifest.version !== 1) errors.push("unsupported manifest version");
     if (manifest.course.id !== "genetics")
         errors.push("course id must be genetics");
     if (
@@ -257,19 +198,10 @@ export function validateManifest(manifest: GeneticsManifest): ValidationResult {
     ) {
         errors.push("unit order does not match the Genetics Course contract");
     }
-
     const pages = manifest.units.flatMap((unit) => unit.pages);
     if (pages.length !== 30) errors.push("manifest must contain 30 pages");
-    const pageIds = pages.map((page) => page.id);
-    if (new Set(pageIds).size !== pageIds.length) {
+    if (new Set(pages.map((page) => page.id)).size !== pages.length) {
         errors.push("page ids must be unique");
     }
-    if (
-        manifest.source.imageWidth !== 1920 ||
-        manifest.source.imageHeight !== 1080
-    ) {
-        errors.push("source dimensions must be 1920x1080");
-    }
-
     return { valid: errors.length === 0, errors };
 }

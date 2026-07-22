@@ -72,7 +72,7 @@ async function exportFiles(
         if (page.type !== "material") continue;
         files.push({
             absolutePath: join(contentRoot, "assets", `${page.id}.jpg`),
-            content: await readFile(join(dataRoot, "crops", `${page.id}.jpg`)),
+            content: await readFile(join(dataRoot, "images", `${page.id}.jpg`)),
         });
     }
     return files;

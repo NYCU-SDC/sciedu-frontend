@@ -1,11 +1,11 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://sciedu.sdc.nycu.club/schemas/genetics-manifest-v1.json",
-    "title": "SciEdu Genetics Course Manifest",
+    "$id": "https://sciedu.sdc.nycu.club/schemas/genetics-manifest-v2.json",
+    "title": "SciEdu Genetics Course Manual Manifest",
     "type": "object",
-    "required": ["version", "course", "source", "units"],
+    "required": ["version", "course", "authoring", "units"],
     "properties": {
-        "version": { "const": 1 },
+        "version": { "const": 2 },
         "course": {
             "type": "object",
             "required": ["id", "title", "unitOrder"],
@@ -21,20 +21,10 @@
             },
             "additionalProperties": false
         },
-        "source": {
+        "authoring": {
             "type": "object",
-            "required": [
-                "archiveName",
-                "archiveSha256",
-                "imageWidth",
-                "imageHeight"
-            ],
-            "properties": {
-                "archiveName": { "type": "string", "minLength": 1 },
-                "archiveSha256": { "type": "string", "minLength": 1 },
-                "imageWidth": { "const": 1920 },
-                "imageHeight": { "const": 1080 }
-            },
+            "required": ["mode"],
+            "properties": { "mode": { "const": "manual" } },
             "additionalProperties": false
         },
         "units": {
@@ -70,8 +60,26 @@
                 "reviewedAt": { "type": "string", "format": "date-time" },
                 "approvalHash": {
                     "type": "string",
-                    "minLength": 64,
-                    "maxLength": 64
+                    "pattern": "^[a-f0-9]{64}$"
+                }
+            },
+            "additionalProperties": false
+        },
+        "image": {
+            "type": "object",
+            "required": ["fileName", "sha256", "width", "height"],
+            "properties": {
+                "fileName": { "type": "string", "pattern": "^[^/]+\\.jpg$" },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+                "width": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 10000
+                },
+                "height": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 10000
                 }
             },
             "additionalProperties": false
@@ -81,8 +89,6 @@
             "required": [
                 "id",
                 "type",
-                "sourceImage",
-                "sourceHash",
                 "secondaryTitle",
                 "activeNavbarTitles",
                 "approvals"
@@ -90,14 +96,11 @@
             "properties": {
                 "id": { "type": "string", "minLength": 1 },
                 "type": { "enum": ["material", "questions", "overview"] },
-                "sourceImage": { "type": "string", "pattern": "^[^/]+\\.jpg$" },
-                "sourceHash": { "type": "string", "minLength": 1 },
                 "secondaryTitle": { "type": "string", "minLength": 1 },
                 "activeNavbarTitles": {
                     "type": "array",
                     "items": { "type": "integer", "minimum": 0, "maximum": 2 }
                 },
-                "ocrDraft": { "type": "array" },
                 "approvals": {
                     "type": "object",
                     "properties": {
@@ -106,8 +109,8 @@
                     },
                     "additionalProperties": false
                 },
-                "crop": { "type": "object" },
-                "imageKey": { "type": "string" },
+                "imageKey": { "type": "string", "minLength": 1 },
+                "image": { "$ref": "#/$defs/image" },
                 "description": { "type": "object" },
                 "questionSections": { "type": "array" },
                 "columns": { "type": "array" },

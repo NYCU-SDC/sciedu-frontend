@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
-import YAML from "yaml";
+import { useEffect, useState } from "react";
 
+import type { PublishResource } from "../server/publish";
 import type {
     GeneticsManifest,
     ManifestPage,
     MaterialManifestPage,
     PublishState,
     PublishedResource,
+    QuestionField,
+    QuestionsManifestPage,
+    OverviewManifestPage,
 } from "../shared/types";
-import type { PublishResource } from "../server/publish";
 
 type Workspace = {
     manifest?: GeneticsManifest;
@@ -45,110 +47,361 @@ function findPage(
 }
 
 function endpointFor(kind: PublishResource["kind"], id: string): string {
-    if (kind === "question") return `/api/questions/${id}`;
-    return `/api/content/${kind}/${id}`;
+    return kind === "question"
+        ? `/api/questions/${id}`
+        : `/api/content/${kind}/${id}`;
 }
 
-function CropEditor({
+function QuestionEditor({
+    value,
+    onChange,
+}: {
+    value: QuestionField;
+    onChange: (value: QuestionField) => void;
+}) {
+    const options = value.options ?? [];
+    return (
+        <div className="questionEditor">
+            <label>
+                Question tag
+                <input
+                    value={value.tag}
+                    placeholder="observation, reasoning, conclusion…"
+                    onChange={(event) =>
+                        onChange({ ...value, tag: event.target.value })
+                    }
+                />
+            </label>
+            <label>
+                Question type
+                <select
+                    value={value.type}
+                    onChange={(event) => {
+                        const type = event.target
+                            .value as QuestionField["type"];
+                        onChange({
+                            ...value,
+                            type,
+                            ...(type === "CHOICE"
+                                ? { options }
+                                : { options: undefined }),
+                        });
+                    }}
+                >
+                    <option value="TEXT">Text response</option>
+                    <option value="CHOICE">Multiple choice</option>
+                </select>
+            </label>
+            <label className="wideField">
+                Question text
+                <textarea
+                    value={value.content}
+                    onChange={(event) =>
+                        onChange({ ...value, content: event.target.value })
+                    }
+                />
+            </label>
+            {value.type === "CHOICE" && (
+                <div className="optionList wideField">
+                    <strong>Options</strong>
+                    {options.map((option, index) => (
+                        <div
+                            className="optionRow"
+                            key={`${value.key}.option.${index}`}
+                        >
+                            <input
+                                aria-label={`Option ${index + 1} label`}
+                                value={option.label}
+                                placeholder="A"
+                                onChange={(event) => {
+                                    const next = [...options];
+                                    next[index] = {
+                                        ...option,
+                                        label: event.target.value,
+                                    };
+                                    onChange({ ...value, options: next });
+                                }}
+                            />
+                            <input
+                                aria-label={`Option ${index + 1} content`}
+                                value={option.content}
+                                placeholder="Option text"
+                                onChange={(event) => {
+                                    const next = [...options];
+                                    next[index] = {
+                                        ...option,
+                                        content: event.target.value,
+                                    };
+                                    onChange({ ...value, options: next });
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onChange({
+                                        ...value,
+                                        options: options.filter(
+                                            (_, optionIndex) =>
+                                                optionIndex !== index
+                                        ),
+                                    })
+                                }
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() =>
+                            onChange({
+                                ...value,
+                                options: [
+                                    ...options,
+                                    {
+                                        label: String.fromCharCode(
+                                            65 + options.length
+                                        ),
+                                        content: "",
+                                    },
+                                ],
+                            })
+                        }
+                    >
+                        Add option
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function MaterialEditor({
     page,
     onChange,
+    onUpload,
 }: {
     page: MaterialManifestPage;
     onChange: (page: MaterialManifestPage) => void;
+    onUpload: (file: File) => void;
 }) {
-    const frameRef = useRef<HTMLDivElement>(null);
-    const gesture = useRef<
-        | {
-              mode: "move" | "resize";
-              startX: number;
-              startY: number;
-              crop: MaterialManifestPage["crop"];
-          }
-        | undefined
-    >(undefined);
-
-    useEffect(() => {
-        const move = (event: PointerEvent) => {
-            const active = gesture.current;
-            const frame = frameRef.current;
-            if (!active || !frame) return;
-            const rect = frame.getBoundingClientRect();
-            const dx = (event.clientX - active.startX) / rect.width;
-            const dy = (event.clientY - active.startY) / rect.height;
-            const crop = { ...active.crop };
-            if (active.mode === "move") {
-                crop.x = Math.max(
-                    0,
-                    Math.min(1 - crop.width, active.crop.x + dx)
-                );
-                crop.y = Math.max(
-                    0,
-                    Math.min(1 - crop.height, active.crop.y + dy)
-                );
-            } else {
-                crop.width = Math.max(
-                    0.02,
-                    Math.min(1 - crop.x, active.crop.width + dx)
-                );
-                crop.height = Math.max(
-                    0.02,
-                    Math.min(1 - crop.y, active.crop.height + dy)
-                );
-            }
-            onChange({ ...page, crop });
-        };
-        const up = () => {
-            gesture.current = undefined;
-        };
-        window.addEventListener("pointermove", move);
-        window.addEventListener("pointerup", up);
-        return () => {
-            window.removeEventListener("pointermove", move);
-            window.removeEventListener("pointerup", up);
-        };
-    }, [onChange, page]);
-
-    const begin = (mode: "move" | "resize", event: React.PointerEvent) => {
-        event.preventDefault();
-        gesture.current = {
-            mode,
-            startX: event.clientX,
-            startY: event.clientY,
-            crop: { ...page.crop },
-        };
-    };
-
     return (
-        <div className="cropGrid">
-            <div className="sourceFrame" ref={frameRef}>
-                <img src={`/api/source/${page.sourceImage}`} alt={page.id} />
-                <div
-                    className="cropBox"
-                    style={{
-                        left: `${page.crop.x * 100}%`,
-                        top: `${page.crop.y * 100}%`,
-                        width: `${page.crop.width * 100}%`,
-                        height: `${page.crop.height * 100}%`,
-                    }}
-                    onPointerDown={(event) => begin("move", event)}
-                >
-                    <button
-                        type="button"
-                        className="resizeHandle"
-                        aria-label="Resize crop"
-                        onPointerDown={(event) => begin("resize", event)}
+        <>
+            <section className="imageUpload">
+                <div>
+                    <h3>Pre-cropped teaching image</h3>
+                    <p>
+                        Crop outside this tool, then upload the finished JPG.
+                        Uploading clears approvals.
+                    </p>
+                    <input
+                        type="file"
+                        accept="image/jpeg,.jpg,.jpeg"
+                        onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) onUpload(file);
+                        }}
                     />
+                    {page.image && (
+                        <code>
+                            {page.image.width}×{page.image.height} ·{" "}
+                            {page.image.sha256.slice(0, 12)}…
+                        </code>
+                    )}
                 </div>
-            </div>
-            <div>
-                <h3>Crop preview</h3>
-                <img
-                    className="cropPreview"
-                    src={`/api/crops/${page.id}.jpg?draft=${JSON.stringify(page.crop)}`}
-                    alt={`${page.id} crop`}
+                {page.image && (
+                    <img
+                        src={`/api/images/${page.id}.jpg?hash=${page.image.sha256}`}
+                        alt="Uploaded teaching material"
+                    />
+                )}
+            </section>
+            <label className="wideField">
+                Page description
+                <textarea
+                    value={page.description.text}
+                    onChange={(event) =>
+                        onChange({
+                            ...page,
+                            description: {
+                                ...page.description,
+                                text: event.target.value,
+                            },
+                        })
+                    }
                 />
-                <code>{JSON.stringify(page.crop)}</code>
+            </label>
+            <div className="sectionHeader">
+                <h3>Question sections</h3>
+                <button
+                    type="button"
+                    onClick={() => {
+                        const number = page.questionSections.length + 1;
+                        const key = `genetics.${page.id}.question.${number}`;
+                        onChange({
+                            ...page,
+                            questionSections: [
+                                ...page.questionSections,
+                                {
+                                    title: { key: `${key}.title`, text: "" },
+                                    question: {
+                                        key,
+                                        tag: "",
+                                        type: "TEXT",
+                                        content: "",
+                                    },
+                                },
+                            ],
+                        });
+                    }}
+                >
+                    Add question
+                </button>
             </div>
+            {page.questionSections.map((section, index) => (
+                <article className="contentCard" key={section.question.key}>
+                    <div className="sectionHeader">
+                        <h4>Question {index + 1}</h4>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onChange({
+                                    ...page,
+                                    questionSections:
+                                        page.questionSections.filter(
+                                            (_, itemIndex) =>
+                                                itemIndex !== index
+                                        ),
+                                })
+                            }
+                        >
+                            Remove
+                        </button>
+                    </div>
+                    <label>
+                        Section heading
+                        <input
+                            value={section.title.text}
+                            onChange={(event) => {
+                                const next = structuredClone(page);
+                                next.questionSections[index].title.text =
+                                    event.target.value;
+                                onChange(next);
+                            }}
+                        />
+                    </label>
+                    <QuestionEditor
+                        value={section.question}
+                        onChange={(question) => {
+                            const next = structuredClone(page);
+                            next.questionSections[index].question = question;
+                            onChange(next);
+                        }}
+                    />
+                </article>
+            ))}
+        </>
+    );
+}
+
+function QuestionsEditor({
+    page,
+    onChange,
+}: {
+    page: QuestionsManifestPage;
+    onChange: (page: QuestionsManifestPage) => void;
+}) {
+    return (
+        <div className="columnGrid">
+            {page.columns.map((column, columnIndex) => (
+                <article className="contentCard" key={column.label.key}>
+                    <label>
+                        Column {columnIndex + 1} label
+                        <input
+                            value={column.label.text}
+                            onChange={(event) => {
+                                const next = structuredClone(page);
+                                next.columns[columnIndex].label.text =
+                                    event.target.value;
+                                onChange(next);
+                            }}
+                        />
+                    </label>
+                    {column.questions.map((item, questionIndex) => (
+                        <div className="nestedQuestion" key={item.question.key}>
+                            <label>
+                                Question {questionIndex + 1} heading
+                                <input
+                                    value={item.title.text}
+                                    onChange={(event) => {
+                                        const next = structuredClone(page);
+                                        next.columns[columnIndex].questions[
+                                            questionIndex
+                                        ].title.text = event.target.value;
+                                        onChange(next);
+                                    }}
+                                />
+                            </label>
+                            <QuestionEditor
+                                value={item.question}
+                                onChange={(question) => {
+                                    const next = structuredClone(page);
+                                    next.columns[columnIndex].questions[
+                                        questionIndex
+                                    ].question = question;
+                                    onChange(next);
+                                }}
+                            />
+                        </div>
+                    ))}
+                </article>
+            ))}
+        </div>
+    );
+}
+
+function OverviewEditor({
+    page,
+    onChange,
+}: {
+    page: OverviewManifestPage;
+    onChange: (page: OverviewManifestPage) => void;
+}) {
+    return (
+        <div className="overviewEditor">
+            <h3>Overview table</h3>
+            <div className="overviewRow">
+                {page.headers.map((header, index) => (
+                    <input
+                        key={header.key}
+                        aria-label={`Header ${index + 1}`}
+                        value={header.text}
+                        placeholder={`Header ${index + 1}`}
+                        onChange={(event) => {
+                            const next = structuredClone(page);
+                            next.headers[index].text = event.target.value;
+                            onChange(next);
+                        }}
+                    />
+                ))}
+            </div>
+            {page.rows.map((row, rowIndex) => (
+                <div className="overviewRow" key={`row-${rowIndex}`}>
+                    {row.map((cell, columnIndex) => (
+                        <textarea
+                            key={cell.key}
+                            aria-label={`Row ${rowIndex + 1}, column ${columnIndex + 1}`}
+                            value={cell.text}
+                            onChange={(event) => {
+                                const next = structuredClone(page);
+                                next.rows[rowIndex][columnIndex].text =
+                                    event.target.value;
+                                onChange(next);
+                            }}
+                        />
+                    ))}
+                </div>
+            ))}
         </div>
     );
 }
@@ -157,7 +410,6 @@ export default function App() {
     const [workspace, setWorkspace] = useState<Workspace>({ states: {} });
     const [selectedId, setSelectedId] = useState("");
     const [draftPage, setDraftPage] = useState<ManifestPage>();
-    const [pageYaml, setPageYaml] = useState("");
     const [reviewer, setReviewer] = useState("");
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState("");
@@ -171,61 +423,58 @@ export default function App() {
 
     const selectPage = (page: ManifestPage | undefined) => {
         if (!page) return;
-        const copy = structuredClone(page);
-        setSelectedId(copy.id);
-        setDraftPage(copy);
-        setPageYaml(YAML.stringify(copy));
+        setSelectedId(page.id);
+        setDraftPage(structuredClone(page));
     };
 
-    const refresh = async () => {
-        const next = await localApi<Workspace>("/api/workspace");
+    const applyWorkspace = (next: Workspace, preferredId = selectedId) => {
         setWorkspace(next);
-        const nextPage =
-            findPage(next.manifest, selectedId) ??
-            next.manifest?.units[0]?.pages[0];
-        selectPage(nextPage);
+        if (!next.validation?.valid) {
+            setDraftPage(undefined);
+            return;
+        }
+        selectPage(
+            findPage(next.manifest, preferredId) ??
+                next.manifest?.units[0]?.pages[0]
+        );
     };
+
+    const refresh = async () =>
+        applyWorkspace(await localApi<Workspace>("/api/workspace"));
 
     useEffect(() => {
         localApi<Workspace>("/api/workspace")
             .then((next) => {
                 setWorkspace(next);
+                if (!next.validation?.valid) return;
                 const firstPage = next.manifest?.units[0]?.pages[0];
-                if (!firstPage) return;
-                const copy = structuredClone(firstPage);
-                setSelectedId(copy.id);
-                setDraftPage(copy);
-                setPageYaml(YAML.stringify(copy));
+                if (firstPage) {
+                    setSelectedId(firstPage.id);
+                    setDraftPage(structuredClone(firstPage));
+                }
             })
             .catch((error) => setMessage(error.message));
     }, []);
 
-    const updateDraft = (page: ManifestPage) => {
-        setDraftPage(page);
-        setPageYaml(YAML.stringify(page));
-    };
-
-    const importArchive = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const input = event.currentTarget.elements.namedItem(
-            "archive"
-        ) as HTMLInputElement;
-        if (!input.files?.[0]) return;
+    const resetManifest = async () => {
         if (
             !window.confirm(
-                "Importing replaces the current local draft workspace. Continue?"
+                "Replace the local draft and clear all page approvals?"
             )
         )
             return;
         setBusy(true);
-        setMessage("Running image validation and Apple Vision OCR…");
         try {
-            const body = new FormData();
-            body.append("archive", input.files[0]);
-            await localApi("/api/import", { method: "POST", body });
+            await localApi("/api/manifest/reset", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ confirmation: "RESET MANUAL DRAFT" }),
+            });
             setSelectedId("");
             await refresh();
-            setMessage("Draft created. Review every field before approval.");
+            setMessage(
+                "Manual 30-page draft created. Enter content and upload finished JPG files."
+            );
         } catch (error) {
             setMessage((error as Error).message);
         } finally {
@@ -234,16 +483,43 @@ export default function App() {
     };
 
     const savePage = async () => {
+        if (!draftPage) return;
         setBusy(true);
         try {
-            const parsed = YAML.parse(pageYaml) as ManifestPage;
             await localApi(`/api/pages/${selectedId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(parsed),
+                body: JSON.stringify(draftPage),
             });
             await refresh();
             setMessage(`${selectedId} saved; previous approvals were cleared.`);
+        } catch (error) {
+            setMessage((error as Error).message);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const uploadImage = async (file: File) => {
+        setBusy(true);
+        try {
+            if (draftPage) {
+                await localApi(`/api/pages/${selectedId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(draftPage),
+                });
+            }
+            const body = new FormData();
+            body.append("image", file);
+            await localApi(`/api/pages/${selectedId}/image`, {
+                method: "POST",
+                body,
+            });
+            await refresh();
+            setMessage(
+                `${selectedId} image uploaded; previous approvals were cleared.`
+            );
         } catch (error) {
             setMessage((error as Error).message);
         } finally {
@@ -286,8 +562,8 @@ export default function App() {
         let response: Response;
         if (resource.kind === "media") {
             const pageId = (resource.payload as { pageId: string }).pageId;
-            const image = await fetch(`/api/crops/${pageId}.jpg`).then((item) =>
-                item.blob()
+            const image = await fetch(`/api/images/${pageId}.jpg`).then(
+                (item) => item.blob()
             );
             const body = new FormData();
             body.append("content", image, `${pageId}.jpg`);
@@ -381,14 +657,13 @@ export default function App() {
 
     const preview = async () => {
         try {
-            const result = await localApi<{
-                files: { path: string; status: string }[];
-            }>("/api/export/preview", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ environment, outputRoot }),
-            });
-            setExportPreview(result);
+            setExportPreview(
+                await localApi("/api/export/preview", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ environment, outputRoot }),
+                })
+            );
         } catch (error) {
             setMessage((error as Error).message);
         }
@@ -416,26 +691,39 @@ export default function App() {
         }
     };
 
-    const pages = workspace.manifest?.units.flatMap((unit) => unit.pages) ?? [];
+    const manifest = workspace.validation?.valid
+        ? workspace.manifest
+        : undefined;
+    const pages = manifest?.units.flatMap((unit) => unit.pages) ?? [];
 
     return (
         <main>
             <header>
                 <div>
-                    <p className="eyebrow">SCIEDU-99 · local-only tool</p>
-                    <h1>Genetics Course Importer</h1>
+                    <p className="eyebrow">SCIEDU-99 · manual authoring tool</p>
+                    <h1>Genetics Course Builder</h1>
                     <p>
-                        OCR produces a draft. Human review is mandatory before
-                        publishing.
+                        People write the content and prepare images; the tool
+                        validates, publishes, and records UUIDs.
                     </p>
                 </div>
-                <form onSubmit={importArchive} className="importForm">
-                    <input name="archive" type="file" accept=".zip" required />
-                    <button disabled={busy}>Import ZIP and run OCR</button>
-                </form>
+                <button
+                    className="secondary"
+                    onClick={resetManifest}
+                    disabled={busy}
+                >
+                    Create / reset manual draft
+                </button>
             </header>
 
             {message && <pre className="message">{message}</pre>}
+            {workspace.validation && !workspace.validation.valid && (
+                <div className="warning">
+                    The saved OCR-era draft is incompatible. Create a new manual
+                    draft to continue.
+                    <pre>{workspace.validation.errors.join("\n")}</pre>
+                </div>
+            )}
 
             <section className="statusRow">
                 <div>
@@ -464,10 +752,10 @@ export default function App() {
                 </div>
             </section>
 
-            {workspace.manifest && (
+            {manifest && (
                 <div className="workspace">
                     <aside className="pageList">
-                        {workspace.manifest.units.map((unit) => (
+                        {manifest.units.map((unit) => (
                             <div key={unit.id}>
                                 <h3>
                                     {unit.id} · {unit.title}
@@ -484,6 +772,10 @@ export default function App() {
                                     >
                                         {page.id}
                                         <span>
+                                            {page.type === "material" &&
+                                            !page.image
+                                                ? "IMG– "
+                                                : ""}
                                             {page.approvals.content
                                                 ? "C✓"
                                                 : "C–"}{" "}
@@ -505,10 +797,7 @@ export default function App() {
                                         <p className="eyebrow">
                                             {draftPage.type}
                                         </p>
-                                        <h2>
-                                            {draftPage.id} ·{" "}
-                                            {draftPage.secondaryTitle}
-                                        </h2>
+                                        <h2>{draftPage.id}</h2>
                                     </div>
                                     <div className="approvalActions">
                                         <input
@@ -530,43 +819,43 @@ export default function App() {
                                         </button>
                                     </div>
                                 </div>
-
-                                {draftPage.type === "material" && (
-                                    <CropEditor
-                                        page={draftPage}
-                                        onChange={updateDraft}
-                                    />
-                                )}
-                                {draftPage.type !== "material" && (
-                                    <img
-                                        className="fullSource"
-                                        src={`/api/source/${draftPage.sourceImage}`}
-                                        alt={draftPage.id}
-                                    />
-                                )}
-
-                                <div className="ocrNotice">
-                                    OCR observations:{" "}
-                                    {draftPage.ocrDraft?.length ?? 0};
-                                    low-confidence:{" "}
-                                    {draftPage.ocrDraft?.filter(
-                                        (item) => item.confidence < 0.7
-                                    ).length ?? 0}
-                                </div>
-                                <label className="yamlEditor">
-                                    <span>
-                                        Page YAML — verify every field before
-                                        saving
-                                    </span>
-                                    <textarea
-                                        value={pageYaml}
+                                <label className="wideField">
+                                    Page display name
+                                    <input
+                                        value={draftPage.secondaryTitle}
                                         onChange={(event) =>
-                                            setPageYaml(event.target.value)
+                                            setDraftPage({
+                                                ...draftPage,
+                                                secondaryTitle:
+                                                    event.target.value,
+                                            })
                                         }
-                                        spellCheck={false}
                                     />
                                 </label>
-                                <button onClick={savePage} disabled={busy}>
+                                {draftPage.type === "material" && (
+                                    <MaterialEditor
+                                        page={draftPage}
+                                        onChange={setDraftPage}
+                                        onUpload={uploadImage}
+                                    />
+                                )}
+                                {draftPage.type === "questions" && (
+                                    <QuestionsEditor
+                                        page={draftPage}
+                                        onChange={setDraftPage}
+                                    />
+                                )}
+                                {draftPage.type === "overview" && (
+                                    <OverviewEditor
+                                        page={draftPage}
+                                        onChange={setDraftPage}
+                                    />
+                                )}
+                                <button
+                                    className="saveButton"
+                                    onClick={savePage}
+                                    disabled={busy}
+                                >
                                     Save page and clear approvals
                                 </button>
                             </>
@@ -576,7 +865,7 @@ export default function App() {
             )}
 
             <section className="publishPanel">
-                <h2>Publish and export</h2>
+                <h2>Publish and export UUID mapping</h2>
                 <div className="formGrid">
                     <label>
                         Environment

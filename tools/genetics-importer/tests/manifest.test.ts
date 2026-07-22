@@ -1,68 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { buildDraftManifest, validateManifest } from "../src/server/manifest";
 
-const sourceFiles = [
-    "TA.jpg",
-    "TB.jpg",
-    "TC.jpg",
-    ...Array.from({ length: 8 }, (_, index) =>
-        ["A", "B", "C"].map((suffix) => `${index + 1}${suffix}.jpg`)
-    ).flat(),
-    "1S.jpg",
-    "2S.jpg",
-    "F.jpg",
-].map((name) => ({
-    name,
-    sha256: `sha-${name}`,
-    width: 1920,
-    height: 1080,
-}));
+import { buildManualManifest, validateManifest } from "../src/server/manifest";
 
-describe("Genetics manifest import", () => {
-    it("builds a valid 30-page draft from the expected archive", () => {
-        const manifest = buildDraftManifest({
-            archiveName: "Genetics Course.zip",
-            archiveSha256: "archive-sha",
-            files: sourceFiles,
-        });
+describe("manual Genetics manifest", () => {
+    it("builds the fixed 30-page route skeleton without source content", () => {
+        const manifest = buildManualManifest();
 
         expect(validateManifest(manifest)).toEqual({ valid: true, errors: [] });
+        expect(manifest.version).toBe(2);
+        expect(manifest.authoring.mode).toBe("manual");
         expect(manifest.units.flatMap((unit) => unit.pages)).toHaveLength(30);
-        expect(manifest.course.unitOrder).toEqual([
-            "T",
-            "1",
-            "2",
-            "3",
-            "4",
-            "1S",
-            "5",
-            "6",
-            "7",
-            "8",
-            "2S",
-            "F",
-        ]);
+        expect(manifest.units[0].pages[0]).toMatchObject({
+            id: "TA",
+            type: "material",
+        });
+        expect(manifest.units[0].pages[0]).not.toHaveProperty("image");
     });
 
-    it("rejects a source archive with a missing page", () => {
-        expect(() =>
-            buildDraftManifest({
-                archiveName: "Genetics Course.zip",
-                archiveSha256: "archive-sha",
-                files: sourceFiles.slice(1),
-            })
-        ).toThrow(/missing TA\.jpg/);
-    });
+    it("rejects a changed route contract", () => {
+        const manifest = buildManualManifest();
+        manifest.course.unitOrder = manifest.course.unitOrder.slice(1);
 
-    it("rejects source images with unexpected dimensions", () => {
-        expect(() =>
-            buildDraftManifest({
-                archiveName: "Genetics Course.zip",
-                archiveSha256: "archive-sha",
-                files: sourceFiles.map((file, index) =>
-                    index === 0 ? { ...file, width: 1280 } : file
-                ),
-            })
-        ).toThrow(/TA\.jpg must be 1920x1080/);
+        expect(validateManifest(manifest)).toEqual(
+            expect.objectContaining({ valid: false })
+        );
     });
 });

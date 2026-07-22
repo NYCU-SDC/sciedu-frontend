@@ -1,22 +1,18 @@
 import { existsSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import express from "express";
 import multer from "multer";
 import { createServer as createViteServer } from "vite";
 
-import { importArchive } from "./archive";
-import { renderAllCrops, renderCropPreview, renderPageCrop } from "./crop";
 import { applyExport, previewExport } from "./exporter";
 import {
-    buildDraftManifest,
-    expectedSourceNames,
+    buildManualManifest,
     manifestHash,
     pageApprovalHash,
     validateManifest,
 } from "./manifest";
-import { applyOcrDrafts, runAppleVisionOcr } from "./ocr";
+import { saveUploadedImage } from "./image";
 import {
     collectResources,
     planPublish,
@@ -33,7 +29,6 @@ import type {
     ManifestPage,
     PublishState,
     PublishedResource,
-    MaterialManifestPage,
 } from "../shared/types";
 
 const toolRoot = resolve(import.meta.dirname, "../..");
@@ -44,7 +39,7 @@ const isDev = process.argv.includes("--dev");
 const app = express();
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 500 * 1024 * 1024 },
+    limits: { fileSize: 20 * 1024 * 1024 },
 });
 
 app.use(express.json({ limit: "20mb" }));
@@ -62,7 +57,14 @@ function asyncRoute(
 
 async function requireManifest(): Promise<GeneticsManifest> {
     const manifest = await loadManifest(dataRoot);
-    if (!manifest) throw new Error("import a Genetics Course archive first");
+    if (!manifest)
+        throw new Error("create a manual Genetics Course draft first");
+    const validation = validateManifest(manifest);
+    if (!validation.valid) {
+        throw new Error(
+            `reset the incompatible draft: ${validation.errors.join("; ")}`
+        );
+    }
     return manifest;
 }
 
@@ -78,12 +80,14 @@ app.get(
     "/api/workspace",
     asyncRoute(async (_request, response) => {
         const manifest = await loadManifest(dataRoot);
+        const validation = manifest ? validateManifest(manifest) : undefined;
         response.json({
             manifest,
-            validation: manifest ? validateManifest(manifest) : undefined,
-            readiness: manifest
-                ? validatePublishReadiness(manifest)
-                : undefined,
+            validation,
+            readiness:
+                manifest && validation?.valid
+                    ? validatePublishReadiness(manifest)
+                    : undefined,
             states: {
                 local: await loadPublishState(dataRoot, "local"),
                 dev: await loadPublishState(dataRoot, "dev"),
@@ -93,31 +97,39 @@ app.get(
 );
 
 app.post(
-    "/api/import",
-    upload.single("archive"),
+    "/api/manifest/reset",
     asyncRoute(async (request, response) => {
-        if (!request.file) throw new Error("archive is required");
-        await mkdir(dataRoot, { recursive: true });
-        const imported = await importArchive(
-            request.file.buffer,
-            dataRoot,
-            expectedSourceNames()
-        );
-        let manifest = buildDraftManifest({
-            archiveName: request.file.originalname,
-            archiveSha256: imported.archiveSha256,
-            files: imported.files,
-        });
-        const paths = imported.files.map((file) =>
-            join(dataRoot, "source", file.name)
-        );
-        const ocr = await runAppleVisionOcr(toolRoot, dataRoot, paths);
-        manifest = applyOcrDrafts(manifest, ocr);
-        await renderAllCrops(dataRoot, manifest);
+        if (request.body.confirmation !== "RESET MANUAL DRAFT") {
+            throw new Error("confirmation must be RESET MANUAL DRAFT");
+        }
+        const manifest = buildManualManifest();
         await saveManifest(dataRoot, manifest);
         response
             .status(201)
             .json({ manifest, readiness: validatePublishReadiness(manifest) });
+    })
+);
+
+app.post(
+    "/api/pages/:id/image",
+    upload.single("image"),
+    asyncRoute(async (request, response) => {
+        if (!request.file) throw new Error("a pre-cropped JPG is required");
+        const manifest = await requireManifest();
+        const page = findPage(manifest, String(request.params.id));
+        if (page.type !== "material") {
+            throw new Error("only material pages accept an image");
+        }
+        page.image = await saveUploadedImage(
+            dataRoot,
+            page.id,
+            request.file.buffer
+        );
+        page.approvals = {};
+        await saveManifest(dataRoot, manifest);
+        response
+            .status(201)
+            .json({ page, readiness: validatePublishReadiness(manifest) });
     })
 );
 
@@ -134,13 +146,15 @@ app.put(
         ) {
             throw new Error("page id and type cannot be changed");
         }
+        if (replacement.type === "material" && existing.type === "material") {
+            replacement.image = existing.image;
+            replacement.imageKey = existing.imageKey;
+        }
         replacement.approvals = {};
         const unit = manifest.units.find((item) =>
             item.pages.includes(existing)
         )!;
         unit.pages[unit.pages.indexOf(existing)] = replacement;
-        if (replacement.type === "material")
-            await renderPageCrop(dataRoot, replacement);
         await saveManifest(dataRoot, manifest);
         response.json({
             page: replacement,
@@ -274,32 +288,11 @@ app.post(
     })
 );
 
-app.get("/api/source/:name", (request, response) => {
-    response.sendFile(join(dataRoot, "source", request.params.name));
+app.get("/api/images/:id.jpg", (request, response) => {
+    response.sendFile(
+        join(dataRoot, "images", `${String(request.params.id)}.jpg`)
+    );
 });
-app.get(
-    "/api/crops/:id.jpg",
-    asyncRoute(async (request, response) => {
-        const draft =
-            typeof request.query.draft === "string"
-                ? request.query.draft
-                : undefined;
-        if (!draft) {
-            response.sendFile(
-                join(dataRoot, "crops", `${String(request.params.id)}.jpg`)
-            );
-            return;
-        }
-        const manifest = await requireManifest();
-        const page = findPage(manifest, String(request.params.id));
-        if (page.type !== "material")
-            throw new Error("only material pages have crops");
-        const crop = JSON.parse(draft) as MaterialManifestPage["crop"];
-        response
-            .type("image/jpeg")
-            .send(await renderCropPreview(dataRoot, { ...page, crop }));
-    })
-);
 
 if (isDev) {
     const vite = await createViteServer({

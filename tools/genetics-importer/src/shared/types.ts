@@ -13,13 +13,6 @@ export const UNIT_ORDER = [
     "F",
 ] as const;
 
-export type CropRect = {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-};
-
 export type Approval = {
     reviewer: string;
     reviewedAt: string;
@@ -34,6 +27,7 @@ export type TextField = {
 
 export type QuestionField = {
     key: string;
+    tag: string;
     type: "CHOICE" | "TEXT";
     content: string;
     options?: { label: string; content: string }[];
@@ -41,27 +35,23 @@ export type QuestionField = {
 
 type PageBase = {
     id: string;
-    sourceImage: string;
-    sourceHash: string;
     secondaryTitle: string;
     activeNavbarTitles: number[];
-    ocrDraft?: OcrObservation[];
     approvals: {
         content?: Approval;
         frontend?: Approval;
     };
 };
 
-export type OcrObservation = {
-    text: string;
-    confidence: number;
-    bounds: CropRect;
-};
-
 export type MaterialManifestPage = PageBase & {
     type: "material";
-    crop: CropRect;
     imageKey: string;
+    image?: {
+        fileName: string;
+        sha256: string;
+        width: number;
+        height: number;
+    };
     description: TextField;
     questionSections: {
         title: TextField;
@@ -97,17 +87,14 @@ export type CourseUnit = {
 };
 
 export type GeneticsManifest = {
-    version: 1;
+    version: 2;
     course: {
         id: "genetics";
         title: string;
         unitOrder: string[];
     };
-    source: {
-        archiveName: string;
-        archiveSha256: string;
-        imageWidth: 1920;
-        imageHeight: 1080;
+    authoring: {
+        mode: "manual";
     };
     units: CourseUnit[];
 };

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Message } from "../../../chat/types/chat";
@@ -17,6 +17,14 @@ export function useCourseChatController() {
     );
     const [editingDraft, setEditingDraft] = useState("");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const chatGenerationRef = useRef(0);
+
+    useEffect(
+        () => () => {
+            chatGenerationRef.current += 1;
+        },
+        []
+    );
 
     const {
         messages: baseMessages,
@@ -65,22 +73,29 @@ export function useCourseChatController() {
         setErrorMessage(null);
 
         if (!chatID) {
+            const generation = chatGenerationRef.current;
             setCreating(true);
 
             try {
                 const { chatID: newID } = await startChat(queryClient, trimmed);
+                if (generation !== chatGenerationRef.current) return;
+
                 void queryClient.invalidateQueries({
                     queryKey: CHAT_HISTORY_QUERY_KEY,
                 });
                 setChatID(newID);
             } catch (error) {
+                if (generation !== chatGenerationRef.current) return;
+
                 const message =
                     error instanceof Error ? error.message : String(error);
                 setErrorMessage(message);
                 setDraft(trimmed);
                 toast.error(`建立對話失敗: ${message}`);
             } finally {
-                setCreating(false);
+                if (generation === chatGenerationRef.current) {
+                    setCreating(false);
+                }
             }
 
             return;
@@ -139,8 +154,10 @@ export function useCourseChatController() {
     };
 
     const handleRefresh = () => {
+        chatGenerationRef.current += 1;
         chat.abort();
         setChatID(null);
+        setCreating(false);
         setDraft("");
         setEditingMessageId(null);
         setEditingDraft("");

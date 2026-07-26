@@ -206,22 +206,24 @@ export default function GeneticsCourse() {
                     secondaryTitle={currentPage.secondaryTitle}
                     onStepChange={handleStepChange}
                 />
-                {pageRequests.map((page, index) => (
-                    <CoursePage
-                        key={page.pageIndex}
-                        isActive={index === currentIndex}
-                        data={page}
-                        answers={answersByPage[page.pageIndex] ?? {}}
-                        onNext={handleNext}
-                        onAnswerChange={(questionId, answer) =>
-                            handleAnswerChange(
-                                page.pageIndex,
-                                questionId,
-                                answer
-                            )
-                        }
-                    />
-                ))}
+                {pageRequests
+                    .slice(0, highestUnlockedIndex + 1)
+                    .map((page, index) => (
+                        <CoursePage
+                            key={page.pageIndex}
+                            isActive={index === currentIndex}
+                            data={page}
+                            answers={answersByPage[page.pageIndex] ?? {}}
+                            onNext={handleNext}
+                            onAnswerChange={(questionId, answer) =>
+                                handleAnswerChange(
+                                    page.pageIndex,
+                                    questionId,
+                                    answer
+                                )
+                            }
+                        />
+                    ))}
                 {/* copyright footer */}
                 <footer className={styles.copyrightFooter}>
                     ©{currentYear} Institute of Education, Science Education

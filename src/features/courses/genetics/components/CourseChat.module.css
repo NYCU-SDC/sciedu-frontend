@@ -3,6 +3,10 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    border: 0.125rem solid var(--color-genetics-brand-teal);
+    border-radius: 1rem;
+    background-color: #ffffff;
 }
 
 .header {

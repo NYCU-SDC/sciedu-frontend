@@ -53,12 +53,13 @@
 
 .heading {
     margin: 0;
-    font-size: 2.25rem;
+    font-size: clamp(1.875rem, 2.5vw, 2.25rem);
     line-height: 1.33;
     font-weight: 700;
     font-family: "Noto Serif TC", serif;
     color: var(--color-black);
     text-align: center;
+    white-space: nowrap;
 }
 
 .status,

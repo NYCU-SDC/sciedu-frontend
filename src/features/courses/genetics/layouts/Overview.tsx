@@ -1,21 +1,24 @@
-import { Button, Skeleton } from "@radix-ui/themes";
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
+import { Button, Skeleton } from "@radix-ui/themes";
 import type { CoursePageRequest, OverviewPage } from "../types/types";
+import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
+import CourseChat from "../components/CourseChat";
 import styles from "./Overview.module.css";
 import FooterStyles from "../components/Footer.module.css";
 
 type Props = {
     data: CoursePageRequest;
+    chat: CourseChatController;
     onNext: () => void;
 };
 
-export default function Overview({ data, onNext }: Props) {
+export default function Overview({ data, chat, onNext }: Props) {
     const req = data.request as OverviewPage;
 
     const allTextIds = useMemo(
-        () => [...req.headerId, ...req.contentId.flat()],
+        () => [...new Set([...req.headerId, ...req.contentId.flat()])],
         [req.headerId, req.contentId]
     );
 
@@ -33,38 +36,16 @@ export default function Overview({ data, onNext }: Props) {
 
     return (
         <div className={styles.pageContainer}>
-            <main className={styles.tableContent}>
-                <table className={styles.comparisonTable}>
-                    <thead>
-                        <tr>
-                            {req.headerId.map((id, index) => {
-                                const query = textById.get(id);
-                                return (
-                                    <th key={index}>
-                                        {query?.isLoading ? (
-                                            <Skeleton minHeight="1rem" />
-                                        ) : query?.isError ? (
-                                            <span className={styles.errorText}>
-                                                載入失敗
-                                            </span>
-                                        ) : (
-                                            (query?.data?.content ?? "")
-                                        )}
-                                    </th>
-                                );
-                            })}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {req.contentId.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
-                                {row.map((id, cellIndex) => {
+            <div className={styles.pageBody}>
+                <main className={styles.tableContent}>
+                    <table className={styles.comparisonTable}>
+                        <thead>
+                            <tr>
+                                {req.headerId.map((id) => {
                                     const query = textById.get(id);
+
                                     return (
-                                        <td
-                                            key={cellIndex}
-                                            className={styles.tdContent}
-                                        >
+                                        <th key={id}>
                                             {query?.isLoading ? (
                                                 <Skeleton minHeight="1rem" />
                                             ) : query?.isError ? (
@@ -76,16 +57,45 @@ export default function Overview({ data, onNext }: Props) {
                                             ) : (
                                                 (query?.data?.content ?? "")
                                             )}
-                                        </td>
+                                        </th>
                                     );
                                 })}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </main>
-            <footer className={FooterStyles.footerContainer}>
-                <div className={FooterStyles.footerActions}>
+                        </thead>
+                        <tbody>
+                            {req.contentId.map((row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                    {row.map((id, cellIndex) => {
+                                        const query = textById.get(id);
+
+                                        return (
+                                            <td
+                                                key={`${id}-${cellIndex}`}
+                                                className={styles.tdContent}
+                                            >
+                                                {query?.isLoading ? (
+                                                    <Skeleton minHeight="1rem" />
+                                                ) : query?.isError ? (
+                                                    <span
+                                                        className={
+                                                            styles.errorText
+                                                        }
+                                                    >
+                                                        載入失敗
+                                                    </span>
+                                                ) : (
+                                                    (query?.data?.content ?? "")
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </main>
+                <aside className={styles.chatSidebar}>
+                    <CourseChat controller={chat} />
                     <Button
                         className={FooterStyles.shadowButton}
                         variant="solid"
@@ -95,8 +105,8 @@ export default function Overview({ data, onNext }: Props) {
                     >
                         送出並前往下一頁
                     </Button>
-                </div>
-            </footer>
+                </aside>
+            </div>
         </div>
     );
 }

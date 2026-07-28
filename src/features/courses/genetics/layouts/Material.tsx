@@ -1,6 +1,8 @@
 import { Button, Skeleton } from "@radix-ui/themes";
 import { useState } from "react";
 import type {
+    CourseAnswer,
+    CourseAnswers,
     CoursePageRequest,
     MaterialPage,
     QuestionResponse,
@@ -11,15 +13,25 @@ import FooterStyles from "../components/Footer.module.css";
 import { api } from "../../../../shared/utils/api";
 import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
+import type { CourseChatController } from "../components/useCourseChatController";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
 type Props = {
     data: CoursePageRequest;
+    chat: CourseChatController;
+    answers: CourseAnswers;
     onNext: () => void;
+    onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
 };
 
-export default function Material({ data, onNext }: Props) {
+export default function Material({
+    data,
+    chat,
+    answers,
+    onNext,
+    onAnswerChange,
+}: Props) {
     const req = data.request as MaterialPage;
 
     const {
@@ -107,6 +119,13 @@ export default function Material({ data, onNext }: Props) {
                                               "載入失敗")
                                             : null
                                     }
+                                    answer={answers[section.questionId] ?? ""}
+                                    onAnswerChange={(answer) =>
+                                        onAnswerChange(
+                                            section.questionId,
+                                            answer
+                                        )
+                                    }
                                 />
                             );
                         })}
@@ -114,7 +133,7 @@ export default function Material({ data, onNext }: Props) {
                 </section>
                 {/* right sidebar */}
                 <aside className={styles.chatSidebar}>
-                    <CourseChat />
+                    <CourseChat controller={chat} />
                     <Button
                         className={FooterStyles.shadowButton}
                         variant="solid"

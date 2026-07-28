@@ -16,6 +16,10 @@ export type QuestionResponse = {
     options: QuestionOption[];
 };
 
+export type CourseAnswer = string | string[];
+
+export type CourseAnswers = Record<string, CourseAnswer>;
+
 export type MaterialType = {
     type: "material";
     content: {

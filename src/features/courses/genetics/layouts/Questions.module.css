@@ -1,18 +1,35 @@
 .pageContainer {
-    height: 100%;
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
+.pageBody {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    gap: 1.25rem;
+    padding: 0 2rem;
+}
+
 .contentWrapper {
     display: flex;
     gap: 2.2rem;
-    padding: 0 2rem;
-    flex: 1;
+    flex: 2;
     min-height: 0;
     position: relative;
     overflow: hidden;
+}
+
+.chatSidebar {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
 }
 
 .contentWrapper::before {
@@ -32,7 +49,7 @@
     flex-direction: column;
     gap: 1.25rem;
     min-height: 0;
-    padding-bottom: 1rem;
+    padding-bottom: 0.5rem;
 }
 
 .columnHeader {

@@ -11,23 +11,88 @@ import Navbar from "./components/Navbar";
 import Material from "./layouts/Material";
 import Overview from "./layouts/Overview";
 import Questions from "./layouts/Questions";
+import {
+    useCourseChatController,
+    type CourseChatController,
+} from "./components/useCourseChatController";
 
 import { coursePageRequests } from "./assets/courseResource";
-import type { CoursePageRequest } from "./types/types";
+import type {
+    CourseAnswer,
+    CourseAnswers,
+    CoursePageRequest,
+} from "./types/types";
 
 type PageContentProps = {
     data: CoursePageRequest;
+    chat: CourseChatController;
+    answers: CourseAnswers;
     onNext: () => void;
+    onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
 };
 
-function PageContent({ data, onNext }: PageContentProps) {
+type CoursePageProps = PageContentProps & {
+    isActive: boolean;
+};
+
+function CoursePage({
+    isActive,
+    data,
+    answers,
+    onNext,
+    onAnswerChange,
+}: Omit<CoursePageProps, "chat">) {
+    // Keep one controller mounted for each page so every page owns an
+    // independent chat session and retains it while the student navigates.
+    const chat = useCourseChatController();
+
+    return (
+        <section
+            className={styles.pageSlot}
+            hidden={!isActive}
+            aria-hidden={!isActive}
+        >
+            <PageContent
+                data={data}
+                chat={chat}
+                answers={answers}
+                onNext={onNext}
+                onAnswerChange={onAnswerChange}
+            />
+        </section>
+    );
+}
+
+function PageContent({
+    data,
+    chat,
+    answers,
+    onNext,
+    onAnswerChange,
+}: PageContentProps) {
     switch (data.request.type) {
         case "material":
-            return <Material data={data} onNext={onNext} />;
+            return (
+                <Material
+                    data={data}
+                    chat={chat}
+                    answers={answers}
+                    onNext={onNext}
+                    onAnswerChange={onAnswerChange}
+                />
+            );
         case "questions":
-            return <Questions data={data} onNext={onNext} />;
+            return (
+                <Questions
+                    data={data}
+                    chat={chat}
+                    answers={answers}
+                    onNext={onNext}
+                    onAnswerChange={onAnswerChange}
+                />
+            );
         case "overview":
-            return <Overview data={data} onNext={onNext} />;
+            return <Overview data={data} chat={chat} onNext={onNext} />;
         default:
             return null;
     }
@@ -35,6 +100,10 @@ function PageContent({ data, onNext }: PageContentProps) {
 
 export default function GeneticsCourse() {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
+    const [answersByPage, setAnswersByPage] = useState<
+        Record<number, CourseAnswers>
+    >({});
     const queryClient = useQueryClient();
     const posthog = usePostHog();
 
@@ -62,14 +131,51 @@ export default function GeneticsCourse() {
     }, [pageRequests, currentIndex, queryClient]);
 
     const handleNext = () => {
-        const nextIndex = Math.min(currentIndex + 1, pageRequests.length - 1);
+        const nextIndex = Math.min(
+            currentIndex + 1,
+            highestUnlockedIndex + 1,
+            pageRequests.length - 1
+        );
+
         posthog.capture("course_page_advanced", {
             from_page_index: currentIndex,
             to_page_index: nextIndex,
             page_type: currentPage.request.type,
             total_pages: pageRequests.length,
         });
+
+        setHighestUnlockedIndex((previousIndex) =>
+            Math.max(previousIndex, nextIndex)
+        );
         setCurrentIndex(nextIndex);
+    };
+
+    const handleStepChange = (step: number) => {
+        const isOutsideCourse = step < 0 || step >= pageRequests.length;
+        const isLocked = step > highestUnlockedIndex;
+
+        if (isOutsideCourse || isLocked) return;
+
+        posthog.capture("course_page_navigated", {
+            from_page_index: currentIndex,
+            to_page_index: step,
+            total_pages: pageRequests.length,
+        });
+        setCurrentIndex(step);
+    };
+
+    const handleAnswerChange = (
+        pageIndex: number,
+        questionId: string,
+        answer: CourseAnswer
+    ) => {
+        setAnswersByPage((previousAnswersByPage) => ({
+            ...previousAnswersByPage,
+            [pageIndex]: {
+                ...previousAnswersByPage[pageIndex],
+                [questionId]: answer,
+            },
+        }));
     };
 
     return (
@@ -96,9 +202,28 @@ export default function GeneticsCourse() {
                 <Navbar
                     activeTitles={currentPage.activeNavbarTitles}
                     activeStep={currentIndex}
+                    highestUnlockedStep={highestUnlockedIndex}
                     secondaryTitle={currentPage.secondaryTitle}
+                    onStepChange={handleStepChange}
                 />
-                <PageContent data={currentPage} onNext={handleNext} />
+                {pageRequests
+                    .slice(0, highestUnlockedIndex + 1)
+                    .map((page, index) => (
+                        <CoursePage
+                            key={page.pageIndex}
+                            isActive={index === currentIndex}
+                            data={page}
+                            answers={answersByPage[page.pageIndex] ?? {}}
+                            onNext={handleNext}
+                            onAnswerChange={(questionId, answer) =>
+                                handleAnswerChange(
+                                    page.pageIndex,
+                                    questionId,
+                                    answer
+                                )
+                            }
+                        />
+                    ))}
                 {/* copyright footer */}
                 <footer className={styles.copyrightFooter}>
                     ©{currentYear} Institute of Education, Science Education

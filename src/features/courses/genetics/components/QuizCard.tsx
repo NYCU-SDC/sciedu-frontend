@@ -11,9 +11,17 @@ type Props = {
     };
     isLoading: boolean;
     error: string | null;
+    answer: string | string[];
+    onAnswerChange: (answer: string | string[]) => void;
 };
 
-export default function QuizCard({ question, isLoading, error }: Props) {
+export default function QuizCard({
+    question,
+    isLoading,
+    error,
+    answer,
+    onAnswerChange,
+}: Props) {
     if (error) {
         return (
             <div className={styles.quizCard}>
@@ -36,7 +44,11 @@ export default function QuizCard({ question, isLoading, error }: Props) {
                 <>
                     <p>{question.data?.content}</p>
                     {question.data?.type === "CHOICE" && (
-                        <CheckboxGroup.Root className={styles.radioGroup}>
+                        <CheckboxGroup.Root
+                            className={styles.radioGroup}
+                            value={Array.isArray(answer) ? answer : []}
+                            onValueChange={onAnswerChange}
+                        >
                             {question.data?.options.map((opt) => (
                                 <CheckboxGroup.Item value={opt.id} key={opt.id}>
                                     {opt.label}. {opt.content}
@@ -50,6 +62,10 @@ export default function QuizCard({ question, isLoading, error }: Props) {
                             placeholder="在此輸入答案..."
                             variant="soft"
                             color="gray"
+                            value={typeof answer === "string" ? answer : ""}
+                            onChange={(event) =>
+                                onAnswerChange(event.target.value)
+                            }
                         />
                     )}
                 </>

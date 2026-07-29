@@ -17,7 +17,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v6
               with:
-                  version: 11
+                  version: 11.9.0
 
             - name: Set up Node.js
               uses: actions/setup-node@v6
@@ -40,7 +40,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v6
               with:
-                  version: 11
+                  version: 11.9.0
 
             - name: Set up Node.js
               uses: actions/setup-node@v6
@@ -63,7 +63,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v6
               with:
-                  version: 11
+                  version: 11.9.0
 
             - name: Set up Node.js
               uses: actions/setup-node@v6
@@ -87,7 +87,7 @@ jobs:
             - name: Install pnpm
               uses: pnpm/action-setup@v6
               with:
-                  version: 11
+                  version: 11.9.0
 
             - name: Set up Node.js
               uses: actions/setup-node@v6
@@ -118,7 +118,7 @@ jobs:
                   context: .
                   build-args: |
                       VITE_BUILD_MODE=development
-                      VITE_BACKEND_BASE_URL=https://dev.sciedu.sdc.nycu.club
+                      VITE_BACKEND_BASE_URL=https://pr-55.sciedu.sdc.nycu.club
                       VITE_APP_MODE=dev
                       VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=${{ vars.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN }}
                       VITE_PUBLIC_POSTHOG_HOST=${{ vars.VITE_PUBLIC_POSTHOG_HOST }}

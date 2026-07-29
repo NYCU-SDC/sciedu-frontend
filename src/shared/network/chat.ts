@@ -57,11 +57,14 @@ export type CreateMessageResponse = {
 export async function createMessage(
     chatID: string,
     content: string,
-    previousID?: string
+    previousID?: string,
+    model?: string
 ): Promise<CreateMessageResponse> {
+    // `model` is omitted from the JSON when undefined, so the backend falls
+    // back to its default — matching the "no forced model" flag state.
     const response = await api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
-        body: JSON.stringify({ content, previousID }),
+        body: JSON.stringify({ content, previousID, model }),
     });
     return { ...response, message: normalizeMessage(response.message) };
 }

@@ -5,12 +5,14 @@ import { toast } from "sonner";
 import { usePostHog } from "@posthog/react";
 import Home from "../components/Home";
 import { startChat } from "../services/startChat";
+import { useModelSelection } from "../services/ModelSelectionContext";
 import { CHAT_HISTORY_QUERY_KEY } from "../../../shared/network/chat";
 
 export default function NewChatPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const posthog = usePostHog();
+    const { modelToSend } = useModelSelection();
     const [draft, setDraft] = useState("");
     const [creating, setCreating] = useState(false);
 
@@ -20,7 +22,11 @@ export default function NewChatPage() {
 
         setCreating(true);
         try {
-            const { chatID } = await startChat(queryClient, trimmed);
+            const { chatID } = await startChat(
+                queryClient,
+                trimmed,
+                modelToSend
+            );
             posthog.capture("chat_started", { chat_id: chatID });
             void queryClient.invalidateQueries({
                 queryKey: CHAT_HISTORY_QUERY_KEY,

@@ -17,11 +17,14 @@ cd sciedu-frontend
 # Install dependencies
 pnpm install
 
+# Configure the local backend and development mode
+cp example.env .env
+
 # Start development server
 pnpm dev
 ```
 
-The application will be available at `http://localhost:5173`.
+The application will be available at `http://localhost:5173`. The default local configuration connects to the backend at `http://localhost:8080`, so follow `.deploy/local/README.md` in the backend repository and start the local backend before testing authentication.
 
 ### Development Scripts
 

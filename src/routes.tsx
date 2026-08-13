@@ -10,6 +10,9 @@ import LoginPage from "./features/auth/pages/LoginPage";
 import NotFoundPage from "./shared/components/NotFoundPage";
 import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
+import Homepage from "./features/courses/Homepage/Homepage";
+
+
 
 const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
@@ -35,9 +38,14 @@ const chatRoutes: RouteObject[] = [
 
 const courseRoutes: RouteObject[] = [
     {
+    path: "/Homepage",
+    element: <Homepage />,
+    },
+    {
         path: "/course/:id",
         element: <GeneticsCourse />,
-    },
+    }
+   
 ];
 
 const enableChatRoutes = ["llm", "dev"].includes(APP_MODE);

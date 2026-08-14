@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import styles from "./CurrentTaskCard.module.css";
+import { Button, Card, Stack, Text, Title } from "@mantine/core";
 
 type Props = {
     eyebrow: string;
@@ -17,22 +17,38 @@ export default function CurrentTaskCard({
     onContinue,
 }: Props) {
     return (
-        <section className={styles.card}>
-            <div>
-                <p className={styles.eyebrow}>{eyebrow}</p>
-                <h3 className={styles.title}>{title}</h3>
-                <p className={styles.meta}>
+        <Card
+            radius="lg"
+            p="1.75rem"
+            shadow="xs"
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: "2.5rem",
+                minHeight: "15rem",
+            }}
+        >
+            <Stack gap={6}>
+                <Text fw={600} fz="0.875rem" c="brandTeal.8">
+                    {eyebrow}
+                </Text>
+                <Title order={3} fz="1.5rem" fw={700} c="dark.9">
+                    {title}
+                </Title>
+                <Text fz="0.8125rem" c="dimmed">
                     共 {totalPages} 頁．已完成第 {completedPage} 頁
-                </p>
-            </div>
-            <button
-                type="button"
-                className={styles.continueButton}
+                </Text>
+            </Stack>
+            <Button
+                radius="md"
+                color="brandTeal"
+                rightSection={<ArrowRight size={16} />}
                 onClick={onContinue}
+                style={{ alignSelf: "flex-start" }}
             >
                 繼續目前任務
-                <ArrowRight size={16} />
-            </button>
-        </section>
+            </Button>
+        </Card>
     );
 }

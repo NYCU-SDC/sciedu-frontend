@@ -10,28 +10,55 @@ import {
     ChevronDown,
     FlaskConical,
     GraduationCap,
-    MapPin,
     Search,
     Users,
 } from "lucide-react";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";
-import { DEMO_EXPERIMENT_ID } from "../data/demoAdminData";
 import {
-    fetchAdminOverview,
-    listMaterialProgress,
-    listParticipantProgress,
+    fetchCurrentUser,
+    fetchExperiment,
+    listExperimentCourses,
+    listExperimentParticipants,
+    listExperiments,
 } from "../services/adminRepository";
-import type { UserRole } from "../types";
+import type {
+    CourseStatus,
+    ExperimentStatus,
+    GradingMode,
+    User,
+    UserRole,
+} from "../types";
 import styles from "./AdminDashboardPage.module.css";
 
-type TableView = "participants" | "materials";
+type TableView = "participants" | "courses";
+
+const PAGE_SIZE = 10;
 
 const roleLabels: Record<UserRole, string> = {
     STUDENT: "學生",
     EXPERIMENTER: "實驗者",
     ADMIN: "管理員",
+};
+
+const experimentStatusLabels: Record<ExperimentStatus, string> = {
+    DRAFT: "草稿",
+    SCHEDULED: "已排程",
+    ACTIVE: "進行中",
+    COMPLETED: "已完成",
+    ARCHIVED: "已封存",
+};
+
+const gradingModeLabels: Record<GradingMode, string> = {
+    AUTOMATIC: "自動評分",
+    MANUAL: "人工評分",
+};
+
+const courseStatusLabels: Record<CourseStatus, string> = {
+    DRAFT: "草稿",
+    PUBLISHED: "已發布",
+    ARCHIVED: "已封存",
 };
 
 function formatDateTime(value: string) {
@@ -46,11 +73,13 @@ function formatDateTime(value: string) {
     }).format(date);
 }
 
-function percentage(completed: number, total: number) {
-    return total === 0 ? 0 : Math.round((completed / total) * 100);
-}
-
-function Sidebar({ onOpenPeople }: { onOpenPeople: () => void }) {
+function Sidebar({
+    currentUser,
+    onOpenPeople,
+}: {
+    currentUser: User;
+    onOpenPeople: () => void;
+}) {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.sidebarBrand}>
@@ -80,10 +109,16 @@ function Sidebar({ onOpenPeople }: { onOpenPeople: () => void }) {
                 </button>
             </nav>
             <div className={styles.profile}>
-                <span className={styles.avatar}>佘</span>
+                <span className={styles.avatar}>
+                    {currentUser.name.trim().slice(0, 1)}
+                </span>
                 <span>
-                    <strong>佘曉青</strong>
-                    <small>教授</small>
+                    <strong>{currentUser.name}</strong>
+                    <small>
+                        {currentUser.roles
+                            .map((role) => roleLabels[role])
+                            .join("、")}
+                    </small>
                 </span>
             </div>
         </aside>
@@ -93,55 +128,91 @@ function Sidebar({ onOpenPeople }: { onOpenPeople: () => void }) {
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
 
+    const [selectedExperimentId, setSelectedExperimentId] = useState("");
     const [tableView, setTableView] = useState<TableView>("participants");
     const [query, setQuery] = useState("");
     const [role, setRole] = useState<UserRole | "">("");
-    const [materialOrder, setMaterialOrder] = useState<"asc" | "desc">("asc");
+    const [courseOrder, setCourseOrder] = useState<"asc" | "desc">("asc");
     const [page, setPage] = useState(1);
     const [isParticipantModalOpen, setParticipantModalOpen] = useState(false);
+    const [loadedAt] = useState(() => Date.now());
 
-    const overviewQuery = useQuery({
-        queryKey: ["admin", "experiments", DEMO_EXPERIMENT_ID, "overview"],
-        queryFn: () => fetchAdminOverview(DEMO_EXPERIMENT_ID),
+    const currentUserQuery = useQuery({
+        queryKey: ["users", "me"],
+        queryFn: fetchCurrentUser,
+        staleTime: 5 * 60 * 1000,
+    });
+    const experimentsQuery = useQuery({
+        queryKey: ["admin", "experiments", "list"],
+        queryFn: () => listExperiments({ page: 1, pageSize: 100 }),
+    });
+
+    const experiments = experimentsQuery.data?.items ?? [];
+    const activeExperimentId = experiments.some(
+        (experiment) => experiment.id === selectedExperimentId
+    )
+        ? selectedExperimentId
+        : (experiments[0]?.id ?? "");
+
+    const experimentQuery = useQuery({
+        queryKey: ["admin", "experiments", activeExperimentId, "detail"],
+        queryFn: () => fetchExperiment(activeExperimentId),
+        enabled: Boolean(activeExperimentId),
     });
     const participantsQuery = useQuery({
-        queryKey: [
-            "admin",
-            "experiments",
-            DEMO_EXPERIMENT_ID,
-            "participants",
-            { page, query, role },
-        ],
-        queryFn: () =>
-            listParticipantProgress(DEMO_EXPERIMENT_ID, {
-                page,
-                pageSize: 10,
-                q: query,
-                role: role || undefined,
-            }),
-        enabled: tableView === "participants",
+        queryKey: ["admin", "experiments", activeExperimentId, "participants"],
+        queryFn: () => listExperimentParticipants(activeExperimentId),
+        enabled: Boolean(activeExperimentId),
     });
-    const materialsQuery = useQuery({
-        queryKey: [
-            "admin",
-            "experiments",
-            DEMO_EXPERIMENT_ID,
-            "materials",
-            { query, materialOrder },
-        ],
-        queryFn: () =>
-            listMaterialProgress(DEMO_EXPERIMENT_ID, {
-                q: query,
-                order: materialOrder,
-            }),
-        enabled: tableView === "materials",
+    const coursesQuery = useQuery({
+        queryKey: ["admin", "experiments", activeExperimentId, "courses"],
+        queryFn: () => listExperimentCourses(activeExperimentId),
+        enabled: Boolean(activeExperimentId),
     });
 
-    const overview = overviewQuery.data;
-    const experimentRange = useMemo(() => {
-        if (!overview) return "";
-        return `${formatDateTime(overview.experiment.startAt)}－${formatDateTime(overview.experiment.endAt)}`;
-    }, [overview]);
+    const filteredParticipants = useMemo(() => {
+        const normalizedQuery = query.trim().toLocaleLowerCase("zh-Hant");
+        return (participantsQuery.data ?? []).filter(({ participant }) => {
+            const matchesQuery =
+                !normalizedQuery ||
+                participant.name
+                    .toLocaleLowerCase("zh-Hant")
+                    .includes(normalizedQuery) ||
+                participant.email.toLocaleLowerCase().includes(normalizedQuery);
+            const matchesRole = !role || participant.roles.includes(role);
+            return matchesQuery && matchesRole;
+        });
+    }, [participantsQuery.data, query, role]);
+
+    const filteredCourses = useMemo(() => {
+        const normalizedQuery = query.trim().toLocaleLowerCase("zh-Hant");
+        return (coursesQuery.data ?? [])
+            .filter(
+                ({ course }) =>
+                    !normalizedQuery ||
+                    course.title
+                        .toLocaleLowerCase("zh-Hant")
+                        .includes(normalizedQuery) ||
+                    course.code.toLocaleLowerCase().includes(normalizedQuery)
+            )
+            .sort(({ course: a }, { course: b }) => {
+                const direction = courseOrder === "asc" ? 1 : -1;
+                return a.code.localeCompare(b.code, "zh-Hant") * direction;
+            });
+    }, [courseOrder, coursesQuery.data, query]);
+
+    const activeItems =
+        tableView === "participants" ? filteredParticipants : filteredCourses;
+    const totalPages = Math.max(1, Math.ceil(activeItems.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const visibleParticipants = filteredParticipants.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    );
+    const visibleCourses = filteredCourses.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    );
 
     const switchView = (nextView: TableView) => {
         setTableView(nextView);
@@ -150,16 +221,50 @@ export default function AdminDashboardPage() {
         setPage(1);
     };
 
-    if (overviewQuery.isPending) {
+    const switchExperiment = (experimentId: string) => {
+        setSelectedExperimentId(experimentId);
+        setQuery("");
+        setRole("");
+        setPage(1);
+    };
+
+    if (currentUserQuery.isPending || experimentsQuery.isPending) {
         return <div className={styles.pageStatus}>載入實驗總覽中⋯</div>;
     }
-    if (overviewQuery.isError || !overview) {
+    if (currentUserQuery.isError || experimentsQuery.isError) {
         return <div className={styles.pageStatus}>實驗總覽載入失敗</div>;
     }
+    if (experimentsQuery.data.items.length === 0) {
+        return <div className={styles.pageStatus}>目前沒有可管理的實驗</div>;
+    }
+    if (experimentQuery.isError) {
+        return <div className={styles.pageStatus}>實驗資料載入失敗</div>;
+    }
+    if (experimentQuery.isPending || !experimentQuery.data) {
+        return <div className={styles.pageStatus}>載入實驗資料中⋯</div>;
+    }
+
+    const experiment = experimentQuery.data;
+    const experimentRange =
+        formatDateTime(experiment.scheduledStartAt) +
+        "－" +
+        formatDateTime(experiment.scheduledEndAt);
+    const remainingDays = Math.max(
+        0,
+        Math.ceil(
+            (new Date(experiment.scheduledEndAt).getTime() - loadedAt) /
+                86_400_000
+        )
+    );
+    const activeQuery =
+        tableView === "participants" ? participantsQuery : coursesQuery;
 
     return (
         <div className={styles.page}>
-            <Sidebar onOpenPeople={() => setParticipantModalOpen(true)} />
+            <Sidebar
+                currentUser={currentUserQuery.data}
+                onOpenPeople={() => setParticipantModalOpen(true)}
+            />
 
             <main className={styles.main}>
                 <header className={styles.pageHeader}>
@@ -178,28 +283,36 @@ export default function AdminDashboardPage() {
                 <section className={styles.experimentCard}>
                     <div className={styles.experimentInfo}>
                         <div className={styles.experimentTitleRow}>
-                            <h2>{overview.experiment.name}</h2>
-                            <span className={styles.statusBadge}>進行中</span>
+                            <h2>{experiment.name}</h2>
+                            <span className={styles.statusBadge}>
+                                {experimentStatusLabels[experiment.status]}
+                            </span>
                         </div>
-                        <p>{overview.experiment.description}</p>
+                        <p>{experiment.description || "尚未提供實驗說明"}</p>
                         <div className={styles.metadata}>
                             <span>
                                 <CalendarDays aria-hidden="true" />
                                 {experimentRange}
-                            </span>
-                            <span>
-                                <MapPin aria-hidden="true" />
-                                {overview.experiment.location}
                             </span>
                         </div>
                     </div>
                     <label className={styles.experimentSelect}>
                         <span>切換實驗</span>
                         <span className={styles.selectShell}>
-                            <select defaultValue={overview.experiment.id}>
-                                <option value={overview.experiment.id}>
-                                    2026/07・{overview.experiment.name}
-                                </option>
+                            <select
+                                value={activeExperimentId}
+                                onChange={(event) =>
+                                    switchExperiment(event.target.value)
+                                }
+                            >
+                                {experimentsQuery.data.items.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {formatDateTime(
+                                            item.scheduledStartAt
+                                        ).slice(0, 7)}
+                                        ・{item.name}
+                                    </option>
+                                ))}
                             </select>
                             <ChevronDown aria-hidden="true" />
                         </span>
@@ -211,30 +324,34 @@ export default function AdminDashboardPage() {
 
                 <section className={styles.stats} aria-label="實驗統計">
                     <article>
-                        <h3>參與學生</h3>
-                        <strong>{overview.summary.participantCount} 人</strong>
-                        <p>本場次已指派任務人數</p>
+                        <h3>參與人員</h3>
+                        <strong>{experiment.participantCount} 人</strong>
+                        <p>本場次目前指派人數</p>
                     </article>
                     <article>
                         <h3>使用教材</h3>
-                        <strong>{overview.summary.materialCount} 份</strong>
-                        <p>本場次已指派教材數量</p>
+                        <strong>{experiment.courseCount} 份</strong>
+                        <p>本場次目前指派教材數量</p>
                     </article>
                     <article>
                         <h3>剩餘時間</h3>
                         <strong>
-                            約{" "}
-                            {Math.ceil(
-                                overview.summary.remainingSeconds / 86400
-                            )}{" "}
-                            天
+                            {remainingDays > 0
+                                ? "約 " + remainingDays + " 天"
+                                : "已結束"}
                         </strong>
-                        <p>{formatDateTime(overview.experiment.endAt)} 結束</p>
+                        <p>{formatDateTime(experiment.scheduledEndAt)} 結束</p>
                     </article>
                     <article>
-                        <h3>測驗模式</h3>
-                        <strong>{overview.experiment.mode}</strong>
-                        <p>其他細節請至「實驗場次」中查看</p>
+                        <h3>評分模式</h3>
+                        <strong>
+                            {
+                                gradingModeLabels[
+                                    experiment.configuration.gradingMode
+                                ]
+                            }
+                        </strong>
+                        <p>依本場實驗設定顯示</p>
                     </article>
                 </section>
 
@@ -255,11 +372,11 @@ export default function AdminDashboardPage() {
                             <button
                                 type="button"
                                 className={
-                                    tableView === "materials"
+                                    tableView === "courses"
                                         ? styles.segmentActive
                                         : ""
                                 }
-                                onClick={() => switchView("materials")}
+                                onClick={() => switchView("courses")}
                             >
                                 按教材查看
                             </button>
@@ -307,21 +424,22 @@ export default function AdminDashboardPage() {
                             ) : (
                                 <label className={styles.compactSelect}>
                                     <select
-                                        value={materialOrder}
-                                        aria-label="教材完成度排序"
-                                        onChange={(event) =>
-                                            setMaterialOrder(
+                                        value={courseOrder}
+                                        aria-label="教材代碼排序"
+                                        onChange={(event) => {
+                                            setCourseOrder(
                                                 event.target.value as
                                                     | "asc"
                                                     | "desc"
-                                            )
-                                        }
+                                            );
+                                            setPage(1);
+                                        }}
                                     >
                                         <option value="asc">
-                                            依完成度低到高排列
+                                            教材代碼 A 到 Z
                                         </option>
                                         <option value="desc">
-                                            依完成度高到低排列
+                                            教材代碼 Z 到 A
                                         </option>
                                     </select>
                                     <ChevronDown aria-hidden="true" />
@@ -330,106 +448,107 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
 
-                    <div className={styles.tableScroll}>
-                        {tableView === "participants" ? (
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>姓名</th>
-                                        <th>郵件</th>
-                                        <th>角色</th>
-                                        <th>教材完成度</th>
-                                        <th>開始測驗時間</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {participantsQuery.data?.items.map(
-                                        (person) => (
-                                            <tr key={person.userId}>
-                                                <td>{person.name}</td>
-                                                <td>{person.email}</td>
-                                                <td>
-                                                    {roleLabels[person.role]}
-                                                </td>
-                                                <td>
-                                                    {person.completedMaterials}{" "}
-                                                    / {person.totalMaterials}（
-                                                    {percentage(
-                                                        person.completedMaterials,
-                                                        person.totalMaterials
-                                                    )}
-                                                    %）
-                                                </td>
-                                                <td>
-                                                    {person.startedAt
-                                                        ? formatDateTime(
-                                                              person.startedAt
-                                                          )
-                                                        : "尚未加入"}
-                                                </td>
-                                            </tr>
-                                        )
-                                    )}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <table className={styles.materialTable}>
-                                <thead>
-                                    <tr>
-                                        <th>代碼</th>
-                                        <th>名稱</th>
-                                        <th>學生完成度</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {materialsQuery.data?.items.map(
-                                        (material) => (
-                                            <tr key={material.materialId}>
-                                                <td>{material.code}</td>
-                                                <td>
-                                                    <strong>
-                                                        {material.name}
-                                                    </strong>
-                                                    <small>
-                                                        {material.description}
-                                                    </small>
-                                                </td>
-                                                <td>
-                                                    {material.completedStudents}{" "}
-                                                    / {material.totalStudents}（
-                                                    {percentage(
-                                                        material.completedStudents,
-                                                        material.totalStudents
-                                                    )}
-                                                    %）
-                                                </td>
-                                            </tr>
-                                        )
-                                    )}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
+                    {activeQuery.isPending ? (
+                        <p className={styles.emptyState}>載入列表中⋯</p>
+                    ) : activeQuery.isError ? (
+                        <p className={styles.emptyState}>列表載入失敗</p>
+                    ) : (
+                        <div className={styles.tableScroll}>
+                            {tableView === "participants" ? (
+                                <table className={styles.participantTable}>
+                                    <thead>
+                                        <tr>
+                                            <th>姓名</th>
+                                            <th>郵件</th>
+                                            <th>角色</th>
+                                            <th>加入實驗時間</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {visibleParticipants.map(
+                                            ({ participant, assignedAt }) => (
+                                                <tr key={participant.id}>
+                                                    <td>{participant.name}</td>
+                                                    <td>{participant.email}</td>
+                                                    <td>
+                                                        {participant.roles
+                                                            .map(
+                                                                (
+                                                                    participantRole
+                                                                ) =>
+                                                                    roleLabels[
+                                                                        participantRole
+                                                                    ]
+                                                            )
+                                                            .join("、")}
+                                                    </td>
+                                                    <td>
+                                                        {formatDateTime(
+                                                            assignedAt
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <table className={styles.materialTable}>
+                                    <thead>
+                                        <tr>
+                                            <th>代碼</th>
+                                            <th>名稱</th>
+                                            <th>狀態</th>
+                                            <th>加入實驗時間</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {visibleCourses.map(
+                                            ({ course, linkedAt }) => (
+                                                <tr key={course.id}>
+                                                    <td>{course.code}</td>
+                                                    <td>
+                                                        <strong>
+                                                            {course.title}
+                                                        </strong>
+                                                        <small>
+                                                            {course.description}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            courseStatusLabels[
+                                                                course.status
+                                                            ]
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {formatDateTime(
+                                                            linkedAt
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    )}
 
                     <footer className={styles.tableFooter}>
                         <span>
                             顯示{" "}
                             {tableView === "participants"
-                                ? (participantsQuery.data?.items.length ?? 0)
-                                : (materialsQuery.data?.items.length ?? 0)}{" "}
-                            筆資料，共{" "}
-                            {tableView === "participants"
-                                ? (participantsQuery.data?.totalItems ?? 0)
-                                : (materialsQuery.data?.totalItems ?? 0)}{" "}
-                            筆
+                                ? visibleParticipants.length
+                                : visibleCourses.length}{" "}
+                            筆資料，共 {activeItems.length} 筆
                         </span>
                         <div className={styles.pagination}>
                             <button
                                 type="button"
                                 aria-label="上一頁"
-                                disabled={
-                                    tableView === "materials" || page <= 1
-                                }
+                                disabled={currentPage <= 1}
                                 onClick={() =>
                                     setPage((current) => current - 1)
                                 }
@@ -437,21 +556,12 @@ export default function AdminDashboardPage() {
                                 <ArrowLeft aria-hidden="true" />
                             </button>
                             <span>
-                                {tableView === "participants"
-                                    ? (participantsQuery.data?.currentPage ?? 1)
-                                    : 1}{" "}
-                                /{" "}
-                                {tableView === "participants"
-                                    ? (participantsQuery.data?.totalPages ?? 1)
-                                    : 1}
+                                {currentPage} / {totalPages}
                             </span>
                             <button
                                 type="button"
                                 aria-label="下一頁"
-                                disabled={
-                                    tableView === "materials" ||
-                                    !participantsQuery.data?.hasNextPage
-                                }
+                                disabled={currentPage >= totalPages}
                                 onClick={() =>
                                     setPage((current) => current + 1)
                                 }
@@ -465,7 +575,7 @@ export default function AdminDashboardPage() {
 
             {isParticipantModalOpen && (
                 <AddParticipantModal
-                    experimentId={DEMO_EXPERIMENT_ID}
+                    experimentId={activeExperimentId}
                     onClose={() => setParticipantModalOpen(false)}
                 />
             )}

@@ -1,6 +1,82 @@
 export type UserRole = "STUDENT" | "EXPERIMENTER" | "ADMIN";
 
-export type ExperimentStatus = "DRAFT" | "ACTIVE" | "COMPLETED";
+export type User = {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string;
+    roles: UserRole[];
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type ExperimentStatus =
+    | "DRAFT"
+    | "SCHEDULED"
+    | "ACTIVE"
+    | "COMPLETED"
+    | "ARCHIVED";
+
+export type GradingMode = "AUTOMATIC" | "MANUAL";
+
+export type CorrectAnswerReleaseMode =
+    | "AFTER_PAGE_SUBMISSION"
+    | "AFTER_COURSE_COMPLETION"
+    | "NEVER";
+
+export type ExperimentConfiguration = {
+    maxAttempts: number;
+    allowRetry: boolean;
+    showScore: boolean;
+    showExplanations: boolean;
+    gradingMode: GradingMode;
+    correctAnswerReleaseMode: CorrectAnswerReleaseMode;
+};
+
+export type Experiment = {
+    id: string;
+    name: string;
+    description?: string;
+    scheduledStartAt: string;
+    scheduledEndAt: string;
+    status: ExperimentStatus;
+    configuration: ExperimentConfiguration;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type ExperimentDetail = Experiment & {
+    participantCount: number;
+    courseCount: number;
+};
+
+export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+export type Course = {
+    id: string;
+    code: string;
+    title: string;
+    description?: string;
+    status: CourseStatus;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type ExperimentParticipantAssignment = {
+    participant: User;
+    assignedAt: string;
+};
+
+export type ExperimentCourseAssignment = {
+    course: Course;
+    linkedAt: string;
+};
+
+export type ParticipantCandidate = {
+    user: User;
+    isAssigned: boolean;
+};
 
 export type PaginatedResponse<T> = {
     items: T[];
@@ -11,65 +87,18 @@ export type PaginatedResponse<T> = {
     hasNextPage: boolean;
 };
 
-export type AdminExperiment = {
-    id: string;
-    name: string;
-    description: string;
-    status: ExperimentStatus;
-    startAt: string;
-    endAt: string;
-    location: string;
-    mode: string;
+export type ExperimentListParams = {
+    page?: number;
+    pageSize?: number;
+    status?: ExperimentStatus;
+    scheduledFrom?: string;
+    scheduledTo?: string;
+    search?: string;
 };
 
-export type ExperimentSummary = {
-    participantCount: number;
-    materialCount: number;
-    remainingSeconds: number;
-};
-
-export type ParticipantProgress = {
-    userId: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    completedMaterials: number;
-    totalMaterials: number;
-    startedAt: string | null;
-};
-
-export type MaterialProgress = {
-    materialId: string;
-    code: string;
-    name: string;
-    description: string;
-    completedStudents: number;
-    totalStudents: number;
-};
-
-export type ParticipantAvailability = "AVAILABLE" | "CONFLICT";
-
-export type ParticipantCandidate = {
-    userId: string;
-    name: string;
-    email: string;
-    availability: ParticipantAvailability;
-    conflictReason?: string;
-};
-
-export type AdminOverview = {
-    experiment: AdminExperiment;
-    summary: ExperimentSummary;
-};
-
-export type ParticipantListParams = {
-    page: number;
-    pageSize: number;
-    q: string;
+export type UserListParams = {
+    page?: number;
+    pageSize?: number;
+    search?: string;
     role?: UserRole;
-};
-
-export type MaterialListParams = {
-    q: string;
-    order: "asc" | "desc";
 };

@@ -1,107 +1,230 @@
+import { api } from "../../../shared/utils/api";
 import {
-    demoCandidates,
-    demoMaterials,
-    demoOverview,
+    demoCandidateUsers,
+    demoCourses,
+    demoCurrentUser,
+    demoExperiment,
     demoParticipants,
 } from "../data/demoAdminData";
 import type {
-    AdminOverview,
-    MaterialListParams,
-    MaterialProgress,
+    Experiment,
+    ExperimentCourseAssignment,
+    ExperimentDetail,
+    ExperimentListParams,
+    ExperimentParticipantAssignment,
     PaginatedResponse,
     ParticipantCandidate,
-    ParticipantListParams,
-    ParticipantProgress,
+    User,
+    UserListParams,
 } from "../types";
 
-// sciedu-api does not define Experiment/Admin operations yet. Keeping the
-// repository boundary explicit lets the UI switch to api<T>(...) once those
-// TypeSpec contracts exist, without leaking demo behavior into components.
+export const isAdminDemoMode =
+    import.meta.env.DEV && import.meta.env.VITE_ADMIN_DEMO_MODE === "true";
+
+const DEMO_DELAY_MS = 180;
+const MAX_PAGE_SIZE = 100;
+
+let demoParticipantState = [...demoParticipants];
+
 const resolveDemo = <T>(value: T): Promise<T> =>
-    new Promise((resolve) => window.setTimeout(() => resolve(value), 180));
-
-export function fetchAdminOverview(
-    __experimentId: string
-): Promise<AdminOverview> {
-    return resolveDemo(demoOverview);
-}
-
-export function listParticipantProgress(
-    __experimentId: string,
-    params: ParticipantListParams
-): Promise<PaginatedResponse<ParticipantProgress>> {
-    const query = params.q.trim().toLocaleLowerCase("zh-Hant");
-    const filtered = demoParticipants.filter((participant) => {
-        const matchesQuery =
-            !query ||
-            participant.name.toLocaleLowerCase("zh-Hant").includes(query) ||
-            participant.email.toLocaleLowerCase().includes(query);
-        return (
-            matchesQuery && (!params.role || participant.role === params.role)
-        );
-    });
-    const offset = (params.page - 1) * params.pageSize;
-    const totalPages = Math.max(
-        1,
-        Math.ceil(filtered.length / params.pageSize)
+    new Promise((resolve) =>
+        window.setTimeout(() => resolve(value), DEMO_DELAY_MS)
     );
 
-    return resolveDemo({
-        items: filtered.slice(offset, offset + params.pageSize),
+function toSearchParams(values: Record<string, string | number | undefined>) {
+    const params = new URLSearchParams();
+    Object.entries(values).forEach(([key, value]) => {
+        if (value !== undefined && value !== "") {
+            params.set(key, String(value));
+        }
+    });
+    return params;
+}
+
+function paginate<T>(
+    items: T[],
+    page: number,
+    pageSize: number
+): PaginatedResponse<T> {
+    const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+    const currentPage = Math.min(page, totalPages);
+    const offset = (currentPage - 1) * pageSize;
+    return {
+        items: items.slice(offset, offset + pageSize),
         totalPages,
-        totalItems: filtered.length,
-        currentPage: Math.min(params.page, totalPages),
-        pageSize: params.pageSize,
-        hasNextPage: params.page < totalPages,
-    });
+        totalItems: items.length,
+        currentPage,
+        pageSize,
+        hasNextPage: currentPage < totalPages,
+    };
 }
 
-export function listMaterialProgress(
-    __experimentId: string,
-    params: MaterialListParams
-): Promise<PaginatedResponse<MaterialProgress>> {
-    const query = params.q.trim().toLocaleLowerCase("zh-Hant");
-    const filtered = demoMaterials
-        .filter(
-            (material) =>
-                !query ||
-                material.name.toLocaleLowerCase("zh-Hant").includes(query) ||
-                material.code.toLocaleLowerCase().includes(query)
-        )
-        .sort((a, b) => {
-            const aRate = a.completedStudents / a.totalStudents;
-            const bRate = b.completedStudents / b.totalStudents;
-            return params.order === "asc" ? aRate - bRate : bRate - aRate;
+async function collectAllPages<T>(
+    fetchPage: (page: number) => Promise<PaginatedResponse<T>>
+): Promise<T[]> {
+    const firstPage = await fetchPage(1);
+    const items = [...firstPage.items];
+    for (let page = 2; page <= firstPage.totalPages; page += 1) {
+        const response = await fetchPage(page);
+        items.push(...response.items);
+    }
+    return items;
+}
+
+export function fetchCurrentUser(): Promise<User> {
+    if (isAdminDemoMode) return resolveDemo(demoCurrentUser);
+    return api<User>("/api/users/me");
+}
+
+export function listExperiments(
+    params: ExperimentListParams = {}
+): Promise<PaginatedResponse<Experiment>> {
+    if (isAdminDemoMode) {
+        const query = params.search?.trim().toLocaleLowerCase("zh-Hant") ?? "";
+        const matches =
+            (!params.status || demoExperiment.status === params.status) &&
+            (!query ||
+                demoExperiment.name
+                    .toLocaleLowerCase("zh-Hant")
+                    .includes(query));
+        return resolveDemo(
+            paginate(
+                matches ? [demoExperiment] : [],
+                params.page ?? 1,
+                params.pageSize ?? 20
+            )
+        );
+    }
+
+    const query = toSearchParams({
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? 20,
+        status: params.status,
+        scheduledFrom: params.scheduledFrom,
+        scheduledTo: params.scheduledTo,
+        search: params.search?.trim() || undefined,
+    });
+    return api<PaginatedResponse<Experiment>>(`/api/experiments?${query}`);
+}
+
+export function fetchExperiment(
+    experimentId: string
+): Promise<ExperimentDetail> {
+    if (isAdminDemoMode) {
+        return resolveDemo({
+            ...demoExperiment,
+            participantCount: demoParticipantState.length,
+            courseCount: demoCourses.length,
         });
-
-    return resolveDemo({
-        items: filtered,
-        totalPages: 1,
-        totalItems: filtered.length,
-        currentPage: 1,
-        pageSize: Math.max(filtered.length, 1),
-        hasNextPage: false,
-    });
+    }
+    return api<ExperimentDetail>(`/api/experiments/${experimentId}`);
 }
 
-export function listParticipantCandidates(
-    __experimentId: string,
-    q: string
-): Promise<ParticipantCandidate[]> {
-    const query = q.trim().toLocaleLowerCase("zh-Hant");
-    return resolveDemo(
-        demoCandidates.filter(
-            (candidate) =>
-                !query ||
-                candidate.name.toLocaleLowerCase("zh-Hant").includes(query) ||
-                candidate.email.toLocaleLowerCase().includes(query)
-        )
+async function fetchParticipantPage(
+    experimentId: string,
+    page: number
+): Promise<PaginatedResponse<ExperimentParticipantAssignment>> {
+    if (isAdminDemoMode) {
+        return resolveDemo(paginate(demoParticipantState, page, MAX_PAGE_SIZE));
+    }
+    const query = toSearchParams({ page, pageSize: MAX_PAGE_SIZE });
+    return api<PaginatedResponse<ExperimentParticipantAssignment>>(
+        `/api/experiments/${experimentId}/participants?${query}`
     );
 }
 
-export function addExperimentParticipants(
-    __experimentId: string,
-    __userIds: string[]
-): Promise<void> {
-    return resolveDemo(undefined);
+export function listExperimentParticipants(
+    experimentId: string
+): Promise<ExperimentParticipantAssignment[]> {
+    return collectAllPages((page) => fetchParticipantPage(experimentId, page));
+}
+
+async function fetchCoursePage(
+    experimentId: string,
+    page: number
+): Promise<PaginatedResponse<ExperimentCourseAssignment>> {
+    if (isAdminDemoMode) {
+        return resolveDemo(paginate(demoCourses, page, MAX_PAGE_SIZE));
+    }
+    const query = toSearchParams({ page, pageSize: MAX_PAGE_SIZE });
+    return api<PaginatedResponse<ExperimentCourseAssignment>>(
+        `/api/experiments/${experimentId}/courses?${query}`
+    );
+}
+
+export function listExperimentCourses(
+    experimentId: string
+): Promise<ExperimentCourseAssignment[]> {
+    return collectAllPages((page) => fetchCoursePage(experimentId, page));
+}
+
+async function fetchUserPage(
+    params: UserListParams,
+    page: number
+): Promise<PaginatedResponse<User>> {
+    if (isAdminDemoMode) {
+        const query = params.search?.trim().toLocaleLowerCase("zh-Hant") ?? "";
+        const users = demoCandidateUsers.filter(
+            (user) =>
+                (!params.role || user.roles.includes(params.role)) &&
+                (!query ||
+                    user.name.toLocaleLowerCase("zh-Hant").includes(query) ||
+                    user.email.toLocaleLowerCase().includes(query))
+        );
+        return resolveDemo(paginate(users, page, MAX_PAGE_SIZE));
+    }
+
+    const query = toSearchParams({
+        page,
+        pageSize: MAX_PAGE_SIZE,
+        search: params.search?.trim() || undefined,
+        role: params.role,
+    });
+    return api<PaginatedResponse<User>>(`/api/users?${query}`);
+}
+
+export async function listParticipantCandidates(
+    experimentId: string,
+    search: string
+): Promise<ParticipantCandidate[]> {
+    const [users, participants] = await Promise.all([
+        collectAllPages((page) =>
+            fetchUserPage({ search, role: "STUDENT" }, page)
+        ),
+        listExperimentParticipants(experimentId),
+    ]);
+    const assignedIds = new Set(
+        participants.map((assignment) => assignment.participant.id)
+    );
+    return users.map((user) => ({
+        user,
+        isAssigned: assignedIds.has(user.id),
+    }));
+}
+
+export async function addExperimentParticipants(
+    experimentId: string,
+    userIds: string[]
+): Promise<ExperimentParticipantAssignment[]> {
+    if (!isAdminDemoMode) {
+        return api<ExperimentParticipantAssignment[]>(
+            `/api/experiments/${experimentId}/participants`,
+            {
+                method: "POST",
+                body: JSON.stringify({ userIds }),
+            }
+        );
+    }
+
+    const assignedIds = new Set(
+        demoParticipantState.map((assignment) => assignment.participant.id)
+    );
+    const assignedAt = new Date().toISOString();
+    const additions = demoCandidateUsers
+        .filter(
+            (user) => userIds.includes(user.id) && !assignedIds.has(user.id)
+        )
+        .map((participant) => ({ participant, assignedAt }));
+    demoParticipantState = [...demoParticipantState, ...additions];
+    return resolveDemo(additions);
 }

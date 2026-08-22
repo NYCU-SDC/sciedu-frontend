@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { ApiError } from "../../../shared/utils/api";
 import {
     addExperimentParticipants,
     listParticipantCandidates,
@@ -37,7 +38,13 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
             toast.success(`已加入 ${selectedIds.size} 位學生`);
             onClose();
         },
-        onError: () => toast.error("加入學生失敗，請稍後再試"),
+        onError: (error) => {
+            if (error instanceof ApiError && error.status === 409) {
+                toast.error("選取的學生與其他實驗時間重疊，未加入任何學生");
+                return;
+            }
+            toast.error("加入學生失敗，請稍後再試");
+        },
     });
 
     useEffect(() => {
@@ -100,28 +107,27 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                             </p>
                         )}
                         {candidatesQuery.data?.map((candidate) => {
-                            const isAvailable =
-                                candidate.availability === "AVAILABLE";
+                            const isAvailable = !candidate.isAssigned;
                             return (
                                 <label
-                                    key={candidate.userId}
+                                    key={candidate.user.id}
                                     className={`${styles.candidateRow} ${!isAvailable ? styles.candidateDisabled : ""}`}
                                 >
                                     <input
                                         type="checkbox"
                                         checked={selectedIds.has(
-                                            candidate.userId
+                                            candidate.user.id
                                         )}
                                         disabled={!isAvailable}
                                         onChange={() =>
-                                            toggleCandidate(candidate.userId)
+                                            toggleCandidate(candidate.user.id)
                                         }
                                     />
                                     <span className={styles.candidateName}>
-                                        {candidate.name}
+                                        {candidate.user.name}
                                     </span>
                                     <span className={styles.candidateEmail}>
-                                        {candidate.email}
+                                        {candidate.user.email}
                                     </span>
                                     <span
                                         className={
@@ -132,7 +138,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                                     >
                                         {isAvailable
                                             ? "可加入"
-                                            : candidate.conflictReason}
+                                            : "已加入本實驗"}
                                     </span>
                                 </label>
                             );

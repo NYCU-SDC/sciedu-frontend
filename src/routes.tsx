@@ -11,6 +11,7 @@ import NotFoundPage from "./shared/components/NotFoundPage";
 import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage";
+import RequireAdminRole from "./features/admin/components/RequireAdminRole";
 
 const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
@@ -46,7 +47,9 @@ const adminRoutes: RouteObject[] = [
         path: "/admin",
         element: (
             <RequireAuth>
-                <AdminDashboardPage />
+                <RequireAdminRole>
+                    <AdminDashboardPage />
+                </RequireAdminRole>
             </RequireAuth>
         ),
     },
@@ -58,6 +61,15 @@ const enableAdminDemo =
     import.meta.env.DEV && import.meta.env.VITE_ADMIN_DEMO_MODE === "true";
 
 export const router = createBrowserRouter([
+    ...(enableCourseRoutes && enableAdminDemo
+        ? [
+              {
+                  path: "/admin",
+                  element: <AdminDashboardPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+          ]
+        : []),
     {
         element: <AuthProvider />,
         errorElement: <RouteErrorBoundary />,
@@ -68,11 +80,7 @@ export const router = createBrowserRouter([
             },
             ...(enableChatRoutes ? chatRoutes : []),
             ...(enableCourseRoutes ? courseRoutes : []),
-            ...(enableCourseRoutes
-                ? enableAdminDemo
-                    ? [{ path: "/admin", element: <AdminDashboardPage /> }]
-                    : adminRoutes
-                : []),
+            ...(enableCourseRoutes && !enableAdminDemo ? adminRoutes : []),
             {
                 path: "*",
                 element: <NotFoundPage />,

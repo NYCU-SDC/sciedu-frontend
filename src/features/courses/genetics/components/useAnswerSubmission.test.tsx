@@ -7,6 +7,7 @@ import type { QuestionResponse } from "../types/types";
 import {
     useAnswerSubmission,
     validateAnswer,
+    MAX_TEXT_ANSWER_LENGTH,
     type SubmittableQuestion,
 } from "./useAnswerSubmission";
 
@@ -48,6 +49,13 @@ const questions: SubmittableQuestion[] = [
     },
 ];
 
+const submittedAnswerResponse = {
+    id: "answer-1",
+    questionId: choiceQuestion.id,
+    selectedOptionId: "option-a",
+    createdAt: "2026-08-26T00:00:00Z",
+};
+
 beforeEach(() => {
     vi.mocked(submitAnswer).mockReset();
 });
@@ -65,11 +73,23 @@ describe("validateAnswer", () => {
         expect(validateAnswer(textQuestion, "   ")).toBe("此題為必填");
         expect(validateAnswer(textQuestion, " 因為基因分離 ")).toBeNull();
     });
+
+    it("rejects a text answer longer than 2,000 characters", () => {
+        expect(
+            validateAnswer(
+                textQuestion,
+                ` ${"字".repeat(MAX_TEXT_ANSWER_LENGTH + 1)} `
+            )
+        ).toBe("答案不可超過 2,000 字");
+        expect(
+            validateAnswer(textQuestion, "字".repeat(MAX_TEXT_ANSWER_LENGTH))
+        ).toBeNull();
+    });
 });
 
 describe("useAnswerSubmission", () => {
     it("does not submit until all required answers are valid", async () => {
-        const onSuccess = vi.fn();
+        const onContinue = vi.fn();
         const { result } = renderHook(() =>
             useAnswerSubmission({
                 questions,
@@ -78,7 +98,7 @@ describe("useAnswerSubmission", () => {
                     [textQuestion.id]: " ",
                 },
                 isCompleted: false,
-                onSuccess,
+                onContinue,
             })
         );
 
@@ -92,15 +112,21 @@ describe("useAnswerSubmission", () => {
         expect(result.current.submissionError).toBe(
             "請完成所有必填題目後再送出。"
         );
-        expect(onSuccess).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
     });
 
     it("retries only failed answers after a partial failure", async () => {
         vi.mocked(submitAnswer)
-            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(submittedAnswerResponse)
             .mockRejectedValueOnce(new Error("網路中斷"))
-            .mockResolvedValueOnce(null);
-        const onSuccess = vi.fn();
+            .mockResolvedValueOnce({
+                ...submittedAnswerResponse,
+                questionId: textQuestion.id,
+                selectedOptionId: undefined,
+                textAnswer: "因為等位基因分離",
+            });
+        const onSubmitted = vi.fn();
+        const onContinue = vi.fn();
         const { result } = renderHook(() =>
             useAnswerSubmission({
                 questions,
@@ -109,7 +135,8 @@ describe("useAnswerSubmission", () => {
                     [textQuestion.id]: "  因為等位基因分離  ",
                 },
                 isCompleted: false,
-                onSuccess,
+                onSubmitted,
+                onContinue,
             })
         );
 
@@ -119,7 +146,8 @@ describe("useAnswerSubmission", () => {
         expect(result.current.submittedQuestionIds).toEqual(
             new Set([choiceQuestion.id])
         );
-        expect(onSuccess).not.toHaveBeenCalled();
+        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
 
         await act(() => result.current.submit());
 
@@ -129,7 +157,8 @@ describe("useAnswerSubmission", () => {
             [textQuestion.id, "TEXT", "因為等位基因分離"],
             [textQuestion.id, "TEXT", "因為等位基因分離"],
         ]);
-        expect(onSuccess).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).toHaveBeenCalledTimes(1);
+        expect(onContinue).toHaveBeenCalledTimes(1);
     });
 
     it("prevents duplicate requests while a submission is in progress", async () => {
@@ -137,16 +166,18 @@ describe("useAnswerSubmission", () => {
         vi.mocked(submitAnswer).mockImplementation(
             () =>
                 new Promise((resolve) => {
-                    resolveSubmission = () => resolve(null);
+                    resolveSubmission = () => resolve(submittedAnswerResponse);
                 })
         );
-        const onSuccess = vi.fn();
+        const onSubmitted = vi.fn();
+        const onContinue = vi.fn();
         const { result } = renderHook(() =>
             useAnswerSubmission({
                 questions: [questions[0]],
                 answers: { [choiceQuestion.id]: "option-a" },
                 isCompleted: false,
-                onSuccess,
+                onSubmitted,
+                onContinue,
             })
         );
 
@@ -163,23 +194,27 @@ describe("useAnswerSubmission", () => {
             await firstSubmission;
         });
 
-        await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(onSubmitted).toHaveBeenCalledTimes(1));
+        expect(onContinue).toHaveBeenCalledTimes(1);
     });
 
     it("does not resubmit answers for an already completed page", async () => {
-        const onSuccess = vi.fn();
+        const onSubmitted = vi.fn();
+        const onContinue = vi.fn();
         const { result } = renderHook(() =>
             useAnswerSubmission({
                 questions: [questions[0]],
                 answers: { [choiceQuestion.id]: "option-a" },
                 isCompleted: true,
-                onSuccess,
+                onSubmitted,
+                onContinue,
             })
         );
 
         await act(() => result.current.submit());
 
         expect(submitAnswer).not.toHaveBeenCalled();
-        expect(onSuccess).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onContinue).toHaveBeenCalledTimes(1);
     });
 });

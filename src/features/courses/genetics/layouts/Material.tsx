@@ -94,7 +94,7 @@ export default function Material({
         questions: submittableQuestions,
         answers,
         isCompleted,
-        onSuccess: onNext,
+        onContinue: onNext,
     });
 
     const handleAnswerChange = (questionId: string, answer: string) => {

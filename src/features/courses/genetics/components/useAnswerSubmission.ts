@@ -13,8 +13,11 @@ type Options = {
     questions: SubmittableQuestion[];
     answers: CourseAnswers;
     isCompleted: boolean;
-    onSuccess: () => void;
+    onSubmitted?: () => void;
+    onContinue: () => void;
 };
+
+export const MAX_TEXT_ANSWER_LENGTH = 2000;
 
 export function validateAnswer(
     question: QuestionResponse,
@@ -24,6 +27,13 @@ export function validateAnswer(
 
     if (!normalizedAnswer) {
         return "此題為必填";
+    }
+
+    if (
+        question.type === "TEXT" &&
+        normalizedAnswer.length > MAX_TEXT_ANSWER_LENGTH
+    ) {
+        return `答案不可超過 ${MAX_TEXT_ANSWER_LENGTH.toLocaleString()} 字`;
     }
 
     if (
@@ -40,7 +50,8 @@ export function useAnswerSubmission({
     questions,
     answers,
     isCompleted,
-    onSuccess,
+    onSubmitted,
+    onContinue,
 }: Options) {
     const [validationErrors, setValidationErrors] = useState<
         Record<string, string>
@@ -68,7 +79,7 @@ export function useAnswerSubmission({
         if (isSubmittingRef.current) return;
 
         if (isCompleted) {
-            onSuccess();
+            onContinue();
             return;
         }
 
@@ -159,7 +170,8 @@ export function useAnswerSubmission({
             }
 
             toast.success("答案已成功送出");
-            onSuccess();
+            onSubmitted?.();
+            onContinue();
         } finally {
             isSubmittingRef.current = false;
             setIsSubmitting(false);

@@ -1,6 +1,7 @@
 import { Skeleton, RadioGroup, TextArea } from "@radix-ui/themes";
 import type { QuestionResponse } from "../types/types";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
+import { MAX_TEXT_ANSWER_LENGTH } from "./useAnswerSubmission";
 import styles from "./QuizCard.module.css";
 
 type Props = {
@@ -69,6 +70,7 @@ export default function QuizCard({
                             variant="soft"
                             color="gray"
                             value={answer}
+                            maxLength={MAX_TEXT_ANSWER_LENGTH}
                             disabled={disabled}
                             aria-invalid={Boolean(validationError)}
                             onChange={(event) =>

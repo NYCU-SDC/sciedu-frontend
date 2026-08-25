@@ -57,4 +57,24 @@ describe("submitAnswer", () => {
             })
         );
     });
+
+    it("does not treat an unspecified 409 conflict as a successful submission", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn().mockResolvedValue({
+                ok: false,
+                status: 409,
+                json: vi.fn().mockResolvedValue({
+                    detail: "answer conflict",
+                }),
+            })
+        );
+
+        await expect(
+            submitAnswer("question-1", "TEXT", "孟德爾遺傳")
+        ).rejects.toMatchObject({
+            message: "answer conflict",
+            status: 409,
+        });
+    });
 });

@@ -15,7 +15,10 @@ import CourseChat from "../components/CourseChat";
 import styles from "./Questions.module.css";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
-import { useAnswerSubmission } from "../components/useAnswerSubmission";
+import {
+    MAX_TEXT_ANSWER_LENGTH,
+    useAnswerSubmission,
+} from "../components/useAnswerSubmission";
 
 type Props = {
     data: CoursePageRequest;
@@ -129,12 +132,11 @@ export default function Questions({
         [questionById, uniqueQuestionIds]
     );
 
-    const handleSubmissionSuccess = () => {
+    const handleAnswersSubmitted = () => {
         posthog.capture("course_questions_submitted", {
             page_index: data.pageIndex,
             question_count: uniqueQuestionIds.length,
         });
-        onNext();
     };
 
     const {
@@ -148,7 +150,8 @@ export default function Questions({
         questions: submittableQuestions,
         answers,
         isCompleted,
-        onSuccess: handleSubmissionSuccess,
+        onSubmitted: handleAnswersSubmitted,
+        onContinue: onNext,
     });
 
     const handleAnswerChange = (questionId: string, answer: string) => {
@@ -292,6 +295,9 @@ export default function Questions({
                                                                     question
                                                                         .questionId
                                                                 ] ?? ""
+                                                            }
+                                                            maxLength={
+                                                                MAX_TEXT_ANSWER_LENGTH
                                                             }
                                                             disabled={
                                                                 isCompleted ||

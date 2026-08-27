@@ -1,5 +1,13 @@
 import { ArrowRight } from "lucide-react";
-import { Box, Button, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import {
+    Box,
+    Button,
+    Group,
+    SimpleGrid,
+    Stack,
+    Text,
+    Title,
+} from "@mantine/core";
 import { useNavigate } from "react-router";
 import Header from "./components/Header";
 import CurrentTaskCard from "./components/CurrentTaskCard";

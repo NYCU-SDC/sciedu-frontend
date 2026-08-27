@@ -12,7 +12,12 @@ export default function Header() {
             style={{ borderRadius: "0 0 1rem 1rem" }}
         >
             <Group gap="1.25rem" wrap="nowrap" style={{ minWidth: 0 }}>
-                <Text fw={700} fz="1.125rem" c="dark.9" style={{ whiteSpace: "nowrap" }}>
+                <Text
+                    fw={700}
+                    fz="1.125rem"
+                    c="dark.9"
+                    style={{ whiteSpace: "nowrap" }}
+                >
                     SciEdu
                 </Text>
                 <Divider
@@ -36,7 +41,10 @@ export default function Header() {
                 c="brandTeal.8"
                 fw={600}
                 fz="0.875rem"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.92)", flexShrink: 0 }}
+                style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.92)",
+                    flexShrink: 0,
+                }}
             >
                 學生模式
             </Badge>

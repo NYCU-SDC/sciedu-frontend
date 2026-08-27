@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { Badge, Card, Group, Stack, Text, Title, UnstyledButton } from "@mantine/core";
+import {
+    Badge,
+    Card,
+    Group,
+    Stack,
+    Text,
+    Title,
+    UnstyledButton,
+} from "@mantine/core";
 
 export type MaterialStatus = "done" | "in_progress" | "not_started";
 
@@ -50,7 +58,10 @@ function StatusCheckbox({ status, onClick }: StatusCheckboxProps) {
                 height: "1.125rem",
                 flexShrink: 0,
                 borderRadius: "0.3rem",
-                border: status === "not_started" ? "1.5px solid var(--mantine-color-gray-4)" : "none",
+                border:
+                    status === "not_started"
+                        ? "1.5px solid var(--mantine-color-gray-4)"
+                        : "none",
                 backgroundColor: checkboxBg[status],
                 display: "flex",
                 alignItems: "center",
@@ -70,19 +81,22 @@ const statusCycle: MaterialStatus[] = ["not_started", "in_progress", "done"];
 
 export default function MaterialProgressCard({ items }: Props) {
     const [statuses, setStatuses] = useState<Record<string, MaterialStatus>>(
-        () => Object.fromEntries(items.map((item) => [item.id, item.status])),
+        () => Object.fromEntries(items.map((item) => [item.id, item.status]))
     );
 
     const toggleItem = (id: string) => {
         setStatuses((prev) => {
             const currentStatus = prev[id] ?? "not_started";
             const currentIndex = statusCycle.indexOf(currentStatus);
-            const nextStatus = statusCycle[(currentIndex + 1) % statusCycle.length];
+            const nextStatus =
+                statusCycle[(currentIndex + 1) % statusCycle.length];
             return { ...prev, [id]: nextStatus };
         });
     };
 
-    const doneCount = Object.values(statuses).filter((status) => status === "done").length;
+    const doneCount = Object.values(statuses).filter(
+        (status) => status === "done"
+    ).length;
 
     return (
         <Card radius="lg" p="1.75rem" shadow="xs">
@@ -108,7 +122,8 @@ export default function MaterialProgressCard({ items }: Props) {
                                     {item.title}
                                 </Text>
                                 <Text fz="0.75rem" c="dimmed">
-                                    共 {item.totalPages} 頁．已完成第 {item.completedPage} 頁
+                                    共 {item.totalPages} 頁．已完成第{" "}
+                                    {item.completedPage} 頁
                                 </Text>
                             </Stack>
                             <Text

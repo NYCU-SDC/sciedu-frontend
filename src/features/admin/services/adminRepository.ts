@@ -228,3 +228,21 @@ export async function addExperimentParticipants(
     demoParticipantState = [...demoParticipantState, ...additions];
     return resolveDemo(additions);
 }
+
+export async function removeExperimentParticipant(
+    experimentId: string,
+    userId: string
+): Promise<void> {
+    if (!isAdminDemoMode) {
+        await api<void>(
+            `/api/experiments/${experimentId}/participants/${userId}`,
+            { method: "DELETE" }
+        );
+        return;
+    }
+
+    demoParticipantState = demoParticipantState.filter(
+        ({ participant }) => participant.id !== userId
+    );
+    await resolveDemo(undefined);
+}

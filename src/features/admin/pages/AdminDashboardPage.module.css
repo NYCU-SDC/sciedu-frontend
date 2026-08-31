@@ -347,13 +347,41 @@
     border-radius: 1rem;
 }
 
+.tableCard.peopleTableCard {
+    height: 43rem;
+    min-height: 43rem;
+}
+
 .toolbar {
     display: flex;
     min-height: 4rem;
+    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     padding: 0 2rem;
+}
+
+.peopleToolbar {
+    min-height: 4.75rem;
+}
+
+.peopleToolbar .tableControls {
+    min-width: 0;
+}
+
+.peopleToolbar .searchField {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 12rem;
+}
+
+.tableTitle {
+    margin: 0;
+    color: var(--color-neutral-500);
+    font-size: 0.875rem;
+    font-weight: 400;
+    white-space: nowrap;
 }
 
 .segmented {
@@ -428,9 +456,39 @@
     border-radius: 0.5rem;
 }
 
+.addButton {
+    display: inline-flex;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    border: 1px solid var(--admin-sidebar);
+    border-radius: 0.5rem;
+    background: var(--admin-sidebar);
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.addButton:hover {
+    background: var(--admin-sidebar-active);
+}
+
+.addButton svg {
+    width: 1rem;
+    height: 1rem;
+}
+
 .tableScroll {
     min-width: 0;
+    flex: 1;
     overflow-x: auto;
+}
+
+.tableCard > .emptyState {
+    flex: 1;
 }
 
 .tableScroll table {
@@ -472,6 +530,98 @@
 
 .participantTable th:nth-child(4) {
     width: 30%;
+}
+
+.peopleTable th:nth-child(1) {
+    width: 14%;
+}
+
+.peopleTable th:nth-child(2) {
+    width: 30%;
+}
+
+.peopleTable th:nth-child(3) {
+    width: 12%;
+}
+
+.peopleTable th:nth-child(4),
+.peopleTable th:nth-child(5) {
+    width: 20%;
+}
+
+.peopleTable th:nth-child(6) {
+    width: 4%;
+}
+
+.peopleTable th:last-child,
+.peopleTable td:last-child {
+    padding-inline: 0.5rem;
+    overflow: visible;
+}
+
+.rowActions {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.rowMenuButton {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--admin-ink);
+    cursor: pointer;
+}
+
+.rowMenuButton:hover,
+.rowMenuButton[aria-expanded="true"] {
+    background: #e5f6f2;
+}
+
+.rowMenuButton svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.rowMenu {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    min-width: 7rem;
+    padding: 0.25rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: 0 0.75rem 2rem rgb(8 46 39 / 16%);
+}
+
+.rowMenu button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: #9f2d25;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.rowMenu button:hover {
+    background: #fff1ef;
+}
+
+.rowMenu svg {
+    width: 1rem;
+    height: 1rem;
 }
 
 .materialTable th:nth-child(1) {
@@ -725,6 +875,10 @@
         align-items: flex-start;
         flex-direction: column;
         padding-block: 1rem;
+    }
+
+    .peopleToolbar {
+        align-items: stretch;
     }
 
     .tableControls {

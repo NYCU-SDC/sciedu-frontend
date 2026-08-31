@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     ArrowDownToLine,
     ArrowLeft,
@@ -10,9 +10,13 @@ import {
     ChevronDown,
     FlaskConical,
     GraduationCap,
+    MoreVertical,
+    Plus,
     Search,
+    Trash2,
     Users,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";
@@ -22,6 +26,7 @@ import {
     listExperimentCourses,
     listExperimentParticipants,
     listExperiments,
+    removeExperimentParticipant,
 } from "../services/adminRepository";
 import type {
     CourseStatus,
@@ -33,6 +38,7 @@ import type {
 import styles from "./AdminDashboardPage.module.css";
 
 type TableView = "participants" | "courses";
+type AdminSection = "overview" | "people";
 
 const PAGE_SIZE = 10;
 
@@ -75,10 +81,12 @@ function formatDateTime(value: string) {
 
 function Sidebar({
     currentUser,
-    onOpenPeople,
+    activeSection,
+    onNavigate,
 }: {
     currentUser: User;
-    onOpenPeople: () => void;
+    activeSection: AdminSection;
+    onNavigate: (section: AdminSection) => void;
 }) {
     return (
         <aside className={styles.sidebar}>
@@ -87,7 +95,13 @@ function Sidebar({
                 <span>研究管理後台</span>
             </div>
             <nav className={styles.sidebarNav} aria-label="後台主選單">
-                <button type="button" className={styles.navActive}>
+                <button
+                    type="button"
+                    className={
+                        activeSection === "overview" ? styles.navActive : ""
+                    }
+                    onClick={() => onNavigate("overview")}
+                >
                     <Search aria-hidden="true" />
                     總覽
                 </button>
@@ -99,7 +113,13 @@ function Sidebar({
                     <BookOpen aria-hidden="true" />
                     教材管理（未開放）
                 </button>
-                <button type="button" onClick={onOpenPeople}>
+                <button
+                    type="button"
+                    className={
+                        activeSection === "people" ? styles.navActive : ""
+                    }
+                    onClick={() => onNavigate("people")}
+                >
                     <Users aria-hidden="true" />
                     人員管理
                 </button>
@@ -127,7 +147,10 @@ function Sidebar({
 
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
+    const queryClient = useQueryClient();
 
+    const [activeSection, setActiveSection] =
+        useState<AdminSection>("overview");
     const [selectedExperimentId, setSelectedExperimentId] = useState("");
     const [tableView, setTableView] = useState<TableView>("participants");
     const [query, setQuery] = useState("");
@@ -135,6 +158,7 @@ export default function AdminDashboardPage() {
     const [courseOrder, setCourseOrder] = useState<"asc" | "desc">("asc");
     const [page, setPage] = useState(1);
     const [isParticipantModalOpen, setParticipantModalOpen] = useState(false);
+    const [openParticipantMenuId, setOpenParticipantMenuId] = useState("");
     const [loadedAt] = useState(() => Date.now());
 
     const currentUserQuery = useQuery({
@@ -170,6 +194,19 @@ export default function AdminDashboardPage() {
         enabled: Boolean(activeExperimentId),
     });
 
+    const removeParticipantMutation = useMutation({
+        mutationFn: (userId: string) =>
+            removeExperimentParticipant(activeExperimentId, userId),
+        onSuccess: async () => {
+            setOpenParticipantMenuId("");
+            await queryClient.invalidateQueries({
+                queryKey: ["admin", "experiments", activeExperimentId],
+            });
+            toast.success("已從本場實驗移除參與者");
+        },
+        onError: () => toast.error("移除參與者失敗，請稍後再試"),
+    });
+
     const filteredParticipants = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase("zh-Hant");
         return (participantsQuery.data ?? []).filter(({ participant }) => {
@@ -201,8 +238,10 @@ export default function AdminDashboardPage() {
             });
     }, [courseOrder, coursesQuery.data, query]);
 
+    const displayView: TableView =
+        activeSection === "people" ? "participants" : tableView;
     const activeItems =
-        tableView === "participants" ? filteredParticipants : filteredCourses;
+        displayView === "participants" ? filteredParticipants : filteredCourses;
     const totalPages = Math.max(1, Math.ceil(activeItems.length / PAGE_SIZE));
     const currentPage = Math.min(page, totalPages);
     const visibleParticipants = filteredParticipants.slice(
@@ -226,6 +265,7 @@ export default function AdminDashboardPage() {
         setQuery("");
         setRole("");
         setPage(1);
+        setOpenParticipantMenuId("");
     };
 
     if (currentUserQuery.isPending || experimentsQuery.isPending) {
@@ -257,18 +297,27 @@ export default function AdminDashboardPage() {
         )
     );
     const activeQuery =
-        tableView === "participants" ? participantsQuery : coursesQuery;
+        displayView === "participants" ? participantsQuery : coursesQuery;
 
     return (
         <div className={styles.page}>
             <Sidebar
                 currentUser={currentUserQuery.data}
-                onOpenPeople={() => setParticipantModalOpen(true)}
+                activeSection={activeSection}
+                onNavigate={(section) => {
+                    setActiveSection(section);
+                    setQuery("");
+                    setRole("");
+                    setPage(1);
+                    setOpenParticipantMenuId("");
+                }}
             />
 
             <main className={styles.main}>
                 <header className={styles.pageHeader}>
-                    <h1>實驗總覽</h1>
+                    <h1>
+                        {activeSection === "overview" ? "實驗總覽" : "人員管理"}
+                    </h1>
                     <button
                         type="button"
                         className={styles.exportButton}
@@ -322,72 +371,92 @@ export default function AdminDashboardPage() {
                     </label>
                 </section>
 
-                <section className={styles.stats} aria-label="實驗統計">
-                    <article>
-                        <h3>參與人員</h3>
-                        <strong>{experiment.participantCount} 人</strong>
-                        <p>本場次目前指派人數</p>
-                    </article>
-                    <article>
-                        <h3>使用教材</h3>
-                        <strong>{experiment.courseCount} 份</strong>
-                        <p>本場次目前指派教材數量</p>
-                    </article>
-                    <article>
-                        <h3>剩餘時間</h3>
-                        <strong>
-                            {remainingDays > 0
-                                ? "約 " + remainingDays + " 天"
-                                : "已結束"}
-                        </strong>
-                        <p>{formatDateTime(experiment.scheduledEndAt)} 結束</p>
-                    </article>
-                    <article>
-                        <h3>評分模式</h3>
-                        <strong>
-                            {
-                                gradingModeLabels[
-                                    experiment.configuration.gradingMode
-                                ]
-                            }
-                        </strong>
-                        <p>依本場實驗設定顯示</p>
-                    </article>
-                </section>
+                {activeSection === "overview" && (
+                    <section className={styles.stats} aria-label="實驗統計">
+                        <article>
+                            <h3>參與人員</h3>
+                            <strong>{experiment.participantCount} 人</strong>
+                            <p>本場次目前指派人數</p>
+                        </article>
+                        <article>
+                            <h3>使用教材</h3>
+                            <strong>{experiment.courseCount} 份</strong>
+                            <p>本場次目前指派教材數量</p>
+                        </article>
+                        <article>
+                            <h3>剩餘時間</h3>
+                            <strong>
+                                {remainingDays > 0
+                                    ? "約 " + remainingDays + " 天"
+                                    : "已結束"}
+                            </strong>
+                            <p>
+                                {formatDateTime(experiment.scheduledEndAt)} 結束
+                            </p>
+                        </article>
+                        <article>
+                            <h3>評分模式</h3>
+                            <strong>
+                                {
+                                    gradingModeLabels[
+                                        experiment.configuration.gradingMode
+                                    ]
+                                }
+                            </strong>
+                            <p>依本場實驗設定顯示</p>
+                        </article>
+                    </section>
+                )}
 
-                <section className={styles.tableCard}>
-                    <div className={styles.toolbar}>
-                        <div className={styles.segmented}>
-                            <button
-                                type="button"
-                                className={
-                                    tableView === "participants"
-                                        ? styles.segmentActive
-                                        : ""
-                                }
-                                onClick={() => switchView("participants")}
-                            >
-                                按人員查看
-                            </button>
-                            <button
-                                type="button"
-                                className={
-                                    tableView === "courses"
-                                        ? styles.segmentActive
-                                        : ""
-                                }
-                                onClick={() => switchView("courses")}
-                            >
-                                按教材查看
-                            </button>
-                        </div>
+                <section
+                    className={`${styles.tableCard} ${
+                        activeSection === "people" ? styles.peopleTableCard : ""
+                    }`}
+                >
+                    <div
+                        className={`${styles.toolbar} ${
+                            activeSection === "people"
+                                ? styles.peopleToolbar
+                                : ""
+                        }`}
+                    >
+                        {activeSection === "overview" ? (
+                            <div className={styles.segmented}>
+                                <button
+                                    type="button"
+                                    className={
+                                        tableView === "participants"
+                                            ? styles.segmentActive
+                                            : ""
+                                    }
+                                    onClick={() => switchView("participants")}
+                                >
+                                    按人員查看
+                                </button>
+                                <button
+                                    type="button"
+                                    className={
+                                        tableView === "courses"
+                                            ? styles.segmentActive
+                                            : ""
+                                    }
+                                    onClick={() => switchView("courses")}
+                                >
+                                    按教材查看
+                                </button>
+                            </div>
+                        ) : (
+                            <h2 className={styles.tableTitle}>
+                                本場次實驗參與者
+                            </h2>
+                        )}
                         <div className={styles.tableControls}>
                             <label className={styles.searchField}>
                                 <Search aria-hidden="true" />
                                 <input
                                     type="search"
                                     placeholder={
-                                        tableView === "participants"
+                                        displayView === "participants"
                                             ? "搜尋姓名或郵件"
                                             : "搜尋教材名稱或代碼"
                                     }
@@ -398,7 +467,7 @@ export default function AdminDashboardPage() {
                                     }}
                                 />
                             </label>
-                            {tableView === "participants" ? (
+                            {displayView === "participants" ? (
                                 <label className={styles.compactSelect}>
                                     <select
                                         value={role}
@@ -445,6 +514,18 @@ export default function AdminDashboardPage() {
                                     <ChevronDown aria-hidden="true" />
                                 </label>
                             )}
+                            {activeSection === "people" && (
+                                <button
+                                    type="button"
+                                    className={styles.addButton}
+                                    onClick={() =>
+                                        setParticipantModalOpen(true)
+                                    }
+                                >
+                                    <Plus aria-hidden="true" />
+                                    加入人員
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -454,14 +535,26 @@ export default function AdminDashboardPage() {
                         <p className={styles.emptyState}>列表載入失敗</p>
                     ) : (
                         <div className={styles.tableScroll}>
-                            {tableView === "participants" ? (
-                                <table className={styles.participantTable}>
+                            {displayView === "participants" ? (
+                                <table
+                                    className={`${styles.participantTable} ${
+                                        activeSection === "people"
+                                            ? styles.peopleTable
+                                            : ""
+                                    }`}
+                                >
                                     <thead>
                                         <tr>
                                             <th>姓名</th>
                                             <th>郵件</th>
                                             <th>角色</th>
                                             <th>加入實驗時間</th>
+                                            {activeSection === "people" && (
+                                                <>
+                                                    <th>帳號建立時間</th>
+                                                    <th aria-label="操作" />
+                                                </>
+                                            )}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -487,6 +580,79 @@ export default function AdminDashboardPage() {
                                                             assignedAt
                                                         )}
                                                     </td>
+                                                    {activeSection ===
+                                                        "people" && (
+                                                        <>
+                                                            <td>
+                                                                {formatDateTime(
+                                                                    participant.createdAt
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                <div
+                                                                    className={
+                                                                        styles.rowActions
+                                                                    }
+                                                                >
+                                                                    <button
+                                                                        type="button"
+                                                                        className={
+                                                                            styles.rowMenuButton
+                                                                        }
+                                                                        aria-label={`開啟 ${participant.name} 的操作選單`}
+                                                                        aria-expanded={
+                                                                            openParticipantMenuId ===
+                                                                            participant.id
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setOpenParticipantMenuId(
+                                                                                (
+                                                                                    current
+                                                                                ) =>
+                                                                                    current ===
+                                                                                    participant.id
+                                                                                        ? ""
+                                                                                        : participant.id
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <MoreVertical aria-hidden="true" />
+                                                                    </button>
+                                                                    {openParticipantMenuId ===
+                                                                        participant.id && (
+                                                                        <div
+                                                                            className={
+                                                                                styles.rowMenu
+                                                                            }
+                                                                            role="menu"
+                                                                        >
+                                                                            <button
+                                                                                type="button"
+                                                                                role="menuitem"
+                                                                                disabled={
+                                                                                    removeParticipantMutation.isPending
+                                                                                }
+                                                                                onClick={() => {
+                                                                                    if (
+                                                                                        window.confirm(
+                                                                                            `確定要將 ${participant.name} 從本場實驗移除嗎？`
+                                                                                        )
+                                                                                    ) {
+                                                                                        removeParticipantMutation.mutate(
+                                                                                            participant.id
+                                                                                        );
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <Trash2 aria-hidden="true" />
+                                                                                刪除
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </>
+                                                    )}
                                                 </tr>
                                             )
                                         )}
@@ -539,7 +705,7 @@ export default function AdminDashboardPage() {
                     <footer className={styles.tableFooter}>
                         <span>
                             顯示{" "}
-                            {tableView === "participants"
+                            {displayView === "participants"
                                 ? visibleParticipants.length
                                 : visibleCourses.length}{" "}
                             筆資料，共 {activeItems.length} 筆

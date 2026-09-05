@@ -20,7 +20,7 @@ const todayMaterials: MaterialListItem[] = [
         id: "cell-division",
         title: "細胞分裂",
         totalPages: 3,
-        completedPage: 1,
+        completedPage: 3,
         status: "done",
     },
     {
@@ -46,10 +46,11 @@ export default function Homepage() {
         <Box
             mih="100vh"
             bg="#eef3f1"
+            p="48px 40px"
             style={{ display: "flex", flexDirection: "column" }}
         >
             <Header />
-            <Box component="main" p="2rem 2.5rem 3rem">
+            <Box component="main" pt="2rem" pb="3rem">
                 <Group justify="space-between" align="flex-start" mb="1.5rem">
                     <Stack gap={6}>
                         <Title order={2} fz="1.5rem" fw={700} c="brandTeal.8">
@@ -64,7 +65,7 @@ export default function Homepage() {
                         radius="xl"
                         rightSection={<ArrowRight size={16} />}
                         style={{ flexShrink: 0 }}
-                        onClick={() => navigate("/MaterialLibrary")}
+                        onClick={() => navigate("/courses/library")}
                     >
                         查看教材書櫃
                     </Button>

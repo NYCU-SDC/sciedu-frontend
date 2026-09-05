@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { Button, Card, Stack, Text, Title } from "@mantine/core";
+import { Button, Card, Text, Title } from "@mantine/core";
 
 type Props = {
     eyebrow: string;
@@ -18,36 +18,59 @@ export default function CurrentTaskCard({
 }: Props) {
     return (
         <Card
-            radius="lg"
-            p="1.75rem"
-            shadow="xs"
+            radius="16px"
             style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
-                gap: "2.5rem",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                gap: "16px",
+                padding: "27px 45px",
                 minHeight: "15rem",
+                backgroundColor: "#ffffff",
+                border: "1px solid #d4d4d4",
+                boxShadow: "0px 16px 40px rgba(44, 79, 71, 0.08)",
             }}
         >
-            <Stack gap={6}>
-                <Text fw={600} fz="0.875rem" c="brandTeal.8">
-                    {eyebrow}
-                </Text>
-                <Title order={3} fz="1.5rem" fw={700} c="dark.9">
-                    {title}
-                </Title>
-                <Text fz="0.8125rem" c="dimmed">
-                    共 {totalPages} 頁．已完成第 {completedPage} 頁
-                </Text>
-            </Stack>
+            <Text fw={700} fz="24px" lh="32px" c="var(--color-brand-teal-dark)">
+                {eyebrow}
+            </Text>
+            <Title order={3} fz="32px" fw={700} lh="43px" c="#000000">
+                {title}
+            </Title>
+            <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
+                共 {totalPages} 頁．已完成第 {completedPage} 頁
+            </Text>
             <Button
-                radius="md"
-                color="brandTeal"
-                rightSection={<ArrowRight size={16} />}
-                onClick={onContinue}
-                style={{ alignSelf: "flex-start" }}
-            >
-                繼續目前任務
+            radius="16px"
+            rightSection={<ArrowRight size={24} color="#ffffff" />}
+            onClick={onContinue}
+            styles={{
+                root: {
+                    width: "164px",
+                    height: "48px",
+                    padding: "12px 18px",
+                    backgroundColor: "#005f55",
+                    color: "#ffffff",
+
+                    // 重要
+                    border: "none",
+                },
+
+                label: {
+                    fontSize: "16px",
+                    fontWeight: 400,
+                    lineHeight: "21px",
+                    whiteSpace: "nowrap",
+                    overflow: "visible",
+                },
+
+                section: {
+                    marginInlineStart: "8px",
+                },
+            }}
+        >
+            繼續目前任務
             </Button>
         </Card>
     );

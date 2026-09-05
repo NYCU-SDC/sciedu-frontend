@@ -1,14 +1,4 @@
-import { useState } from "react";
-import { Check } from "lucide-react";
-import {
-    Badge,
-    Card,
-    Group,
-    Stack,
-    Text,
-    Title,
-    UnstyledButton,
-} from "@mantine/core";
+import { Card, Text, Title } from "@mantine/core";
 
 export type MaterialStatus = "done" | "in_progress" | "not_started";
 
@@ -32,100 +22,88 @@ const statusColor: Record<MaterialStatus, string> = {
     not_started: "gray.5",
 };
 
-// 將 Checkbox 的背景與邊框樣式提取出來，避免在 style 裡面寫複雜的三元運算子
-const checkboxBg: Record<MaterialStatus, string> = {
-    done: "var(--mantine-color-brandTeal-8)",
-    in_progress: "#000",
-    not_started: "transparent",
-};
+function getProgressLabel(
+    item: MaterialListItem,
+    status: MaterialStatus
+) {
+    switch (status) {
+        case "done":
+            return `共 ${item.totalPages} 頁．已完成全部`;
 
-type StatusCheckboxProps = {
-    status: MaterialStatus;
-    onClick: () => void;
-};
+        case "in_progress":
+            return `共 ${item.totalPages} 頁．已完成第 ${item.completedPage} 頁`;
 
-function StatusCheckbox({ status, onClick }: StatusCheckboxProps) {
-    const isDone = status === "done";
-
-    return (
-        <UnstyledButton
-            type="button"
-            role="checkbox"
-            aria-checked={isDone}
-            onClick={onClick}
-            style={{
-                width: "1.125rem",
-                height: "1.125rem",
-                flexShrink: 0,
-                borderRadius: "0.3rem",
-                border:
-                    status === "not_started"
-                        ? "1.5px solid var(--mantine-color-gray-4)"
-                        : "none",
-                backgroundColor: checkboxBg[status],
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            {isDone && <Check size={12} strokeWidth={3} color="white" />}
-        </UnstyledButton>
-    );
+        case "not_started":
+            return `共 ${item.totalPages} 頁．尚未開始`;
+    }
 }
 
 type Props = {
     items: MaterialListItem[];
 };
 
-const statusCycle: MaterialStatus[] = ["not_started", "in_progress", "done"];
-
 export default function MaterialProgressCard({ items }: Props) {
-    const [statuses, setStatuses] = useState<Record<string, MaterialStatus>>(
-        () => Object.fromEntries(items.map((item) => [item.id, item.status]))
-    );
-
-    const toggleItem = (id: string) => {
-        setStatuses((prev) => {
-            const currentStatus = prev[id] ?? "not_started";
-            const currentIndex = statusCycle.indexOf(currentStatus);
-            const nextStatus =
-                statusCycle[(currentIndex + 1) % statusCycle.length];
-            return { ...prev, [id]: nextStatus };
-        });
-    };
-
-    const doneCount = Object.values(statuses).filter(
-        (status) => status === "done"
-    ).length;
+    const doneCount = items.filter((item) => item.status === "done").length;
 
     return (
         <Card radius="lg" p="1.75rem" shadow="xs">
-            <Group justify="space-between" mb="1.25rem">
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: "1.25rem",
+                }}
+            >
                 <Title order={3} fz="1.125rem" fw={700} c="dark.9">
                     今日教材
                 </Title>
-                <Badge radius="xl" variant="light" color="brandTeal">
+                <div
+                    style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "20px",
+                        padding: "0 10px",
+                        borderRadius: "32px",
+                        backgroundColor: "var(--color-teal-100)",
+                        color: "var(--color-teal-900)",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                    }}
+                >
                     {doneCount}/{items.length} 完成
-                </Badge>
-            </Group>
-            <Stack gap="1.25rem">
+                </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 {items.map((item) => {
-                    const status = statuses[item.id] ?? item.status;
+                    const status = item.status;
                     return (
-                        <Group key={item.id} wrap="nowrap" gap="0.75rem">
-                            <StatusCheckbox
-                                status={status}
-                                onClick={() => toggleItem(item.id)}
-                            />
-                            <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                            key={item.id}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                flexWrap: "nowrap",
+                                gap: "0.75rem",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.125rem",
+                                    flex: 1,
+                                    minWidth: 0,
+                                }}
+                            >
                                 <Text fz="0.9375rem" fw={600} c="dark.9">
                                     {item.title}
                                 </Text>
-                                <Text fz="0.75rem" c="dimmed">
-                                    共 {item.totalPages} 頁．已完成第{" "}
-                                    {item.completedPage} 頁
+                               <Text fz="0.75rem" c="dimmed">
+                                {getProgressLabel(item, status)}
                                 </Text>
-                            </Stack>
+                            </div>
                             <Text
                                 fz="0.8125rem"
                                 fw={600}
@@ -134,10 +112,10 @@ export default function MaterialProgressCard({ items }: Props) {
                             >
                                 {statusLabel[status]}
                             </Text>
-                        </Group>
+                        </div>
                     );
                 })}
-            </Stack>
+            </div>
         </Card>
     );
 }

@@ -8,23 +8,19 @@ import "@radix-ui/themes/styles.css";
 import { router } from "./routes";
 import { mantineTheme } from "./mantineTheme";
 
-
-
 const queryClient = new QueryClient();
 function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <MantineProvider theme={mantineTheme}>
                 {/* existing app providers/components */}
-                    <Theme>
-                        <RouterProvider router={router} />
-                        <Toaster />
-                    </Theme>
+                <Theme>
+                    <RouterProvider router={router} />
+                    <Toaster />
+                </Theme>
             </MantineProvider>
         </QueryClientProvider>
     );
 }
-
-
 
 export default App;

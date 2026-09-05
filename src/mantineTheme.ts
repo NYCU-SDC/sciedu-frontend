@@ -1,7 +1,4 @@
-import {
-    createTheme,
-    type MantineColorsTuple,
-} from "@mantine/core";
+import { createTheme, type MantineColorsTuple } from "@mantine/core";
 
 const brandTeal: MantineColorsTuple = [
     "var(--color-teal-50)",

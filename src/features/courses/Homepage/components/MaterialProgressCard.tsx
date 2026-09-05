@@ -22,10 +22,7 @@ const statusColor: Record<MaterialStatus, string> = {
     not_started: "gray.5",
 };
 
-function getProgressLabel(
-    item: MaterialListItem,
-    status: MaterialStatus
-) {
+function getProgressLabel(item: MaterialListItem, status: MaterialStatus) {
     switch (status) {
         case "done":
             return `共 ${item.totalPages} 頁．已完成全部`;
@@ -75,7 +72,13 @@ export default function MaterialProgressCard({ items }: Props) {
                     {doneCount}/{items.length} 完成
                 </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1.25rem",
+                }}
+            >
                 {items.map((item) => {
                     const status = item.status;
                     return (
@@ -100,8 +103,8 @@ export default function MaterialProgressCard({ items }: Props) {
                                 <Text fz="0.9375rem" fw={600} c="dark.9">
                                     {item.title}
                                 </Text>
-                               <Text fz="0.75rem" c="dimmed">
-                                {getProgressLabel(item, status)}
+                                <Text fz="0.75rem" c="dimmed">
+                                    {getProgressLabel(item, status)}
                                 </Text>
                             </div>
                             <Text

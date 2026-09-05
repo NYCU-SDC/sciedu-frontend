@@ -42,35 +42,35 @@ export default function CurrentTaskCard({
                 共 {totalPages} 頁．已完成第 {completedPage} 頁
             </Text>
             <Button
-            radius="16px"
-            rightSection={<ArrowRight size={24} color="#ffffff" />}
-            onClick={onContinue}
-            styles={{
-                root: {
-                    width: "164px",
-                    height: "48px",
-                    padding: "12px 18px",
-                    backgroundColor: "#005f55",
-                    color: "#ffffff",
+                radius="16px"
+                rightSection={<ArrowRight size={24} color="#ffffff" />}
+                onClick={onContinue}
+                styles={{
+                    root: {
+                        width: "164px",
+                        height: "48px",
+                        padding: "12px 18px",
+                        backgroundColor: "#005f55",
+                        color: "#ffffff",
 
-                    // 重要
-                    border: "none",
-                },
+                        // 重要
+                        border: "none",
+                    },
 
-                label: {
-                    fontSize: "16px",
-                    fontWeight: 400,
-                    lineHeight: "21px",
-                    whiteSpace: "nowrap",
-                    overflow: "visible",
-                },
+                    label: {
+                        fontSize: "16px",
+                        fontWeight: 400,
+                        lineHeight: "21px",
+                        whiteSpace: "nowrap",
+                        overflow: "visible",
+                    },
 
-                section: {
-                    marginInlineStart: "8px",
-                },
-            }}
-        >
-            繼續目前任務
+                    section: {
+                        marginInlineStart: "8px",
+                    },
+                }}
+            >
+                繼續目前任務
             </Button>
         </Card>
     );

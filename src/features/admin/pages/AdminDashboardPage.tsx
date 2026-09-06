@@ -18,6 +18,7 @@ import {
     Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";

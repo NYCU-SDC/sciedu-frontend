@@ -7,6 +7,7 @@ import {
     demoParticipants,
 } from "../data/demoAdminData";
 import type {
+    Course,
     Experiment,
     ExperimentCourseAssignment,
     ExperimentDetail,
@@ -162,6 +163,17 @@ export function listExperimentCourses(
     experimentId: string
 ): Promise<ExperimentCourseAssignment[]> {
     return collectAllPages((page) => fetchCoursePage(experimentId, page));
+}
+
+/**
+ * The backend spec currently has no course-catalog endpoint for experiment
+ * creation. Demo mode can still expose the seeded courses so the selection UI
+ * remains testable without inventing a production endpoint.
+ */
+export function listExperimentCourseCandidates(): Promise<Course[]> {
+    return resolveDemo(
+        isAdminDemoMode ? demoCourses.map(({ course }) => course) : []
+    );
 }
 
 async function fetchUserPage(

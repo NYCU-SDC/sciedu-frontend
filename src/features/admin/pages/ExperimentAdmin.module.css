@@ -333,43 +333,68 @@
     display: flex;
     height: 7rem;
     align-items: center;
+    justify-content: space-between;
+    margin: 0;
     padding: 0 2rem;
+    list-style: none;
 }
 .step {
+    display: flex;
     min-width: 0;
+    height: 4rem;
     flex: 0 1 15.625rem;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0;
 }
 .stepBody {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
     gap: 0.125rem;
+    white-space: nowrap;
 }
-.stepIcon {
-    width: 2.25rem;
-    min-width: 2.25rem;
-    height: 2.25rem;
-    border-color: #e5e5e5;
-    background: #f5f5f5;
-    font-size: 0.875rem;
-}
-.stepLabel {
+.stepBody strong {
     color: #525252;
     font-size: 1rem;
     font-weight: 500;
     line-height: 1.375rem;
 }
-.step[data-progress] .stepLabel,
-.step[data-completed] .stepLabel {
+.stepActive .stepBody strong {
     color: var(--admin-ink);
     font-weight: 700;
 }
-.stepDescription {
+.stepBody small {
     color: #a1a1a1;
     font-size: 0.75rem;
     line-height: 1.0625rem;
 }
+.stepIcon {
+    display: grid;
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 1px solid #e5e5e5;
+    border-radius: 999px;
+    background: #f5f5f5;
+    color: #525252;
+    font-size: 0.875rem;
+}
+.stepIconCurrent {
+    border-color: #005f55;
+    background: #005f55;
+    color: #fff;
+}
+.stepIconComplete {
+    border-color: #62cab8;
+    background: #62cab8;
+    color: #005f55;
+}
 .stepSeparator {
-    margin-inline: 0.75rem;
-    background: #e5e5e5;
+    margin-left: auto;
+    color: #e5e5e5;
+    font-size: 1.125rem;
 }
 .formGrid {
     display: grid;
@@ -381,12 +406,34 @@
     background: #fff;
 }
 .formCard {
-    min-height: 43.125rem;
     padding: 1.75rem 2rem;
+}
+.formGrid > .formCard {
+    min-height: 43.125rem;
+}
+.formCard .sectionTitle {
+    font-size: 1.5rem;
+    line-height: 2.125rem;
 }
 .helpCard {
     min-height: 22.75rem;
     padding: 1.75rem;
+}
+.guidanceItem {
+    width: 100%;
+    margin-top: 1rem;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+.timezoneNotice {
+    width: fit-content;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: #62cab8;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
 }
 .formCard :global(.mantine-Input-input) {
     min-height: 3.25rem;
@@ -414,12 +461,13 @@
     gap: 1rem;
 }
 .choiceGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 0.5rem;
 }
 .choice {
+    min-width: 12.125rem;
     padding: 0.9rem;
     border: 1px solid #d4d4d4;
     border-radius: 0.5rem;
@@ -427,6 +475,41 @@
 .choice:has(input:checked) {
     border-color: var(--admin-accent);
     background: #f3fbfa;
+}
+.settingBlock {
+    display: flex;
+    flex-direction: column;
+}
+.settingBlock > strong {
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+}
+.settingBlock > small {
+    margin-top: 0.25rem;
+    color: #737373;
+    font-size: 0.75rem;
+    line-height: 1.0625rem;
+}
+.teachingHelp {
+    min-height: 27.625rem;
+}
+.activeNotice {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #edf5f3;
+    color: #525252;
+    font-size: 0.75rem;
+}
+.activeNotice strong {
+    color: var(--admin-ink);
+    font-size: 0.875rem;
 }
 .formFooter {
     display: flex;
@@ -437,6 +520,12 @@
     gap: 1rem;
     padding: 0;
     background: #fff;
+}
+.formFooter button {
+    height: 2.75rem;
+    padding-inline: 1.125rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
 }
 .coursePicker {
     display: flex;
@@ -495,6 +584,10 @@
     .reviewGrid {
         grid-template-columns: 1fr;
     }
+    .formGrid {
+        min-height: auto;
+        overflow: visible;
+    }
 }
 
 @media (max-width: 48rem) {
@@ -528,6 +621,9 @@
     .pageHeader {
         align-items: flex-start;
         flex-direction: column;
+    }
+    .pageHeader h1 {
+        font-size: 2rem;
     }
     .filters,
     .fieldGrid,

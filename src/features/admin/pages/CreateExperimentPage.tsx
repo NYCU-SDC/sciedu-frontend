@@ -9,13 +9,12 @@ import {
     Group,
     Radio,
     Stack,
-    Stepper,
     Textarea,
     TextInput,
     Title,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -42,13 +41,26 @@ type Draft = {
 const initialDraft: Draft = {
     name: "",
     description: "",
-    startsAt: "",
-    endsAt: "",
+    startsAt: "2026-08-03T09:00",
+    endsAt: "2026-08-03T16:00",
     maxAttempts: "1",
     result: "explanations",
     release: "course",
-    courseIds: [],
+    courseIds: isAdminDemoMode
+        ? [
+              "10000000-0000-4000-8000-000000000001",
+              "10000000-0000-4000-8000-000000000002",
+              "10000000-0000-4000-8000-000000000003",
+          ]
+        : [],
 };
+
+const steps = [
+    { label: "基本資料", description: "設定名稱與時段" },
+    { label: "教學設定", description: "作答與答案公開" },
+    { label: "選擇教材", description: "至少一份已發布教材" },
+    { label: "學生與確認", description: "學生可稍後加入" },
+];
 
 export default function CreateExperimentPage() {
     const navigate = useNavigate();
@@ -59,6 +71,7 @@ export default function CreateExperimentPage() {
     const [step, setStep] = useState(0);
     const [draft, setDraft] = useState(initialDraft);
     const [showBasicErrors, setShowBasicErrors] = useState(false);
+    const [courseSearch, setCourseSearch] = useState("");
     const coursesQuery = useQuery({
         queryKey: ["admin", "experiments", "course-candidates"],
         queryFn: listExperimentCourseCandidates,
@@ -112,6 +125,17 @@ export default function CreateExperimentPage() {
                 : (coursesQuery.data ?? []),
         [assignedCoursesQuery.data, coursesQuery.data, isEditing]
     );
+    const visibleCourseOptions = useMemo(() => {
+        const normalized = courseSearch.trim().toLocaleLowerCase("zh-Hant");
+        return courseOptions.filter(
+            (course) =>
+                !normalized ||
+                course.title
+                    .toLocaleLowerCase("zh-Hant")
+                    .includes(normalized) ||
+                course.code.toLocaleLowerCase().includes(normalized)
+        );
+    }, [courseOptions, courseSearch]);
 
     const selectedCourses = useMemo(
         () =>
@@ -165,41 +189,58 @@ export default function CreateExperimentPage() {
                 <Card
                     className={`${styles.card} ${styles.stepper}`}
                     radius="lg"
+                    component="ol"
+                    aria-label="新增實驗步驟"
                 >
-                    <Stepper
-                        active={step}
-                        color="teal"
-                        size="sm"
-                        classNames={{
-                            step: styles.step,
-                            stepBody: styles.stepBody,
-                            stepIcon: styles.stepIcon,
-                            stepLabel: styles.stepLabel,
-                            stepDescription: styles.stepDescription,
-                            separator: styles.stepSeparator,
-                        }}
-                    >
-                        <Stepper.Step
-                            label="基本資料"
-                            description={step > 0 ? "已完成" : "設定名稱與時段"}
-                        />
-                        <Stepper.Step
-                            label="教學設定"
-                            description={step > 1 ? "已完成" : "作答與答案公開"}
-                        />
-                        <Stepper.Step
-                            label="選擇教材"
-                            description={
-                                step > 2 ? "已完成" : "至少一份已發布教材"
-                            }
-                        />
-                        <Stepper.Step
-                            label="學生與確認"
-                            description={
-                                isEditing ? "確認變更" : "排程前最後確認"
-                            }
-                        />
-                    </Stepper>
+                    {steps.map((item, index) => {
+                        const isComplete = index < step;
+                        const isCurrent = index === step;
+                        return (
+                            <li
+                                className={`${styles.step} ${
+                                    isComplete || isCurrent
+                                        ? styles.stepActive
+                                        : ""
+                                }`}
+                                key={item.label}
+                            >
+                                <div
+                                    className={`${styles.stepIcon} ${
+                                        isComplete
+                                            ? styles.stepIconComplete
+                                            : isCurrent
+                                              ? styles.stepIconCurrent
+                                              : ""
+                                    }`}
+                                    aria-current={
+                                        isCurrent ? "step" : undefined
+                                    }
+                                >
+                                    {isComplete ? (
+                                        <Check size={16} aria-hidden="true" />
+                                    ) : (
+                                        index + 1
+                                    )}
+                                </div>
+                                <div className={styles.stepBody}>
+                                    <strong>{item.label}</strong>
+                                    <small>
+                                        {isComplete
+                                            ? "已完成"
+                                            : item.description}
+                                    </small>
+                                </div>
+                                {index < steps.length - 1 && (
+                                    <span
+                                        className={styles.stepSeparator}
+                                        aria-hidden="true"
+                                    >
+                                        —
+                                    </span>
+                                )}
+                            </li>
+                        );
+                    })}
                 </Card>
 
                 {step === 0 && (
@@ -289,9 +330,10 @@ export default function CreateExperimentPage() {
                                         }
                                     />
                                 </div>
-                                <Alert color="teal" icon={<Info size={16} />}>
+                                <div className={styles.timezoneNotice}>
                                     所有時間均以台灣時間（UTC+8）顯示。
-                                </Alert>
+                                    開始時間必須早於結束時間。
+                                </div>
                             </Stack>
                         </Card>
                         <Card
@@ -302,14 +344,17 @@ export default function CreateExperimentPage() {
                                 建立流程
                             </Title>
                             <p>
-                                完成本步驟並前往下一步時，系統預期建立草稿；目前建立
-                                API 尚未提供，所以表單只在本頁暫存。
+                                完成本步驟並前往下一步時，系統會建立草稿。之後可以隨時從實驗列表繼續編輯。
                             </p>
-                            <ul className={styles.noticeList}>
-                                <li>草稿不會立即對學生開放</li>
-                                <li>排程前至少需要一份已發布教材</li>
-                                <li>學生名單可在排程後補上</li>
-                            </ul>
+                            <div className={styles.guidanceItem}>
+                                ✓ 草稿不會立即對學生開放
+                            </div>
+                            <div className={styles.guidanceItem}>
+                                ✓ 排程前至少需要一份已發布教材
+                            </div>
+                            <div className={styles.guidanceItem}>
+                                ✓ 學生名單可以在排程後補上
+                            </div>
                         </Card>
                     </div>
                 )}
@@ -327,12 +372,16 @@ export default function CreateExperimentPage() {
                                 設定學生的作答方式，以及完成教材後可以看到的資訊。
                             </p>
                             <Stack mt="lg" gap="lg">
-                                <Radio.Group label="評分方式" value="automatic">
+                                <div className={styles.settingBlock}>
+                                    <strong>評分方式 *</strong>
+                                    <small>本階段僅支援自動評分。</small>
                                     <div className={styles.choiceGrid}>
                                         <label className={styles.choice}>
                                             <Radio
                                                 value="automatic"
                                                 label="自動評分"
+                                                checked
+                                                readOnly
                                             />
                                         </label>
                                         <label className={styles.choice}>
@@ -343,96 +392,125 @@ export default function CreateExperimentPage() {
                                             />
                                         </label>
                                     </div>
-                                </Radio.Group>
-                                <Radio.Group
-                                    label="重新作答"
-                                    value={draft.maxAttempts}
-                                    onChange={(value) =>
-                                        setField("maxAttempts", value)
-                                    }
-                                >
-                                    <div className={styles.choiceGrid}>
-                                        <label className={styles.choice}>
-                                            <Radio value="1" label="不允許" />
-                                        </label>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="2"
-                                                label="允許 1 次"
-                                            />
-                                        </label>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="3"
-                                                label="最多 2 次"
-                                            />
-                                        </label>
-                                    </div>
-                                </Radio.Group>
-                                <Radio.Group
-                                    label="結果顯示"
-                                    value={draft.result}
-                                    onChange={(value) =>
-                                        setField(
-                                            "result",
-                                            value as Draft["result"]
-                                        )
-                                    }
-                                >
-                                    <div className={styles.choiceGrid}>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="score"
-                                                label="只顯示分數"
-                                            />
-                                        </label>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="explanations"
-                                                label="顯示分數與詳解"
-                                            />
-                                        </label>
-                                    </div>
-                                </Radio.Group>
-                                <Radio.Group
-                                    label="正確答案公開"
-                                    value={draft.release}
-                                    onChange={(value) =>
-                                        setField(
-                                            "release",
-                                            value as Draft["release"]
-                                        )
-                                    }
-                                >
-                                    <div className={styles.choiceGrid}>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="page"
-                                                label="每頁完成後公開"
-                                            />
-                                        </label>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="course"
-                                                label="整份教材完成後公開"
-                                            />
-                                        </label>
-                                    </div>
-                                </Radio.Group>
+                                </div>
+                                <div className={styles.settingBlock}>
+                                    <strong>重新作答 *</strong>
+                                    <small>
+                                        設定學生完成後是否能重新挑戰教材。
+                                    </small>
+                                    <Radio.Group
+                                        value={draft.maxAttempts}
+                                        onChange={(value) =>
+                                            setField("maxAttempts", value)
+                                        }
+                                    >
+                                        <div className={styles.choiceGrid}>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="1"
+                                                    label="不允許"
+                                                />
+                                            </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="2"
+                                                    label="允許 1 次"
+                                                />
+                                            </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="3"
+                                                    label="最多 2 次"
+                                                />
+                                            </label>
+                                        </div>
+                                    </Radio.Group>
+                                </div>
+                                <div className={styles.settingBlock}>
+                                    <strong>結果顯示 *</strong>
+                                    <small>
+                                        設定學生完成整份教材後能查看的內容。
+                                    </small>
+                                    <Radio.Group
+                                        value={draft.result}
+                                        onChange={(value) =>
+                                            setField(
+                                                "result",
+                                                value as Draft["result"]
+                                            )
+                                        }
+                                    >
+                                        <div className={styles.choiceGrid}>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="score"
+                                                    label="只顯示分數"
+                                                />
+                                            </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="explanations"
+                                                    label="顯示分數與詳解"
+                                                />
+                                            </label>
+                                        </div>
+                                    </Radio.Group>
+                                </div>
+                                <div className={styles.settingBlock}>
+                                    <strong>正確答案公開 *</strong>
+                                    <small>避免作答期間提前看到答案。</small>
+                                    <Radio.Group
+                                        value={draft.release}
+                                        onChange={(value) =>
+                                            setField(
+                                                "release",
+                                                value as Draft["release"]
+                                            )
+                                        }
+                                    >
+                                        <div className={styles.choiceGrid}>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="page"
+                                                    label="每頁完成後公開"
+                                                />
+                                            </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="course"
+                                                    label="整份教材完成後公開"
+                                                />
+                                            </label>
+                                        </div>
+                                    </Radio.Group>
+                                </div>
                             </Stack>
                         </Card>
                         <Card
-                            className={`${styles.card} ${styles.helpCard}`}
+                            className={`${styles.card} ${styles.helpCard} ${styles.teachingHelp}`}
                             radius="lg"
                         >
                             <Title order={2} className={styles.sectionTitle}>
                                 設定說明
                             </Title>
-                            <ul className={styles.noticeList}>
-                                <li>評分方式目前固定為自動評分</li>
-                                <li>結果顯示與答案公開可分開設定</li>
-                                <li>實驗開始後設定會鎖定</li>
-                            </ul>
+                            <p>
+                                這些設定會套用到本實驗中的所有教材。排程後仍可檢查內容，實驗開始後部分欄位會鎖定。
+                            </p>
+                            <div className={styles.guidanceItem}>
+                                ✓ 評分方式目前固定為自動評分
+                            </div>
+                            <div className={styles.guidanceItem}>
+                                ✓ 結果顯示與答案公開可分開設定
+                            </div>
+                            <div className={styles.guidanceItem}>
+                                ✓ ACTIVE 後不可修改評分與公開規則
+                            </div>
+                            <div className={styles.activeNotice}>
+                                <strong>進行中的實驗</strong>
+                                <span>
+                                    為保持學生作答條件一致，實驗開始後將鎖定本頁設定。
+                                </span>
+                            </div>
                         </Card>
                     </div>
                 )}
@@ -455,11 +533,21 @@ export default function CreateExperimentPage() {
                                     尚未提供教材目錄端點，正式環境暫時無法選擇教材。
                                 </Alert>
                             )}
+                            <TextInput
+                                mt="lg"
+                                type="search"
+                                placeholder="搜尋教材名稱"
+                                aria-label="搜尋教材名稱"
+                                value={courseSearch}
+                                onChange={(event) =>
+                                    setCourseSearch(event.currentTarget.value)
+                                }
+                            />
                             <div className={styles.coursePicker}>
                                 {coursesQuery.isPending && (
                                     <p className={styles.empty}>載入教材中⋯</p>
                                 )}
-                                {courseOptions.map((course) => {
+                                {visibleCourseOptions.map((course) => {
                                     const available =
                                         course.status === "PUBLISHED";
                                     return (
@@ -498,7 +586,7 @@ export default function CreateExperimentPage() {
                                         </label>
                                     );
                                 })}
-                                {courseOptions.length === 0 && (
+                                {visibleCourseOptions.length === 0 && (
                                     <p className={styles.empty}>
                                         目前沒有可選教材
                                     </p>

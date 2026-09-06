@@ -331,6 +331,7 @@
 }
 .stepper {
     display: flex;
+    flex-direction: row;
     height: 7rem;
     align-items: center;
     justify-content: space-between;
@@ -469,6 +470,22 @@
     margin-top: 0.5rem;
     color: #a1a1a1;
     font-size: 0.75rem;
+}
+.formCard :global(.mantine-InputWrapper-root) {
+    display: flex;
+    flex-direction: column;
+}
+.formCard :global(.mantine-InputWrapper-label) {
+    order: 1;
+}
+.formCard :global(.mantine-Input-wrapper) {
+    order: 2;
+}
+.formCard :global(.mantine-InputWrapper-description) {
+    order: 3;
+}
+.formCard :global(.mantine-InputWrapper-error) {
+    order: 4;
 }
 .fieldGrid {
     display: grid;

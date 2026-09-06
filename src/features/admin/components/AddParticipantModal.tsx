@@ -1,6 +1,15 @@
-import { useEffect, useId, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, X } from "lucide-react";
+import {
+    Button,
+    Checkbox,
+    Group,
+    Modal,
+    Stack,
+    Text,
+    TextInput,
+} from "@mantine/core";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { ApiError } from "../../../shared/utils/api";
@@ -16,7 +25,6 @@ type Props = {
 };
 
 export default function AddParticipantModal({ experimentId, onClose }: Props) {
-    const titleId = useId();
     const queryClient = useQueryClient();
     const [query, setQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
@@ -47,14 +55,6 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
         },
     });
 
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
-
     const toggleCandidate = (userId: string) => {
         setSelectedIds((previous) => {
             const next = new Set(previous);
@@ -65,115 +65,118 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
     };
 
     return (
-        <div className={styles.modalBackdrop} onMouseDown={onClose}>
-            <section
-                className={styles.modal}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={titleId}
-                onMouseDown={(event) => event.stopPropagation()}
-            >
-                <header className={styles.modalHeader}>
-                    <h2 id={titleId}>加入學生</h2>
-                    <button
-                        type="button"
-                        className={styles.iconButton}
-                        aria-label="關閉加入學生視窗"
-                        onClick={onClose}
-                    >
-                        <X aria-hidden="true" />
-                    </button>
-                </header>
+        <Modal
+            opened
+            onClose={onClose}
+            title="加入學生"
+            centered
+            size="lg"
+            radius="lg"
+            overlayProps={{ backgroundOpacity: 0.72, blur: 1 }}
+            classNames={{
+                content: styles.mantineModal,
+                header: styles.mantineModalHeader,
+                body: styles.mantineModalBody,
+            }}
+        >
+            <Stack gap="sm">
+                <TextInput
+                    autoFocus
+                    type="search"
+                    placeholder="搜尋姓名或郵件"
+                    aria-label="搜尋可加入的學生"
+                    value={query}
+                    onChange={(event) => setQuery(event.currentTarget.value)}
+                    leftSection={<Search size={16} aria-hidden="true" />}
+                    radius="md"
+                    classNames={{ input: styles.mantineTextInput }}
+                />
 
-                <div className={styles.modalBody}>
-                    <label className={styles.searchField}>
-                        <Search aria-hidden="true" />
-                        <input
-                            autoFocus
-                            type="search"
-                            placeholder="搜尋姓名或郵件"
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                        />
-                    </label>
-
-                    <div className={styles.candidateList}>
-                        {candidatesQuery.isPending && (
-                            <p className={styles.emptyState}>載入學生中⋯</p>
-                        )}
-                        {candidatesQuery.isError && (
-                            <p className={styles.emptyState}>
-                                學生名單載入失敗
-                            </p>
-                        )}
-                        {candidatesQuery.data?.map((candidate) => {
-                            const isAvailable = !candidate.isAssigned;
-                            return (
-                                <label
-                                    key={candidate.user.id}
-                                    className={`${styles.candidateRow} ${!isAvailable ? styles.candidateDisabled : ""}`}
+                <Stack gap="sm" className={styles.candidateList}>
+                    {candidatesQuery.isPending && (
+                        <Text c="dimmed" ta="center" my="lg">
+                            載入學生中⋯
+                        </Text>
+                    )}
+                    {candidatesQuery.isError && (
+                        <Text c="dimmed" ta="center" my="lg">
+                            學生名單載入失敗
+                        </Text>
+                    )}
+                    {candidatesQuery.data?.map((candidate) => {
+                        const isAvailable = !candidate.isAssigned;
+                        return (
+                            <label
+                                key={candidate.user.id}
+                                className={`${styles.candidateRow} ${
+                                    !isAvailable ? styles.candidateDisabled : ""
+                                }`}
+                            >
+                                <Checkbox
+                                    checked={selectedIds.has(candidate.user.id)}
+                                    disabled={!isAvailable}
+                                    onChange={() =>
+                                        toggleCandidate(candidate.user.id)
+                                    }
+                                    aria-label={`選取 ${candidate.user.name}`}
+                                    color="brandTeal"
+                                />
+                                <Text
+                                    component="span"
+                                    className={styles.candidateName}
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedIds.has(
-                                            candidate.user.id
-                                        )}
-                                        disabled={!isAvailable}
-                                        onChange={() =>
-                                            toggleCandidate(candidate.user.id)
-                                        }
-                                    />
-                                    <span className={styles.candidateName}>
-                                        {candidate.user.name}
-                                    </span>
-                                    <span className={styles.candidateEmail}>
-                                        {candidate.user.email}
-                                    </span>
-                                    <span
-                                        className={
-                                            isAvailable
-                                                ? styles.available
-                                                : styles.conflict
-                                        }
-                                    >
-                                        {isAvailable
-                                            ? "可加入"
-                                            : "已加入本實驗"}
-                                    </span>
-                                </label>
-                            );
-                        })}
-                        {candidatesQuery.data?.length === 0 && (
-                            <p className={styles.emptyState}>
-                                找不到符合的學生
-                            </p>
-                        )}
-                    </div>
-                </div>
+                                    {candidate.user.name}
+                                </Text>
+                                <Text
+                                    component="span"
+                                    className={styles.candidateEmail}
+                                >
+                                    {candidate.user.email}
+                                </Text>
+                                <Text
+                                    component="span"
+                                    className={
+                                        isAvailable
+                                            ? styles.available
+                                            : styles.conflict
+                                    }
+                                >
+                                    {isAvailable ? "可加入" : "已加入本實驗"}
+                                </Text>
+                            </label>
+                        );
+                    })}
+                    {candidatesQuery.data?.length === 0 && (
+                        <Text c="dimmed" ta="center" my="lg">
+                            找不到符合的學生
+                        </Text>
+                    )}
+                </Stack>
 
-                <footer className={styles.modalFooter}>
-                    <span>已選擇 {selectedIds.size} 位學生</span>
-                    <div className={styles.modalActions}>
-                        <button
-                            type="button"
-                            className={styles.secondaryButton}
-                            onClick={onClose}
-                        >
+                <Group
+                    justify="space-between"
+                    align="center"
+                    pt="md"
+                    className={styles.mantineModalFooter}
+                >
+                    <Text size="sm" c="dimmed">
+                        已選擇 {selectedIds.size} 位學生
+                    </Text>
+                    <Group gap="sm">
+                        <Button variant="default" onClick={onClose}>
                             取消
-                        </button>
-                        <button
-                            type="button"
-                            className={styles.primaryButton}
-                            disabled={
-                                selectedIds.size === 0 || addMutation.isPending
-                            }
+                        </Button>
+                        <Button
+                            color="brandTeal"
+                            disabled={selectedIds.size === 0}
+                            loading={addMutation.isPending}
                             onClick={() => addMutation.mutate()}
                         >
-                            {addMutation.isPending ? "加入中⋯" : "加入學生"}
-                        </button>
-                    </div>
-                </footer>
-            </section>
-        </div>
+                            加入學生
+                        </Button>
+                    </Group>
+                </Group>
+            </Stack>
+        </Modal>
     );
 }

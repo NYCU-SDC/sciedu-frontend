@@ -1,149 +1,45 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+    ActionIcon,
+    Button,
+    Card,
+    SegmentedControl,
+    Select,
+    Text,
+    TextInput,
+    Title,
+} from "@mantine/core";
+import {
     ArrowDownToLine,
     ArrowLeft,
     ArrowRight,
-    BookOpen,
-    CalendarDays,
-    CheckCircle2,
-    ChevronDown,
-    FlaskConical,
-    GraduationCap,
-    MoreVertical,
     Plus,
     Search,
-    Trash2,
-    Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";
+import AdminSidebar, { type AdminSection } from "../components/AdminSidebar";
+import CourseTable from "../components/CourseTable";
+import ExperimentStats from "../components/ExperimentStats";
+import ExperimentSummary from "../components/ExperimentSummary";
+import ParticipantTable from "../components/ParticipantTable";
 import {
     fetchCurrentUser,
     fetchExperiment,
+    listAllExperiments,
     listExperimentCourses,
     listExperimentParticipants,
-    listExperiments,
     removeExperimentParticipant,
 } from "../services/adminRepository";
-import type {
-    CourseStatus,
-    ExperimentStatus,
-    GradingMode,
-    User,
-    UserRole,
-} from "../types";
+import type { UserRole } from "../types";
 import styles from "./AdminDashboardPage.module.css";
 
 type TableView = "participants" | "courses";
-type AdminSection = "overview" | "people";
 
 const PAGE_SIZE = 10;
-
-const roleLabels: Record<UserRole, string> = {
-    STUDENT: "學生",
-    EXPERIMENTER: "實驗者",
-    ADMIN: "管理員",
-};
-
-const experimentStatusLabels: Record<ExperimentStatus, string> = {
-    DRAFT: "草稿",
-    SCHEDULED: "已排程",
-    ACTIVE: "進行中",
-    COMPLETED: "已完成",
-    ARCHIVED: "已封存",
-};
-
-const gradingModeLabels: Record<GradingMode, string> = {
-    AUTOMATIC: "自動評分",
-    MANUAL: "人工評分",
-};
-
-const courseStatusLabels: Record<CourseStatus, string> = {
-    DRAFT: "草稿",
-    PUBLISHED: "已發布",
-    ARCHIVED: "已封存",
-};
-
-function formatDateTime(value: string) {
-    const date = new Date(value);
-    return new Intl.DateTimeFormat("zh-TW", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-    }).format(date);
-}
-
-function Sidebar({
-    currentUser,
-    activeSection,
-    onNavigate,
-}: {
-    currentUser: User;
-    activeSection: AdminSection;
-    onNavigate: (section: AdminSection) => void;
-}) {
-    return (
-        <aside className={styles.sidebar}>
-            <div className={styles.sidebarBrand}>
-                <GraduationCap aria-hidden="true" />
-                <span>研究管理後台</span>
-            </div>
-            <nav className={styles.sidebarNav} aria-label="後台主選單">
-                <button
-                    type="button"
-                    className={
-                        activeSection === "overview" ? styles.navActive : ""
-                    }
-                    onClick={() => onNavigate("overview")}
-                >
-                    <Search aria-hidden="true" />
-                    總覽
-                </button>
-                <button type="button" disabled>
-                    <FlaskConical aria-hidden="true" />
-                    實驗場次（未開放）
-                </button>
-                <button type="button" disabled>
-                    <BookOpen aria-hidden="true" />
-                    教材管理（未開放）
-                </button>
-                <button
-                    type="button"
-                    className={
-                        activeSection === "people" ? styles.navActive : ""
-                    }
-                    onClick={() => onNavigate("people")}
-                >
-                    <Users aria-hidden="true" />
-                    人員管理
-                </button>
-                <button type="button" disabled>
-                    <CheckCircle2 aria-hidden="true" />
-                    作答紀錄（未開放）
-                </button>
-            </nav>
-            <div className={styles.profile}>
-                <span className={styles.avatar}>
-                    {currentUser.name.trim().slice(0, 1)}
-                </span>
-                <span>
-                    <strong>{currentUser.name}</strong>
-                    <small>
-                        {currentUser.roles
-                            .map((role) => roleLabels[role])
-                            .join("、")}
-                    </small>
-                </span>
-            </div>
-        </aside>
-    );
-}
 
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
@@ -158,7 +54,6 @@ export default function AdminDashboardPage() {
     const [courseOrder, setCourseOrder] = useState<"asc" | "desc">("asc");
     const [page, setPage] = useState(1);
     const [isParticipantModalOpen, setParticipantModalOpen] = useState(false);
-    const [openParticipantMenuId, setOpenParticipantMenuId] = useState("");
     const [loadedAt] = useState(() => Date.now());
 
     const currentUserQuery = useQuery({
@@ -168,10 +63,10 @@ export default function AdminDashboardPage() {
     });
     const experimentsQuery = useQuery({
         queryKey: ["admin", "experiments", "list"],
-        queryFn: () => listExperiments({ page: 1, pageSize: 100 }),
+        queryFn: listAllExperiments,
     });
 
-    const experiments = experimentsQuery.data?.items ?? [];
+    const experiments = experimentsQuery.data ?? [];
     const activeExperimentId = experiments.some(
         (experiment) => experiment.id === selectedExperimentId
     )
@@ -198,7 +93,6 @@ export default function AdminDashboardPage() {
         mutationFn: (userId: string) =>
             removeExperimentParticipant(activeExperimentId, userId),
         onSuccess: async () => {
-            setOpenParticipantMenuId("");
             await queryClient.invalidateQueries({
                 queryKey: ["admin", "experiments", activeExperimentId],
             });
@@ -253,19 +147,25 @@ export default function AdminDashboardPage() {
         currentPage * PAGE_SIZE
     );
 
-    const switchView = (nextView: TableView) => {
-        setTableView(nextView);
+    const resetTable = () => {
         setQuery("");
         setRole("");
         setPage(1);
     };
 
+    const switchView = (nextView: TableView) => {
+        setTableView(nextView);
+        resetTable();
+    };
+
     const switchExperiment = (experimentId: string) => {
         setSelectedExperimentId(experimentId);
-        setQuery("");
-        setRole("");
-        setPage(1);
-        setOpenParticipantMenuId("");
+        resetTable();
+    };
+
+    const switchSection = (section: AdminSection) => {
+        setActiveSection(section);
+        resetTable();
     };
 
     if (currentUserQuery.isPending || experimentsQuery.isPending) {
@@ -274,7 +174,7 @@ export default function AdminDashboardPage() {
     if (currentUserQuery.isError || experimentsQuery.isError) {
         return <div className={styles.pageStatus}>實驗總覽載入失敗</div>;
     }
-    if (experimentsQuery.data.items.length === 0) {
+    if (experiments.length === 0) {
         return <div className={styles.pageStatus}>目前沒有可管理的實驗</div>;
     }
     if (experimentQuery.isError) {
@@ -285,10 +185,6 @@ export default function AdminDashboardPage() {
     }
 
     const experiment = experimentQuery.data;
-    const experimentRange =
-        formatDateTime(experiment.scheduledStartAt) +
-        "－" +
-        formatDateTime(experiment.scheduledEndAt);
     const remainingDays = Math.max(
         0,
         Math.ceil(
@@ -301,117 +197,52 @@ export default function AdminDashboardPage() {
 
     return (
         <div className={styles.page}>
-            <Sidebar
+            <AdminSidebar
                 currentUser={currentUserQuery.data}
                 activeSection={activeSection}
-                onNavigate={(section) => {
-                    setActiveSection(section);
-                    setQuery("");
-                    setRole("");
-                    setPage(1);
-                    setOpenParticipantMenuId("");
-                }}
+                onNavigate={switchSection}
             />
 
             <main className={styles.main}>
                 <header className={styles.pageHeader}>
-                    <h1>
+                    <Title order={1}>
                         {activeSection === "overview" ? "實驗總覽" : "人員管理"}
-                    </h1>
-                    <button
-                        type="button"
+                    </Title>
+                    <Button
                         className={styles.exportButton}
+                        classNames={{
+                            label: styles.exportButtonLabel,
+                            section: styles.exportButtonSection,
+                        }}
                         disabled
                         title="匯出資料功能尚未開放"
+                        variant="default"
+                        radius="md"
+                        leftSection={<ArrowDownToLine aria-hidden="true" />}
                     >
-                        <ArrowDownToLine aria-hidden="true" />
                         匯出資料
-                    </button>
+                    </Button>
                 </header>
 
-                <section className={styles.experimentCard}>
-                    <div className={styles.experimentInfo}>
-                        <div className={styles.experimentTitleRow}>
-                            <h2>{experiment.name}</h2>
-                            <span className={styles.statusBadge}>
-                                {experimentStatusLabels[experiment.status]}
-                            </span>
-                        </div>
-                        <p>{experiment.description || "尚未提供實驗說明"}</p>
-                        <div className={styles.metadata}>
-                            <span>
-                                <CalendarDays aria-hidden="true" />
-                                {experimentRange}
-                            </span>
-                        </div>
-                    </div>
-                    <label className={styles.experimentSelect}>
-                        <span>切換實驗</span>
-                        <span className={styles.selectShell}>
-                            <select
-                                value={activeExperimentId}
-                                onChange={(event) =>
-                                    switchExperiment(event.target.value)
-                                }
-                            >
-                                {experimentsQuery.data.items.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {formatDateTime(
-                                            item.scheduledStartAt
-                                        ).slice(0, 7)}
-                                        ・{item.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronDown aria-hidden="true" />
-                        </span>
-                        <small>
-                            切換實驗後，統計資料與下方列表會同步更新。
-                        </small>
-                    </label>
-                </section>
+                <ExperimentSummary
+                    experiment={experiment}
+                    experiments={experiments}
+                    activeExperimentId={activeExperimentId}
+                    onExperimentChange={switchExperiment}
+                />
 
                 {activeSection === "overview" && (
-                    <section className={styles.stats} aria-label="實驗統計">
-                        <article>
-                            <h3>參與人員</h3>
-                            <strong>{experiment.participantCount} 人</strong>
-                            <p>本場次目前指派人數</p>
-                        </article>
-                        <article>
-                            <h3>使用教材</h3>
-                            <strong>{experiment.courseCount} 份</strong>
-                            <p>本場次目前指派教材數量</p>
-                        </article>
-                        <article>
-                            <h3>剩餘時間</h3>
-                            <strong>
-                                {remainingDays > 0
-                                    ? "約 " + remainingDays + " 天"
-                                    : "已結束"}
-                            </strong>
-                            <p>
-                                {formatDateTime(experiment.scheduledEndAt)} 結束
-                            </p>
-                        </article>
-                        <article>
-                            <h3>評分模式</h3>
-                            <strong>
-                                {
-                                    gradingModeLabels[
-                                        experiment.configuration.gradingMode
-                                    ]
-                                }
-                            </strong>
-                            <p>依本場實驗設定顯示</p>
-                        </article>
-                    </section>
+                    <ExperimentStats
+                        experiment={experiment}
+                        remainingDays={remainingDays}
+                    />
                 )}
 
-                <section
-                    className={`${styles.tableCard} ${
-                        activeSection === "people" ? styles.peopleTableCard : ""
-                    }`}
+                <Card
+                    component="section"
+                    radius="lg"
+                    withBorder
+                    className={styles.tableCard}
                 >
                     <div
                         className={`${styles.toolbar} ${
@@ -421,322 +252,207 @@ export default function AdminDashboardPage() {
                         }`}
                     >
                         {activeSection === "overview" ? (
-                            <div className={styles.segmented}>
-                                <button
-                                    type="button"
-                                    className={
-                                        tableView === "participants"
-                                            ? styles.segmentActive
-                                            : ""
-                                    }
-                                    onClick={() => switchView("participants")}
-                                >
-                                    按人員查看
-                                </button>
-                                <button
-                                    type="button"
-                                    className={
-                                        tableView === "courses"
-                                            ? styles.segmentActive
-                                            : ""
-                                    }
-                                    onClick={() => switchView("courses")}
-                                >
-                                    按教材查看
-                                </button>
-                            </div>
+                            <SegmentedControl
+                                className={styles.segmented}
+                                classNames={{
+                                    indicator: styles.segmentedIndicator,
+                                    label: styles.segmentedLabel,
+                                }}
+                                value={tableView}
+                                data={[
+                                    {
+                                        label: "按人員查看",
+                                        value: "participants",
+                                    },
+                                    { label: "按教材查看", value: "courses" },
+                                ]}
+                                onChange={(value) =>
+                                    switchView(value as TableView)
+                                }
+                                radius="md"
+                            />
                         ) : (
-                            <h2 className={styles.tableTitle}>
+                            <Text c="dimmed" size="sm">
                                 本場次實驗參與者
-                            </h2>
+                            </Text>
                         )}
                         <div className={styles.tableControls}>
-                            <label className={styles.searchField}>
-                                <Search aria-hidden="true" />
-                                <input
-                                    type="search"
-                                    placeholder={
-                                        displayView === "participants"
-                                            ? "搜尋姓名或郵件"
-                                            : "搜尋教材名稱或代碼"
-                                    }
-                                    value={query}
-                                    onChange={(event) => {
-                                        setQuery(event.target.value);
+                            <TextInput
+                                className={styles.searchField}
+                                classNames={{ input: styles.mantineTextInput }}
+                                type="search"
+                                placeholder={
+                                    displayView === "participants"
+                                        ? "搜尋姓名或郵件"
+                                        : "搜尋教材名稱或代碼"
+                                }
+                                aria-label="搜尋表格資料"
+                                value={query}
+                                onChange={(event) => {
+                                    setQuery(event.currentTarget.value);
+                                    setPage(1);
+                                }}
+                                leftSection={
+                                    <Search size={16} aria-hidden="true" />
+                                }
+                                radius="md"
+                            />
+                            {displayView === "participants" ? (
+                                <Select
+                                    className={styles.compactSelect}
+                                    value={role}
+                                    allowDeselect={false}
+                                    aria-label="篩選角色"
+                                    data={[
+                                        { value: "", label: "全部角色" },
+                                        { value: "STUDENT", label: "學生" },
+                                        {
+                                            value: "EXPERIMENTER",
+                                            label: "實驗者",
+                                        },
+                                        { value: "ADMIN", label: "管理員" },
+                                    ]}
+                                    onChange={(value) => {
+                                        setRole((value ?? "") as UserRole | "");
                                         setPage(1);
                                     }}
+                                    radius="md"
+                                    classNames={{
+                                        input: styles.mantineSelectInput,
+                                        dropdown: styles.mantineSelectDropdown,
+                                        option: styles.mantineSelectOption,
+                                    }}
                                 />
-                            </label>
-                            {displayView === "participants" ? (
-                                <label className={styles.compactSelect}>
-                                    <select
-                                        value={role}
-                                        aria-label="篩選角色"
-                                        onChange={(event) => {
-                                            setRole(
-                                                event.target.value as
-                                                    | UserRole
-                                                    | ""
-                                            );
-                                            setPage(1);
-                                        }}
-                                    >
-                                        <option value="">全部角色</option>
-                                        <option value="STUDENT">學生</option>
-                                        <option value="EXPERIMENTER">
-                                            實驗者
-                                        </option>
-                                        <option value="ADMIN">管理員</option>
-                                    </select>
-                                    <ChevronDown aria-hidden="true" />
-                                </label>
                             ) : (
-                                <label className={styles.compactSelect}>
-                                    <select
-                                        value={courseOrder}
-                                        aria-label="教材代碼排序"
-                                        onChange={(event) => {
-                                            setCourseOrder(
-                                                event.target.value as
-                                                    | "asc"
-                                                    | "desc"
-                                            );
-                                            setPage(1);
-                                        }}
-                                    >
-                                        <option value="asc">
-                                            教材代碼 A 到 Z
-                                        </option>
-                                        <option value="desc">
-                                            教材代碼 Z 到 A
-                                        </option>
-                                    </select>
-                                    <ChevronDown aria-hidden="true" />
-                                </label>
+                                <Select
+                                    className={styles.compactSelect}
+                                    value={courseOrder}
+                                    allowDeselect={false}
+                                    aria-label="教材代碼排序"
+                                    data={[
+                                        {
+                                            value: "asc",
+                                            label: "教材代碼 A 到 Z",
+                                        },
+                                        {
+                                            value: "desc",
+                                            label: "教材代碼 Z 到 A",
+                                        },
+                                    ]}
+                                    onChange={(value) => {
+                                        setCourseOrder(
+                                            (value ?? "asc") as "asc" | "desc"
+                                        );
+                                        setPage(1);
+                                    }}
+                                    radius="md"
+                                    classNames={{
+                                        input: styles.mantineSelectInput,
+                                        dropdown: styles.mantineSelectDropdown,
+                                        option: styles.mantineSelectOption,
+                                    }}
+                                />
                             )}
                             {activeSection === "people" && (
-                                <button
-                                    type="button"
+                                <Button
                                     className={styles.addButton}
+                                    leftSection={
+                                        <Plus size={16} aria-hidden="true" />
+                                    }
+                                    color="brandTeal"
                                     onClick={() =>
                                         setParticipantModalOpen(true)
                                     }
                                 >
-                                    <Plus aria-hidden="true" />
                                     加入人員
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>
 
                     {activeQuery.isPending ? (
-                        <p className={styles.emptyState}>載入列表中⋯</p>
+                        <Text
+                            c="dimmed"
+                            ta="center"
+                            my="xl"
+                            className={styles.emptyState}
+                        >
+                            載入列表中⋯
+                        </Text>
                     ) : activeQuery.isError ? (
-                        <p className={styles.emptyState}>列表載入失敗</p>
+                        <Text
+                            c="dimmed"
+                            ta="center"
+                            my="xl"
+                            className={styles.emptyState}
+                        >
+                            列表載入失敗
+                        </Text>
                     ) : (
                         <div className={styles.tableScroll}>
                             {displayView === "participants" ? (
-                                <table
-                                    className={`${styles.participantTable} ${
+                                <ParticipantTable
+                                    participants={visibleParticipants}
+                                    showAccountCreatedAt={
                                         activeSection === "people"
-                                            ? styles.peopleTable
-                                            : ""
-                                    }`}
-                                >
-                                    <thead>
-                                        <tr>
-                                            <th>姓名</th>
-                                            <th>郵件</th>
-                                            <th>角色</th>
-                                            <th>加入實驗時間</th>
-                                            {activeSection === "people" && (
-                                                <>
-                                                    <th>帳號建立時間</th>
-                                                    <th aria-label="操作" />
-                                                </>
-                                            )}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {visibleParticipants.map(
-                                            ({ participant, assignedAt }) => (
-                                                <tr key={participant.id}>
-                                                    <td>{participant.name}</td>
-                                                    <td>{participant.email}</td>
-                                                    <td>
-                                                        {participant.roles
-                                                            .map(
-                                                                (
-                                                                    participantRole
-                                                                ) =>
-                                                                    roleLabels[
-                                                                        participantRole
-                                                                    ]
-                                                            )
-                                                            .join("、")}
-                                                    </td>
-                                                    <td>
-                                                        {formatDateTime(
-                                                            assignedAt
-                                                        )}
-                                                    </td>
-                                                    {activeSection ===
-                                                        "people" && (
-                                                        <>
-                                                            <td>
-                                                                {formatDateTime(
-                                                                    participant.createdAt
-                                                                )}
-                                                            </td>
-                                                            <td>
-                                                                <div
-                                                                    className={
-                                                                        styles.rowActions
-                                                                    }
-                                                                >
-                                                                    <button
-                                                                        type="button"
-                                                                        className={
-                                                                            styles.rowMenuButton
-                                                                        }
-                                                                        aria-label={`開啟 ${participant.name} 的操作選單`}
-                                                                        aria-expanded={
-                                                                            openParticipantMenuId ===
-                                                                            participant.id
-                                                                        }
-                                                                        onClick={() =>
-                                                                            setOpenParticipantMenuId(
-                                                                                (
-                                                                                    current
-                                                                                ) =>
-                                                                                    current ===
-                                                                                    participant.id
-                                                                                        ? ""
-                                                                                        : participant.id
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <MoreVertical aria-hidden="true" />
-                                                                    </button>
-                                                                    {openParticipantMenuId ===
-                                                                        participant.id && (
-                                                                        <div
-                                                                            className={
-                                                                                styles.rowMenu
-                                                                            }
-                                                                            role="menu"
-                                                                        >
-                                                                            <button
-                                                                                type="button"
-                                                                                role="menuitem"
-                                                                                disabled={
-                                                                                    removeParticipantMutation.isPending
-                                                                                }
-                                                                                onClick={() => {
-                                                                                    if (
-                                                                                        window.confirm(
-                                                                                            `確定要將 ${participant.name} 從本場實驗移除嗎？`
-                                                                                        )
-                                                                                    ) {
-                                                                                        removeParticipantMutation.mutate(
-                                                                                            participant.id
-                                                                                        );
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                <Trash2 aria-hidden="true" />
-                                                                                刪除
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        </>
-                                                    )}
-                                                </tr>
+                                    }
+                                    isRemoving={
+                                        removeParticipantMutation.isPending
+                                    }
+                                    onRemove={(
+                                        participantId,
+                                        participantName
+                                    ) => {
+                                        if (
+                                            window.confirm(
+                                                `確定要將 ${participantName} 從本場實驗移除嗎？`
                                             )
-                                        )}
-                                    </tbody>
-                                </table>
+                                        ) {
+                                            removeParticipantMutation.mutate(
+                                                participantId
+                                            );
+                                        }
+                                    }}
+                                />
                             ) : (
-                                <table className={styles.materialTable}>
-                                    <thead>
-                                        <tr>
-                                            <th>代碼</th>
-                                            <th>名稱</th>
-                                            <th>狀態</th>
-                                            <th>加入實驗時間</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {visibleCourses.map(
-                                            ({ course, linkedAt }) => (
-                                                <tr key={course.id}>
-                                                    <td>{course.code}</td>
-                                                    <td>
-                                                        <strong>
-                                                            {course.title}
-                                                        </strong>
-                                                        <small>
-                                                            {course.description}
-                                                        </small>
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            courseStatusLabels[
-                                                                course.status
-                                                            ]
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {formatDateTime(
-                                                            linkedAt
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )}
-                                    </tbody>
-                                </table>
+                                <CourseTable courses={visibleCourses} />
                             )}
                         </div>
                     )}
 
                     <footer className={styles.tableFooter}>
-                        <span>
-                            顯示{" "}
+                        <Text component="span" size="xs" c="dimmed">
+                            顯示
                             {displayView === "participants"
                                 ? visibleParticipants.length
-                                : visibleCourses.length}{" "}
+                                : visibleCourses.length}
                             筆資料，共 {activeItems.length} 筆
-                        </span>
+                        </Text>
                         <div className={styles.pagination}>
-                            <button
-                                type="button"
+                            <ActionIcon
+                                variant="default"
+                                radius="xl"
                                 aria-label="上一頁"
                                 disabled={currentPage <= 1}
-                                onClick={() =>
-                                    setPage((current) => current - 1)
-                                }
+                                onClick={() => setPage(currentPage - 1)}
                             >
                                 <ArrowLeft aria-hidden="true" />
-                            </button>
-                            <span>
+                            </ActionIcon>
+                            <Text component="span" size="xs">
                                 {currentPage} / {totalPages}
-                            </span>
-                            <button
-                                type="button"
+                            </Text>
+                            <ActionIcon
+                                variant="default"
+                                radius="xl"
                                 aria-label="下一頁"
                                 disabled={currentPage >= totalPages}
-                                onClick={() =>
-                                    setPage((current) => current + 1)
-                                }
+                                onClick={() => setPage(currentPage + 1)}
                             >
                                 <ArrowRight aria-hidden="true" />
-                            </button>
+                            </ActionIcon>
                         </div>
                     </footer>
-                </section>
+                </Card>
             </main>
 
             {isParticipantModalOpen && (

@@ -153,35 +153,35 @@
     line-height: 1.33;
 }
 
-.exportButton,
-.secondaryButton,
-.primaryButton,
-.iconButton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--admin-border);
-    background: white;
-    color: var(--admin-ink);
-    cursor: pointer;
-}
-
 .exportButton {
-    gap: 0.5rem;
-    padding: 0.75rem 1.125rem;
-    border-radius: 1rem;
-    font-size: 1.25rem;
+    height: 2.5rem;
+    min-width: 7rem;
+    padding-inline: 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 700;
 }
 
-.exportButton:disabled {
+.exportButton:disabled,
+.exportButton[data-disabled] {
     cursor: not-allowed;
-    opacity: 0.58;
+    border-color: var(--admin-border);
+    background: white;
+    color: #63847f;
+    opacity: 1;
 }
 
 .exportButton svg {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+.exportButtonLabel {
+    line-height: 1;
+}
+
+.exportButtonSection {
+    margin-inline-end: 0.375rem;
 }
 
 .experimentCard,
@@ -192,14 +192,19 @@
 }
 
 .experimentCard {
-    display: flex;
     flex-shrink: 0;
     overflow: hidden;
+    padding: 1.25rem 2rem;
+    border-radius: 1rem;
+}
+
+.experimentCardContent {
+    display: flex;
+    width: 100%;
+    min-width: 0;
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
-    padding: 1.25rem 2rem;
-    border-radius: 1rem;
 }
 
 .experimentInfo {
@@ -218,17 +223,9 @@
     line-height: 1.33;
 }
 
-.statusBadge {
-    color: #925800;
-    font-size: 0.875rem;
-    white-space: nowrap;
-}
-
-.experimentInfo > p {
+.experimentDescription {
     margin: 0.25rem 0;
     overflow: hidden;
-    color: var(--color-neutral-600);
-    font-size: 0.875rem;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -265,35 +262,44 @@
     font-size: 0.75rem;
 }
 
-.selectShell,
 .compactSelect {
-    position: relative;
-    display: flex;
-    align-items: center;
+    width: 10rem;
+    flex: 0 0 auto;
 }
 
-.selectShell select,
-.compactSelect select {
-    width: 100%;
-    appearance: none;
-    border: 1px solid var(--admin-border);
-    background: white;
+.mantineSelectInput,
+.mantineTextInput {
+    height: 2.5rem;
+    border-color: var(--color-neutral-400);
+    border-radius: 0.5rem;
     color: var(--admin-ink);
+}
+
+.mantineSelectInput {
     cursor: pointer;
 }
 
-.selectShell select {
-    padding: 1rem 2.75rem 1rem 0.75rem;
-    border-radius: 1rem;
+.mantineSelectDropdown {
+    padding: 0.375rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 0.75rem 2rem rgb(8 46 39 / 16%);
 }
 
-.selectShell svg,
-.compactSelect svg {
-    position: absolute;
-    right: 0.75rem;
-    width: 1.25rem;
-    height: 1.25rem;
-    pointer-events: none;
+.mantineSelectOption {
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--admin-ink);
+}
+
+.mantineSelectOption:hover,
+.mantineSelectOption[data-combobox-active] {
+    background: #e5f6f2;
+}
+
+.mantineSelectOption[data-combobox-selected] {
+    background: var(--admin-sidebar);
+    color: white;
 }
 
 .stats {
@@ -341,15 +347,11 @@
 .tableCard {
     display: flex;
     min-height: 24rem;
+    flex: 1 0 24rem;
     flex-direction: column;
     margin-top: 0.625rem;
     overflow: hidden;
     border-radius: 1rem;
-}
-
-.tableCard.peopleTableCard {
-    height: 43rem;
-    min-height: 43rem;
 }
 
 .toolbar {
@@ -376,14 +378,6 @@
     flex: 1 1 12rem;
 }
 
-.tableTitle {
-    margin: 0;
-    color: var(--color-neutral-500);
-    font-size: 0.875rem;
-    font-weight: 400;
-    white-space: nowrap;
-}
-
 .segmented {
     display: flex;
     gap: 0.25rem;
@@ -392,19 +386,12 @@
     background: var(--color-neutral-200);
 }
 
-.segmented button {
-    padding: 0.5rem 1rem;
-    border: 0;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: var(--color-neutral-600);
-    cursor: pointer;
-    font-size: 0.875rem;
+.segmentedIndicator {
+    background: white;
+    box-shadow: 0 1px 3px rgb(8 46 39 / 12%);
 }
 
-.segmented .segmentActive {
-    background: white;
-    box-shadow: 0 0.5rem 1.25rem rgb(44 79 71 / 16%);
+.segmentedLabel {
     color: var(--admin-ink);
 }
 
@@ -415,45 +402,11 @@
 }
 
 .searchField {
-    display: flex;
-    height: 2.5rem;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0 1rem;
-    border: 1px solid var(--color-neutral-400);
-    border-radius: 0.5rem;
-    background: white;
+    min-width: 0;
 }
 
 .tableControls .searchField {
     width: 20rem;
-}
-
-.searchField svg {
-    width: 1rem;
-    height: 1rem;
-    flex: 0 0 auto;
-    color: var(--color-neutral-400);
-}
-
-.searchField input {
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: var(--admin-ink);
-}
-
-.searchField input::placeholder {
-    color: var(--color-neutral-400);
-}
-
-.compactSelect select {
-    height: 2.5rem;
-    padding: 0 2.5rem 0 1rem;
-    border-color: var(--color-neutral-400);
-    border-radius: 0.5rem;
 }
 
 .addButton {
@@ -484,7 +437,7 @@
 .tableScroll {
     min-width: 0;
     flex: 1;
-    overflow-x: auto;
+    overflow: auto;
 }
 
 .tableCard > .emptyState {
@@ -559,71 +512,6 @@
     overflow: visible;
 }
 
-.rowActions {
-    position: relative;
-    display: flex;
-    justify-content: center;
-}
-
-.rowMenuButton {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    place-items: center;
-    border: 0;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: var(--admin-ink);
-    cursor: pointer;
-}
-
-.rowMenuButton:hover,
-.rowMenuButton[aria-expanded="true"] {
-    background: #e5f6f2;
-}
-
-.rowMenuButton svg {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
-.rowMenu {
-    position: absolute;
-    z-index: 5;
-    top: calc(100% + 0.25rem);
-    right: 0;
-    min-width: 7rem;
-    padding: 0.25rem;
-    border: 1px solid var(--admin-border);
-    border-radius: 0.5rem;
-    background: white;
-    box-shadow: 0 0.75rem 2rem rgb(8 46 39 / 16%);
-}
-
-.rowMenu button {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    border: 0;
-    border-radius: 0.375rem;
-    background: transparent;
-    color: #9f2d25;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.rowMenu button:hover {
-    background: #fff1ef;
-}
-
-.rowMenu svg {
-    width: 1rem;
-    height: 1rem;
-}
-
 .materialTable th:nth-child(1) {
     width: 15%;
 }
@@ -673,8 +561,7 @@
     color: var(--admin-ink);
 }
 
-.pagination button,
-.iconButton {
+.pagination button {
     width: 2.25rem;
     height: 2.25rem;
     padding: 0;
@@ -686,78 +573,39 @@
     opacity: 0.35;
 }
 
-.pagination svg,
-.iconButton svg {
+.pagination svg {
     width: 1.25rem;
     height: 1.25rem;
 }
 
-.modalBackdrop {
-    position: fixed;
-    z-index: 100;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 1.5rem;
-    background: rgb(0 0 0 / 72%);
-}
-
-.modal {
-    display: flex;
-    width: min(46.375rem, 100%);
+.mantineModal {
     max-height: min(42rem, calc(100vh - 3rem));
-    flex-direction: column;
     overflow: hidden;
-    border-radius: 1rem;
-    background: white;
     box-shadow: 0 1.375rem 4rem rgb(8 46 39 / 18%);
 }
 
-.modalHeader,
-.modalFooter {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.mantineModalHeader {
     padding: 1rem 2rem;
-}
-
-.modalHeader {
     border-bottom: 1px solid var(--admin-border);
 }
 
-.modalHeader h2 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 400;
-}
-
-.iconButton {
-    border-radius: 0.5rem;
-}
-
-.iconButton:hover {
-    border-color: #acd0c8;
-    background: #e5f6f2;
-}
-
-.modalBody {
-    display: flex;
-    min-height: 0;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.625rem;
-    padding: 0.625rem 2rem;
+.mantineModalBody {
+    padding: 1rem 2rem 0;
     overflow-y: auto;
 }
 
-.modalBody > .searchField {
-    flex: 0 0 auto;
+.mantineModalFooter {
+    margin-inline: -2rem;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--admin-border);
 }
 
 .candidateList {
     display: flex;
+    max-height: 26rem;
     flex-direction: column;
     gap: 0.625rem;
+    overflow-y: auto;
 }
 
 .candidateRow {
@@ -812,37 +660,6 @@
     text-align: center;
 }
 
-.modalFooter {
-    min-height: 6.25rem;
-    border-top: 1px solid var(--admin-border);
-    color: var(--color-neutral-600);
-    font-size: 0.875rem;
-}
-
-.modalActions {
-    display: flex;
-    gap: 0.625rem;
-}
-
-.secondaryButton,
-.primaryButton {
-    min-width: 6rem;
-    min-height: 2.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-}
-
-.primaryButton {
-    border-color: var(--admin-sidebar);
-    background: var(--admin-sidebar);
-    color: white;
-}
-
-.primaryButton:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
-}
-
 @media (max-width: 75rem) {
     .sidebar {
         width: 15rem;
@@ -858,7 +675,7 @@
         font-size: 1rem;
     }
 
-    .experimentCard {
+    .experimentCardContent {
         align-items: flex-start;
         flex-direction: column;
     }
@@ -985,13 +802,8 @@
         white-space: nowrap;
     }
 
-    .modalFooter {
+    .mantineModalFooter {
         align-items: stretch;
         flex-direction: column;
-    }
-
-    .modalActions,
-    .modalActions button {
-        width: 100%;
     }
 }

@@ -107,6 +107,12 @@ export function listExperiments(
     return api<PaginatedResponse<Experiment>>(`/api/experiments?${query}`);
 }
 
+export function listAllExperiments(): Promise<Experiment[]> {
+    return collectAllPages((page) =>
+        listExperiments({ page, pageSize: MAX_PAGE_SIZE })
+    );
+}
+
 export function fetchExperiment(
     experimentId: string
 ): Promise<ExperimentDetail> {

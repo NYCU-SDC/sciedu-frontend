@@ -111,7 +111,7 @@
 }
 .pageHeader h1 {
     margin: 0;
-    font-size: 2rem;
+    font-size: 2.5rem;
     line-height: 1.4;
 }
 .titleGroup {
@@ -150,10 +150,9 @@
 }
 .filters {
     display: grid;
-    grid-template-columns: minmax(15rem, 1fr) repeat(
-            3,
-            minmax(8rem, 0.35fr)
-        ) auto;
+    grid-template-columns:
+        minmax(15rem, 1fr) repeat(3, minmax(8rem, 0.35fr))
+        auto;
     gap: 0.625rem;
     padding: 0.75rem 1rem;
 }
@@ -331,16 +330,83 @@
     text-align: center;
 }
 .stepper {
-    padding: 1.5rem;
+    display: flex;
+    height: 7rem;
+    align-items: center;
+    padding: 0 2rem;
+}
+.step {
+    min-width: 0;
+    flex: 0 1 15.625rem;
+    padding: 0;
+}
+.stepBody {
+    gap: 0.125rem;
+}
+.stepIcon {
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    border-color: #e5e5e5;
+    background: #f5f5f5;
+    font-size: 0.875rem;
+}
+.stepLabel {
+    color: #525252;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.375rem;
+}
+.step[data-progress] .stepLabel,
+.step[data-completed] .stepLabel {
+    color: var(--admin-ink);
+    font-weight: 700;
+}
+.stepDescription {
+    color: #a1a1a1;
+    font-size: 0.75rem;
+    line-height: 1.0625rem;
+}
+.stepSeparator {
+    margin-inline: 0.75rem;
+    background: #e5e5e5;
 }
 .formGrid {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
-    gap: 1rem;
+    min-height: 46.875rem;
+    grid-template-columns: minmax(0, 1fr) 22.75rem;
+    align-items: start;
+    gap: 1.25rem;
+    overflow: hidden;
+    background: #fff;
 }
-.formCard,
+.formCard {
+    min-height: 43.125rem;
+    padding: 1.75rem 2rem;
+}
 .helpCard {
-    padding: 1.5rem;
+    min-height: 22.75rem;
+    padding: 1.75rem;
+}
+.formCard :global(.mantine-Input-input) {
+    min-height: 3.25rem;
+    border-color: #e5e5e5;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+.formCard :global(textarea.mantine-Input-input) {
+    min-height: 6.5rem;
+}
+.formCard :global(.mantine-Input-label) {
+    margin-bottom: 0.5rem;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.formCard :global(.mantine-Input-description) {
+    margin-top: 0.5rem;
+    color: #a1a1a1;
+    font-size: 0.75rem;
 }
 .fieldGrid {
     display: grid;
@@ -363,13 +429,13 @@
     background: #f3fbfa;
 }
 .formFooter {
-    position: sticky;
-    bottom: -2rem;
-    z-index: 2;
     display: flex;
+    height: 4rem;
+    flex-shrink: 0;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.75rem 0;
+    padding: 0;
     background: #fff;
 }
 .coursePicker {
@@ -395,6 +461,7 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 1rem;
+    background: #fff;
 }
 .gapNote {
     padding: 0.75rem 1rem;

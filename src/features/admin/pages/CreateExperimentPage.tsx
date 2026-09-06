@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+    ActionIcon,
     Alert,
     Badge,
     Button,
@@ -57,6 +58,7 @@ export default function CreateExperimentPage() {
     const initialized = useRef(false);
     const [step, setStep] = useState(0);
     const [draft, setDraft] = useState(initialDraft);
+    const [showBasicErrors, setShowBasicErrors] = useState(false);
     const coursesQuery = useQuery({
         queryKey: ["admin", "experiments", "course-candidates"],
         queryFn: listExperimentCourseCandidates,
@@ -142,14 +144,14 @@ export default function CreateExperimentPage() {
             <div className={styles.contentStack}>
                 <header className={styles.pageHeader}>
                     <div className={styles.titleGroup}>
-                        <Button
+                        <ActionIcon
                             variant="subtle"
-                            px={0}
+                            size="lg"
                             aria-label="返回實驗列表"
                             onClick={() => navigate("/admin/experiments")}
                         >
                             <ArrowLeft aria-hidden="true" />
-                        </Button>
+                        </ActionIcon>
                         <Title order={1}>
                             {isEditing
                                 ? "編輯實驗"
@@ -164,7 +166,19 @@ export default function CreateExperimentPage() {
                     className={`${styles.card} ${styles.stepper}`}
                     radius="lg"
                 >
-                    <Stepper active={step} color="teal" size="sm">
+                    <Stepper
+                        active={step}
+                        color="teal"
+                        size="sm"
+                        classNames={{
+                            step: styles.step,
+                            stepBody: styles.stepBody,
+                            stepIcon: styles.stepIcon,
+                            stepLabel: styles.stepLabel,
+                            stepDescription: styles.stepDescription,
+                            separator: styles.stepSeparator,
+                        }}
+                    >
                         <Stepper.Step
                             label="基本資料"
                             description={step > 0 ? "已完成" : "設定名稱與時段"}
@@ -214,6 +228,11 @@ export default function CreateExperimentPage() {
                                         )
                                     }
                                     description="最多 200 個字元"
+                                    error={
+                                        showBasicErrors && !draft.name.trim()
+                                            ? "請輸入實驗名稱"
+                                            : undefined
+                                    }
                                 />
                                 <Textarea
                                     label="實驗說明"
@@ -241,6 +260,11 @@ export default function CreateExperimentPage() {
                                                 event.currentTarget.value
                                             )
                                         }
+                                        error={
+                                            showBasicErrors && !draft.startsAt
+                                                ? "請選擇開始時間"
+                                                : undefined
+                                        }
                                     />
                                     <TextInput
                                         required
@@ -254,11 +278,14 @@ export default function CreateExperimentPage() {
                                             )
                                         }
                                         error={
-                                            draft.startsAt &&
-                                            draft.endsAt &&
-                                            draft.startsAt >= draft.endsAt
-                                                ? "結束時間必須晚於開始時間"
-                                                : undefined
+                                            showBasicErrors && !draft.endsAt
+                                                ? "請選擇結束時間"
+                                                : draft.startsAt &&
+                                                    draft.endsAt &&
+                                                    draft.startsAt >=
+                                                        draft.endsAt
+                                                  ? "結束時間必須晚於開始時間"
+                                                  : undefined
                                         }
                                     />
                                 </div>
@@ -654,13 +681,20 @@ export default function CreateExperimentPage() {
                     </Group>
                     {step < 3 ? (
                         <Button
-                            disabled={
-                                (step === 0 && !canContinueBasic) ||
-                                (step === 2 && !canContinueCourses)
-                            }
-                            onClick={() => setStep((current) => current + 1)}
+                            disabled={step === 2 && !canContinueCourses}
+                            onClick={() => {
+                                if (step === 0 && !canContinueBasic) {
+                                    setShowBasicErrors(true);
+                                    return;
+                                }
+                                setStep((current) => current + 1);
+                            }}
                         >
-                            下一步 →
+                            {step === 0
+                                ? "下一步：教學設定 →"
+                                : step === 1
+                                  ? "下一步：選擇教材 →"
+                                  : "下一步：學生與確認 →"}
                         </Button>
                     ) : (
                         <Button

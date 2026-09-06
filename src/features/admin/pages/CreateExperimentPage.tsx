@@ -170,7 +170,7 @@ export default function CreateExperimentPage() {
                     <div className={styles.titleGroup}>
                         <ActionIcon
                             variant="subtle"
-                            size="lg"
+                            size={24}
                             aria-label="返回實驗列表"
                             onClick={() => navigate("/admin/experiments")}
                         >
@@ -255,7 +255,7 @@ export default function CreateExperimentPage() {
                             <p className={styles.muted}>
                                 建立實驗草稿後，可以繼續設定教材與學生。
                             </p>
-                            <Stack mt="lg">
+                            <Stack className={styles.formFields}>
                                 <TextInput
                                     required
                                     label="實驗名稱"
@@ -371,7 +371,7 @@ export default function CreateExperimentPage() {
                             <p className={styles.muted}>
                                 設定學生的作答方式，以及完成教材後可以看到的資訊。
                             </p>
-                            <Stack mt="lg" gap="lg">
+                            <Stack className={styles.formFields}>
                                 <div className={styles.settingBlock}>
                                     <strong>評分方式 *</strong>
                                     <small>本階段僅支援自動評分。</small>

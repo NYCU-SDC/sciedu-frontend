@@ -118,7 +118,7 @@
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 0.875rem;
+    gap: 1rem;
 }
 .backButton {
     color: var(--admin-deep);
@@ -415,9 +415,24 @@
     font-size: 1.5rem;
     line-height: 2.125rem;
 }
+.formCard > .muted {
+    margin-top: 1.5rem;
+}
+.formFields {
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
 .helpCard {
+    display: flex;
     min-height: 22.75rem;
+    flex-direction: column;
+    gap: 1.125rem;
     padding: 1.75rem;
+}
+.helpCard p,
+.helpCard .guidanceItem,
+.helpCard .activeNotice {
+    margin: 0;
 }
 .guidanceItem {
     width: 100%;
@@ -526,6 +541,12 @@
     padding-inline: 1.125rem;
     border-radius: 0.5rem;
     font-size: 1rem;
+}
+.formFooter button:disabled {
+    border-color: #e5e5e5;
+    background: #fff;
+    color: #004038;
+    opacity: 1;
 }
 .coursePicker {
     display: flex;

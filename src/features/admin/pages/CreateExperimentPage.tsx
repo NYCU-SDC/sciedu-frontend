@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     ActionIcon,
-    Alert,
     Badge,
     Button,
     Card,
@@ -13,18 +12,27 @@ import {
     TextInput,
     Title,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
+import { ApiError } from "../../../shared/utils/api";
+import AddParticipantModal from "../components/AddParticipantModal";
 import ExperimentAdminShell from "../components/ExperimentAdminShell";
 import {
+    addExperimentCourses,
+    createExperiment,
     fetchExperiment,
-    isAdminDemoMode,
     listExperimentCourseCandidates,
     listExperimentCourses,
+    listExperimentParticipants,
+    removeExperimentCourse,
+    updateExperiment,
+    updateExperimentStatus,
 } from "../services/adminRepository";
+import type { EditableExperimentPayload } from "../types";
 import styles from "./ExperimentAdmin.module.css";
 
 type Draft = {
@@ -38,21 +46,20 @@ type Draft = {
     courseIds: string[];
 };
 
+const TAIPEI_TIME_ZONE = "Asia/Taipei";
+const defaultExperimentDate = toTaipeiInputValue(
+    new Date(Date.now() + 86_400_000).toISOString()
+).slice(0, 10);
+
 const initialDraft: Draft = {
     name: "",
     description: "",
-    startsAt: "2026-08-03T09:00",
-    endsAt: "2026-08-03T16:00",
+    startsAt: `${defaultExperimentDate}T09:00`,
+    endsAt: `${defaultExperimentDate}T16:00`,
     maxAttempts: "1",
     result: "explanations",
     release: "course",
-    courseIds: isAdminDemoMode
-        ? [
-              "10000000-0000-4000-8000-000000000001",
-              "10000000-0000-4000-8000-000000000002",
-              "10000000-0000-4000-8000-000000000003",
-          ]
-        : [],
+    courseIds: [],
 };
 
 const steps = [
@@ -62,8 +69,34 @@ const steps = [
     { label: "學生與確認", description: "學生可稍後加入" },
 ];
 
+function toTaipeiInputValue(value: string) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: TAIPEI_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+    }).formatToParts(new Date(value));
+    const part = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((item) => item.type === type)?.value ?? "";
+    return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
+
+function taipeiInputToISOString(value: string) {
+    return new Date(`${value}:00+08:00`).toISOString();
+}
+
+function errorMessage(error: unknown) {
+    return error instanceof ApiError && error.message
+        ? error.message
+        : "操作失敗，請稍後再試";
+}
+
 export default function CreateExperimentPage() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { experimentId } = useParams();
     const isEditing = Boolean(experimentId);
     useDocumentTitle(isEditing ? "編輯實驗" : "新增實驗");
@@ -72,6 +105,13 @@ export default function CreateExperimentPage() {
     const [draft, setDraft] = useState(initialDraft);
     const [showBasicErrors, setShowBasicErrors] = useState(false);
     const [courseSearch, setCourseSearch] = useState("");
+    const [persistedExperimentId, setPersistedExperimentId] = useState(
+        experimentId ?? ""
+    );
+    const [persistedCourseIds, setPersistedCourseIds] = useState<string[]>([]);
+    const [coursesTouched, setCoursesTouched] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isAddingStudents, setAddingStudents] = useState(false);
     const coursesQuery = useQuery({
         queryKey: ["admin", "experiments", "course-candidates"],
         queryFn: listExperimentCourseCandidates,
@@ -86,6 +126,16 @@ export default function CreateExperimentPage() {
         queryFn: () => listExperimentCourses(experimentId ?? ""),
         enabled: isEditing,
     });
+    const participantsQuery = useQuery({
+        queryKey: [
+            "admin",
+            "experiments",
+            persistedExperimentId,
+            "participants",
+        ],
+        queryFn: () => listExperimentParticipants(persistedExperimentId),
+        enabled: Boolean(persistedExperimentId) && step === 3,
+    });
 
     useEffect(() => {
         if (
@@ -98,8 +148,8 @@ export default function CreateExperimentPage() {
         setDraft({
             name: experiment.name,
             description: experiment.description ?? "",
-            startsAt: experiment.scheduledStartAt.slice(0, 16),
-            endsAt: experiment.scheduledEndAt.slice(0, 16),
+            startsAt: toTaipeiInputValue(experiment.scheduledStartAt),
+            endsAt: toTaipeiInputValue(experiment.scheduledEndAt),
             maxAttempts: String(
                 Math.max(1, experiment.configuration.maxAttempts)
             ),
@@ -115,16 +165,21 @@ export default function CreateExperimentPage() {
                 ({ course }) => course.id
             ),
         });
+        setPersistedCourseIds(
+            (assignedCoursesQuery.data ?? []).map(({ course }) => course.id)
+        );
         initialized.current = true;
     }, [assignedCoursesQuery.data, experimentQuery.data, isEditing]);
 
-    const courseOptions = useMemo(
-        () =>
-            isEditing
-                ? (assignedCoursesQuery.data ?? []).map(({ course }) => course)
-                : (coursesQuery.data ?? []),
-        [assignedCoursesQuery.data, coursesQuery.data, isEditing]
-    );
+    const courseOptions = useMemo(() => {
+        const courses = new Map(
+            (coursesQuery.data ?? []).map((course) => [course.id, course])
+        );
+        (assignedCoursesQuery.data ?? []).forEach(({ course }) =>
+            courses.set(course.id, course)
+        );
+        return [...courses.values()];
+    }, [assignedCoursesQuery.data, coursesQuery.data]);
     const visibleCourseOptions = useMemo(() => {
         const normalized = courseSearch.trim().toLocaleLowerCase("zh-Hant");
         return courseOptions.filter(
@@ -151,10 +206,17 @@ export default function CreateExperimentPage() {
         draft.startsAt < draft.endsAt
     );
     const canContinueCourses = draft.courseIds.length > 0;
+    const currentStatus = experimentQuery.data?.status;
+    const isReadOnly =
+        currentStatus === "COMPLETED" || currentStatus === "ARCHIVED";
+    const isActive = currentStatus === "ACTIVE";
+    const canEditCourses = !currentStatus || currentStatus === "DRAFT";
     const setField = <K extends keyof Draft>(field: K, value: Draft[K]) =>
         setDraft((current) => ({ ...current, [field]: value }));
 
     const toggleCourse = (courseId: string) => {
+        if (!canEditCourses) return;
+        setCoursesTouched(true);
         setDraft((current) => ({
             ...current,
             courseIds: current.courseIds.includes(courseId)
@@ -162,6 +224,115 @@ export default function CreateExperimentPage() {
                 : [...current.courseIds, courseId],
         }));
     };
+
+    const payloadFromDraft = (): EditableExperimentPayload => ({
+        name: draft.name.trim(),
+        ...(draft.description.trim()
+            ? { description: draft.description.trim() }
+            : {}),
+        scheduledStartAt: taipeiInputToISOString(draft.startsAt),
+        scheduledEndAt: taipeiInputToISOString(draft.endsAt),
+        configuration: {
+            maxAttempts: Number(draft.maxAttempts),
+            allowRetry: Number(draft.maxAttempts) > 1,
+            showScore: true,
+            showExplanations: draft.result === "explanations",
+            gradingMode: "AUTOMATIC",
+            correctAnswerReleaseMode:
+                draft.release === "page"
+                    ? "AFTER_PAGE_SUBMISSION"
+                    : "AFTER_COURSE_COMPLETION",
+        },
+    });
+
+    const persistExperiment = async () => {
+        if (persistedExperimentId) {
+            return updateExperiment(persistedExperimentId, payloadFromDraft());
+        }
+        const created = await createExperiment(payloadFromDraft());
+        setPersistedExperimentId(created.id);
+        return created;
+    };
+
+    const syncCourses = async (id: string) => {
+        if (!canEditCourses || (!coursesTouched && step < 2)) return;
+        const selected = new Set(draft.courseIds);
+        const persisted = new Set(persistedCourseIds);
+        const additions = draft.courseIds.filter((id) => !persisted.has(id));
+        const removals = persistedCourseIds.filter((id) => !selected.has(id));
+
+        await Promise.all([
+            additions.length ? addExperimentCourses(id, additions) : null,
+            ...removals.map((courseId) => removeExperimentCourse(id, courseId)),
+        ]);
+        setPersistedCourseIds([...draft.courseIds]);
+        setCoursesTouched(false);
+    };
+
+    const validateBasic = () => {
+        if (canContinueBasic) return true;
+        setShowBasicErrors(true);
+        return false;
+    };
+
+    const save = async (
+        options: { schedule?: boolean; exit?: boolean } = {}
+    ) => {
+        if (!validateBasic() || isReadOnly) return;
+        if (options.schedule && !canContinueCourses) {
+            setStep(2);
+            toast.error("排程前至少需要選擇一份已發布教材");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const experiment = await persistExperiment();
+            await syncCourses(experiment.id);
+            if (options.schedule && experiment.status !== "SCHEDULED") {
+                await updateExperimentStatus(experiment.id, "SCHEDULED");
+            }
+            await queryClient.invalidateQueries({
+                queryKey: ["admin", "experiments"],
+            });
+            toast.success(options.schedule ? "實驗已排程" : "實驗已儲存");
+            if (options.exit) {
+                navigate(`/admin/experiments/${experiment.id}`);
+            }
+        } catch (error) {
+            toast.error(errorMessage(error));
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const goNext = async () => {
+        if (step === 0 && !validateBasic()) return;
+        if (step === 2 && !canContinueCourses) return;
+        setIsSaving(true);
+        try {
+            const experiment = await persistExperiment();
+            if (step === 2) await syncCourses(experiment.id);
+            setStep((current) => current + 1);
+        } catch (error) {
+            toast.error(errorMessage(error));
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    if (
+        isEditing &&
+        (experimentQuery.isPending || assignedCoursesQuery.isPending)
+    ) {
+        return <div className={styles.pageStatus}>載入實驗資料中⋯</div>;
+    }
+    if (
+        isEditing &&
+        (experimentQuery.isError || assignedCoursesQuery.isError)
+    ) {
+        return <div className={styles.pageStatus}>實驗資料載入失敗</div>;
+    }
 
     return (
         <ExperimentAdminShell activeSection="experiments">
@@ -258,6 +429,7 @@ export default function CreateExperimentPage() {
                             <Stack className={styles.formFields}>
                                 <TextInput
                                     required
+                                    disabled={isActive || isReadOnly}
                                     label="實驗名稱"
                                     placeholder="請輸入實驗名稱"
                                     maxLength={200}
@@ -276,6 +448,7 @@ export default function CreateExperimentPage() {
                                     }
                                 />
                                 <Textarea
+                                    disabled={isActive || isReadOnly}
                                     label="實驗說明"
                                     placeholder="說明本次實驗目的與注意事項"
                                     maxLength={4000}
@@ -292,6 +465,7 @@ export default function CreateExperimentPage() {
                                 <div className={styles.fieldGrid}>
                                     <TextInput
                                         required
+                                        disabled={isActive || isReadOnly}
                                         type="datetime-local"
                                         label="開始時間"
                                         value={draft.startsAt}
@@ -309,6 +483,7 @@ export default function CreateExperimentPage() {
                                     />
                                     <TextInput
                                         required
+                                        disabled={isReadOnly}
                                         type="datetime-local"
                                         label="結束時間"
                                         value={draft.endsAt}
@@ -407,18 +582,27 @@ export default function CreateExperimentPage() {
                                         <div className={styles.choiceGrid}>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="1"
                                                     label="不允許"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="2"
                                                     label="允許 1 次"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="3"
                                                     label="最多 2 次"
                                                 />
@@ -443,12 +627,18 @@ export default function CreateExperimentPage() {
                                         <div className={styles.choiceGrid}>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="score"
                                                     label="只顯示分數"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="explanations"
                                                     label="顯示分數與詳解"
                                                 />
@@ -471,12 +661,18 @@ export default function CreateExperimentPage() {
                                         <div className={styles.choiceGrid}>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="page"
                                                     label="每頁完成後公開"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
                                                 <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
                                                     value="course"
                                                     label="整份教材完成後公開"
                                                 />
@@ -527,12 +723,6 @@ export default function CreateExperimentPage() {
                             <p className={styles.muted}>
                                 排程前至少需要一份已發布教材。
                             </p>
-                            {!isAdminDemoMode && (
-                                <Alert mt="lg" color="orange">
-                                    API
-                                    尚未提供教材目錄端點，正式環境暫時無法選擇教材。
-                                </Alert>
-                            )}
                             <TextInput
                                 mt="lg"
                                 type="search"
@@ -547,6 +737,11 @@ export default function CreateExperimentPage() {
                                 {coursesQuery.isPending && (
                                     <p className={styles.empty}>載入教材中⋯</p>
                                 )}
+                                {coursesQuery.isError && (
+                                    <p className={styles.empty}>
+                                        教材載入失敗，請稍後再試
+                                    </p>
+                                )}
                                 {visibleCourseOptions.map((course) => {
                                     const available =
                                         course.status === "PUBLISHED";
@@ -559,7 +754,11 @@ export default function CreateExperimentPage() {
                                                 checked={draft.courseIds.includes(
                                                     course.id
                                                 )}
-                                                disabled={!available}
+                                                disabled={
+                                                    !available ||
+                                                    !canEditCourses ||
+                                                    isSaving
+                                                }
                                                 onChange={() =>
                                                     toggleCourse(course.id)
                                                 }
@@ -726,14 +925,19 @@ export default function CreateExperimentPage() {
                                 參與學生
                             </Title>
                             <Title order={3} mt="md">
-                                0 人
+                                {participantsQuery.data?.length ??
+                                    experimentQuery.data?.participantCount ??
+                                    0}{" "}
+                                人
                             </Title>
                             <p>
-                                建立草稿 API 尚未提供，取得實驗 ID
-                                前無法加入學生。建立 API
-                                串接後可直接重用詳細頁的加入學生元件。
+                                學生名單可以在排程前加入，也可以稍後從實驗詳細頁補上。
                             </p>
-                            <Button variant="default" disabled>
+                            <Button
+                                variant="default"
+                                disabled={!persistedExperimentId || isReadOnly}
+                                onClick={() => setAddingStudents(true)}
+                            >
                                 ＋ 加入學生
                             </Button>
                             <div className={styles.warning}>
@@ -761,22 +965,21 @@ export default function CreateExperimentPage() {
                         </Button>
                         <Button
                             variant="default"
-                            disabled
-                            title="API 尚未提供建立／更新草稿 mutation"
+                            loading={isSaving}
+                            disabled={isReadOnly}
+                            onClick={() => void save({ exit: true })}
                         >
                             {isEditing ? "儲存變更" : "儲存草稿並離開"}
                         </Button>
                     </Group>
                     {step < 3 ? (
                         <Button
-                            disabled={step === 2 && !canContinueCourses}
-                            onClick={() => {
-                                if (step === 0 && !canContinueBasic) {
-                                    setShowBasicErrors(true);
-                                    return;
-                                }
-                                setStep((current) => current + 1);
-                            }}
+                            loading={isSaving}
+                            disabled={
+                                isReadOnly ||
+                                (step === 2 && !canContinueCourses)
+                            }
+                            onClick={() => void goNext()}
                         >
                             {step === 0
                                 ? "下一步：教學設定 →"
@@ -786,14 +989,30 @@ export default function CreateExperimentPage() {
                         </Button>
                     ) : (
                         <Button
-                            disabled
-                            title="API 尚未提供建立與排程 mutation"
+                            loading={isSaving}
+                            disabled={isReadOnly}
+                            onClick={() =>
+                                void save({
+                                    schedule:
+                                        currentStatus !== "SCHEDULED" &&
+                                        currentStatus !== "ACTIVE",
+                                    exit: true,
+                                })
+                            }
                         >
-                            {isEditing ? "儲存變更" : "排程實驗"}
+                            {currentStatus === "SCHEDULED" || isActive
+                                ? "儲存變更"
+                                : "排程實驗"}
                         </Button>
                     )}
                 </footer>
             </div>
+            {isAddingStudents && persistedExperimentId && (
+                <AddParticipantModal
+                    experimentId={persistedExperimentId}
+                    onClose={() => setAddingStudents(false)}
+                />
+            )}
         </ExperimentAdminShell>
     );
 }

@@ -32,19 +32,50 @@ const statusColors: Record<ExperimentStatus, string> = {
     ARCHIVED: "dark",
 };
 
+type DateRange = "upcoming7" | "upcoming30" | "past30";
+
+function getScheduledRange(range: DateRange | null) {
+    if (!range) return {};
+    const now = new Date();
+    const day = 86_400_000;
+    if (range === "past30") {
+        return {
+            scheduledFrom: new Date(now.getTime() - 30 * day).toISOString(),
+            scheduledTo: now.toISOString(),
+        };
+    }
+    return {
+        scheduledFrom: now.toISOString(),
+        scheduledTo: new Date(
+            now.getTime() + (range === "upcoming7" ? 7 : 30) * day
+        ).toISOString(),
+    };
+}
+
 export default function ExperimentListPage() {
     useDocumentTitle("實驗管理");
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState<ExperimentStatus | null>(null);
+    const [dateRange, setDateRange] = useState<DateRange | null>(null);
+    const [page, setPage] = useState(1);
     const experimentsQuery = useQuery({
-        queryKey: ["admin", "experiments", "management", search, status],
+        queryKey: [
+            "admin",
+            "experiments",
+            "management",
+            search,
+            status,
+            dateRange,
+            page,
+        ],
         queryFn: () =>
             listExperiments({
-                page: 1,
-                pageSize: 100,
+                page,
+                pageSize: 20,
                 search,
                 status: status ?? undefined,
+                ...getScheduledRange(dateRange),
             }),
     });
 
@@ -80,9 +111,10 @@ export default function ExperimentListPage() {
                         aria-label="搜尋實驗名稱"
                         placeholder="搜尋實驗名稱"
                         value={search}
-                        onChange={(event) =>
-                            setSearch(event.currentTarget.value)
-                        }
+                        onChange={(event) => {
+                            setSearch(event.currentTarget.value);
+                            setPage(1);
+                        }}
                         leftSection={<Search size={16} aria-hidden="true" />}
                     />
                     <Select
@@ -90,18 +122,27 @@ export default function ExperimentListPage() {
                         placeholder="全部狀態"
                         clearable
                         value={status}
-                        onChange={(value) =>
-                            setStatus(value as ExperimentStatus | null)
-                        }
+                        onChange={(value) => {
+                            setStatus(value as ExperimentStatus | null);
+                            setPage(1);
+                        }}
                         data={Object.entries(experimentStatusLabels).map(
                             ([value, label]) => ({ value, label })
                         )}
                     />
                     <Select
-                        disabled
                         placeholder="實驗日期"
-                        title="API 尚未提供日期篩選"
-                        data={[]}
+                        clearable
+                        value={dateRange}
+                        onChange={(value) => {
+                            setDateRange(value as DateRange | null);
+                            setPage(1);
+                        }}
+                        data={[
+                            { value: "upcoming7", label: "未來 7 天" },
+                            { value: "upcoming30", label: "未來 30 天" },
+                            { value: "past30", label: "過去 30 天" },
+                        ]}
                     />
                     <Select
                         disabled
@@ -114,6 +155,8 @@ export default function ExperimentListPage() {
                         onClick={() => {
                             setSearch("");
                             setStatus(null);
+                            setDateRange(null);
+                            setPage(1);
                         }}
                     >
                         清除篩選
@@ -246,13 +289,36 @@ export default function ExperimentListPage() {
                             {experimentsQuery.data?.totalItems ?? 0} 筆
                         </span>
                         <Group gap="xs">
-                            <Button variant="default" size="xs" disabled>
+                            <Button
+                                variant="default"
+                                size="xs"
+                                disabled={
+                                    page <= 1 || experimentsQuery.isFetching
+                                }
+                                onClick={() =>
+                                    setPage((current) => current - 1)
+                                }
+                            >
                                 ←
                             </Button>
                             <span>
-                                1 / {experimentsQuery.data?.totalPages ?? 1}
+                                {experimentsQuery.data?.currentPage ?? page} /{" "}
+                                {Math.max(
+                                    experimentsQuery.data?.totalPages ?? 1,
+                                    1
+                                )}
                             </span>
-                            <Button variant="default" size="xs" disabled>
+                            <Button
+                                variant="default"
+                                size="xs"
+                                disabled={
+                                    !experimentsQuery.data?.hasNextPage ||
+                                    experimentsQuery.isFetching
+                                }
+                                onClick={() =>
+                                    setPage((current) => current + 1)
+                                }
+                            >
                                 →
                             </Button>
                         </Group>

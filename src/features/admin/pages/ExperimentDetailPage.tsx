@@ -19,6 +19,7 @@ import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
+import { ApiError } from "../../../shared/utils/api";
 import AddParticipantModal from "../components/AddParticipantModal";
 import ExperimentAdminShell from "../components/ExperimentAdminShell";
 import {
@@ -32,8 +33,9 @@ import {
     listExperimentCourses,
     listExperimentParticipants,
     removeExperimentParticipant,
+    updateExperimentStatus,
 } from "../services/adminRepository";
-import type { UserRole } from "../types";
+import type { ExperimentStatus, UserRole } from "../types";
 import styles from "./ExperimentAdmin.module.css";
 
 type DetailTab = "settings" | "courses" | "students";
@@ -43,6 +45,12 @@ const releaseLabels = {
     AFTER_COURSE_COMPLETION: "完成整份教材後公開",
     NEVER: "不公開正確答案",
 };
+
+function mutationErrorMessage(error: unknown) {
+    return error instanceof ApiError && error.message
+        ? error.message
+        : "操作失敗，請稍後再試";
+}
 
 export default function ExperimentDetailPage() {
     useDocumentTitle("實驗詳細資料");
@@ -78,7 +86,18 @@ export default function ExperimentDetailPage() {
             });
             toast.success("已從本場實驗移除學生");
         },
-        onError: () => toast.error("移除學生失敗，請稍後再試"),
+        onError: (error) => toast.error(mutationErrorMessage(error)),
+    });
+    const statusMutation = useMutation({
+        mutationFn: (status: ExperimentStatus) =>
+            updateExperimentStatus(experimentId, status),
+        onSuccess: async (_, status) => {
+            await queryClient.invalidateQueries({
+                queryKey: ["admin", "experiments"],
+            });
+            toast.success(status === "SCHEDULED" ? "實驗已排程" : "實驗已封存");
+        },
+        onError: (error) => toast.error(mutationErrorMessage(error)),
     });
 
     const filteredParticipants = useMemo(() => {
@@ -107,8 +126,14 @@ export default function ExperimentDetailPage() {
     const isLocked = ["ACTIVE", "COMPLETED", "ARCHIVED"].includes(
         experiment.status
     );
-    const canManageStudents = !["COMPLETED", "ARCHIVED"].includes(
+    const canAddStudents = !["COMPLETED", "ARCHIVED"].includes(
         experiment.status
+    );
+    const canRemoveStudents = ["DRAFT", "SCHEDULED"].includes(
+        experiment.status
+    );
+    const hasPublishedCourse = coursesQuery.data?.some(
+        ({ course }) => course.status === "PUBLISHED"
     );
     const statusColor =
         experiment.status === "ACTIVE"
@@ -138,8 +163,11 @@ export default function ExperimentDetailPage() {
                     <Group gap="sm">
                         {experiment.status === "ACTIVE" && (
                             <Button
-                                disabled
-                                title="API 尚未提供延長結束時間 mutation"
+                                onClick={() =>
+                                    navigate(
+                                        `/admin/experiments/${experimentId}/edit`
+                                    )
+                                }
                             >
                                 延長結束時間
                             </Button>
@@ -170,16 +198,29 @@ export default function ExperimentDetailPage() {
                         )}
                         {experiment.status === "DRAFT" && (
                             <Button
-                                disabled
-                                title="API 尚未提供排程實驗 mutation"
+                                loading={statusMutation.isPending}
+                                disabled={!hasPublishedCourse}
+                                title={
+                                    !hasPublishedCourse
+                                        ? "排程前至少需要一份已發布教材"
+                                        : undefined
+                                }
+                                onClick={() =>
+                                    statusMutation.mutate("SCHEDULED")
+                                }
                             >
                                 排程實驗
                             </Button>
                         )}
                         {experiment.status === "COMPLETED" && (
                             <Button
-                                disabled
-                                title="API 尚未提供封存實驗 mutation"
+                                loading={statusMutation.isPending}
+                                onClick={() => {
+                                    if (
+                                        window.confirm("確定要封存這場實驗嗎？")
+                                    )
+                                        statusMutation.mutate("ARCHIVED");
+                                }}
                             >
                                 封存實驗
                             </Button>
@@ -263,16 +304,20 @@ export default function ExperimentDetailPage() {
                                 >
                                     實驗設定
                                 </Title>
-                                <Button
-                                    variant="default"
-                                    onClick={() =>
-                                        navigate(
-                                            `/admin/experiments/${experimentId}/edit`
-                                        )
-                                    }
-                                >
-                                    編輯允許項目
-                                </Button>
+                                {!["COMPLETED", "ARCHIVED"].includes(
+                                    experiment.status
+                                ) && (
+                                    <Button
+                                        variant="default"
+                                        onClick={() =>
+                                            navigate(
+                                                `/admin/experiments/${experimentId}/edit`
+                                            )
+                                        }
+                                    >
+                                        編輯允許項目
+                                    </Button>
+                                )}
                             </Group>
                             <div className={styles.settingRows}>
                                 <div className={styles.settingRow}>
@@ -395,7 +440,7 @@ export default function ExperimentDetailPage() {
                                 <li>開始後不可修改評分與答案公開設定</li>
                             </ul>
                             <div className={styles.warning}>
-                                管理狀態的 API 尚未提供，因此相關動作目前停用。
+                                系統會依照目前狀態限制可修改的欄位與人員、教材操作。
                             </div>
                         </Card>
                     </div>
@@ -419,9 +464,9 @@ export default function ExperimentDetailPage() {
                                 </p>
                             </div>
                             <div className={styles.gapNote}>
-                                {isLocked
-                                    ? "進行中不可更換教材"
-                                    : "教材指派 API 尚未提供"}
+                                {experiment.status === "DRAFT"
+                                    ? "可從編輯實驗調整教材"
+                                    : "目前狀態不可更換教材"}
                             </div>
                         </div>
                         {coursesQuery.isPending ? (
@@ -501,7 +546,7 @@ export default function ExperimentDetailPage() {
                                         ([value, label]) => ({ value, label })
                                     )}
                                 />
-                                {canManageStudents && (
+                                {canAddStudents && (
                                     <Button
                                         leftSection={
                                             <Plus
@@ -568,7 +613,7 @@ export default function ExperimentDetailPage() {
                                                         )}
                                                     </Table.Td>
                                                     <Table.Td>
-                                                        {canManageStudents && (
+                                                        {canRemoveStudents && (
                                                             <Menu position="bottom-end">
                                                                 <Menu.Target>
                                                                     <ActionIcon

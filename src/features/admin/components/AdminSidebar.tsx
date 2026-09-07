@@ -44,9 +44,7 @@ export default function AdminSidebar({
                     <Search aria-hidden="true" />
                     總覽
                 </UnstyledButton>
-                <UnstyledButton
-                    onClick={() => navigate("/admin/experiments")}
-                >
+                <UnstyledButton onClick={() => navigate("/admin/experiments")}>
                     <FlaskConical aria-hidden="true" />
                     實驗管理
                 </UnstyledButton>

@@ -281,6 +281,9 @@ export default function MaterialLibrary() {
                                     totalPages={item.totalPages}
                                     completedPage={item.completedPage}
                                     status={item.status}
+                                    onContinue={() =>
+                                        navigate("/courses/summary")
+                                    }
                                 />
                             ))}
                         </SimpleGrid>

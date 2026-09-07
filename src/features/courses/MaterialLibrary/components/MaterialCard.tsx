@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { Button, Card, Stack, Text, Title } from "@mantine/core";
+import { Button, Card, Text, Title } from "@mantine/core";
 
 export type MaterialStatus = "done" | "in_progress" | "not_started";
 
@@ -10,9 +10,9 @@ const statusLabel: Record<MaterialStatus, string> = {
 };
 
 const statusColor: Record<MaterialStatus, string> = {
-    done: "teal.7",
-    in_progress: "orange.6",
-    not_started: "orange.6",
+    done: "#00856e",
+    in_progress: "#925800",
+    not_started: "#925800",
 };
 
 function getMetaText(
@@ -46,28 +46,53 @@ export default function MaterialCard({
 }: Props) {
     return (
         <Card
-            radius="lg"
-            p="1.75rem"
-            shadow="xs"
-            style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
+            radius="16px"
+            h="257px"
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                gap: "16px",
+                padding: "27px 45px",
+                backgroundColor: "#ffffff",
+                border: "1px solid #d4d4d4",
+                boxShadow: "0px 16px 40px rgba(44, 79, 71, 0.08)",
+            }}
         >
-            <Stack gap={6} style={{ flex: 1 }}>
-                <Text fw={700} fz="0.8125rem" c={statusColor[status]}>
-                    {statusLabel[status]}
-                </Text>
-                <Title order={3} fz="1.25rem" fw={700} c="dark.9">
-                    {title}
-                </Title>
-                <Text fz="0.8125rem" c="dimmed">
-                    {getMetaText(status, totalPages, completedPage)}
-                </Text>
-            </Stack>
+            <Text fz="14px" lh="19px" fw={400} c={statusColor[status]}>
+                {statusLabel[status]}
+            </Text>
+            <Title order={3} fz="32px" lh="43px" fw={700} c="#000000">
+                {title}
+            </Title>
+            <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
+                {getMetaText(status, totalPages, completedPage)}
+            </Text>
             <Button
-                radius="md"
-                color="brandTeal"
-                rightSection={<ArrowRight size={16} />}
+                radius="16px"
+                rightSection={<ArrowRight size={24} color="#ffffff" />}
                 onClick={onContinue}
-                style={{ alignSelf: "flex-start" }}
+                styles={{
+                    root: {
+                        width: "164px",
+                        height: "48px",
+                        padding: "12px 18px",
+                        backgroundColor: "#005f55",
+                        color: "#ffffff",
+                        border: "none",
+                    },
+                    label: {
+                        fontSize: "16px",
+                        fontWeight: 400,
+                        lineHeight: "21px",
+                        whiteSpace: "nowrap",
+                        overflow: "visible",
+                    },
+                    section: {
+                        marginInlineStart: "8px",
+                    },
+                }}
             >
                 繼續目前任務
             </Button>

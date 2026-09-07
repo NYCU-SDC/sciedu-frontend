@@ -16,10 +16,14 @@ const statusLabel: Record<MaterialStatus, string> = {
     not_started: "未完成",
 };
 
+// 設計稿標示的字體是 'GenYoGothic2 TW'，
+// 但實際掛載進來的字體名稱是 GenYoGothicTW（沒有「2」也沒有空格）
+const FONT_FAMILY = '"GenYoGothicTW", sans-serif';
+
 const statusColor: Record<MaterialStatus, string> = {
-    done: "teal.7",
-    in_progress: "orange.6",
-    not_started: "gray.5",
+    done: "#00856e",
+    in_progress: "#925800",
+    not_started: "var(--color-neutral-600)",
 };
 
 function getProgressLabel(item: MaterialListItem, status: MaterialStatus) {
@@ -43,16 +47,35 @@ export default function MaterialProgressCard({ items }: Props) {
     const doneCount = items.filter((item) => item.status === "done").length;
 
     return (
-        <Card radius="lg" p="1.75rem" shadow="xs">
+        <Card
+            radius="16px"
+            mih={{ base: "auto", md: "448px" }}
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                padding: "27px 45px",
+                backgroundColor: "#ffffff",
+                border: "1px solid #d4d4d4",
+                boxShadow: "0px 16px 40px rgba(44, 79, 71, 0.08)",
+                fontFamily: FONT_FAMILY,
+            }}
+        >
             <div
                 style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    marginBottom: "1.25rem",
                 }}
             >
-                <Title order={3} fz="1.125rem" fw={700} c="dark.9">
+                <Title
+                    order={3}
+                    fz="24px"
+                    lh="32px"
+                    fw={700}
+                    ff={FONT_FAMILY}
+                    c="var(--color-brand-teal-dark)"
+                >
                     今日教材
                 </Title>
                 <div
@@ -60,13 +83,15 @@ export default function MaterialProgressCard({ items }: Props) {
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        height: "20px",
-                        padding: "0 10px",
+                        height: "41px",
+                        padding: "6px 12px",
                         borderRadius: "32px",
-                        backgroundColor: "var(--color-teal-100)",
-                        color: "var(--color-teal-900)",
-                        fontSize: "11px",
-                        fontWeight: 700,
+                        backgroundColor: "rgba(0, 95, 85, 0.25)",
+                        border: "1px solid #004038",
+                        color: "#004038",
+                        fontSize: "20px",
+                        fontWeight: 500,
+                        lineHeight: "27px",
                     }}
                 >
                     {doneCount}/{items.length} 完成
@@ -76,7 +101,7 @@ export default function MaterialProgressCard({ items }: Props) {
                 style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: "1.25rem",
+                    gap: "10px",
                 }}
             >
                 {items.map((item) => {
@@ -88,7 +113,7 @@ export default function MaterialProgressCard({ items }: Props) {
                                 display: "flex",
                                 alignItems: "center",
                                 flexWrap: "nowrap",
-                                gap: "0.75rem",
+                                gap: "10px",
                             }}
                         >
                             <div
@@ -100,16 +125,29 @@ export default function MaterialProgressCard({ items }: Props) {
                                     minWidth: 0,
                                 }}
                             >
-                                <Text fz="0.9375rem" fw={600} c="dark.9">
+                                <Text
+                                    fz="20px"
+                                    lh="27px"
+                                    fw={500}
+                                    ff={FONT_FAMILY}
+                                    c="#000000"
+                                >
                                     {item.title}
                                 </Text>
-                                <Text fz="0.75rem" c="dimmed">
+                                <Text
+                                    fz="12px"
+                                    lh="16px"
+                                    ff={FONT_FAMILY}
+                                    c="var(--color-neutral-600)"
+                                >
                                     {getProgressLabel(item, status)}
                                 </Text>
                             </div>
                             <Text
-                                fz="0.8125rem"
-                                fw={600}
+                                fz="14px"
+                                lh="19px"
+                                fw={400}
+                                ff={FONT_FAMILY}
                                 c={statusColor[status]}
                                 style={{ whiteSpace: "nowrap", flexShrink: 0 }}
                             >

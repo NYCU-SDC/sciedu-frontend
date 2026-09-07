@@ -19,6 +19,7 @@ export default function CurrentTaskCard({
     return (
         <Card
             radius="16px"
+            mih={{ base: "auto", md: "448px" }}
             style={{
                 display: "flex",
                 flexDirection: "column",
@@ -26,7 +27,6 @@ export default function CurrentTaskCard({
                 alignItems: "flex-start",
                 gap: "16px",
                 padding: "27px 45px",
-                minHeight: "15rem",
                 backgroundColor: "#ffffff",
                 border: "1px solid #d4d4d4",
                 boxShadow: "0px 16px 40px rgba(44, 79, 71, 0.08)",

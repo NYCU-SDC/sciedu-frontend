@@ -1,84 +1,20 @@
-import { ArrowRight } from "lucide-react";
-import {
-    Box,
-    Button,
-    Group,
-    SimpleGrid,
-    Stack,
-    Text,
-    Title,
-} from "@mantine/core";
-import { useNavigate } from "react-router";
+import { Box } from "@mantine/core";
 import Header from "./components/Header";
-import CurrentTaskCard from "./components/CurrentTaskCard";
-import MaterialProgressCard, {
-    type MaterialListItem,
-} from "./components/MaterialProgressCard";
-
-const todayMaterials: MaterialListItem[] = [
-    {
-        id: "cell-division",
-        title: "細胞分裂",
-        totalPages: 3,
-        completedPage: 3,
-        status: "done",
-    },
-    {
-        id: "pea-seed-coat-current",
-        title: "碗豆－種皮形狀",
-        totalPages: 3,
-        completedPage: 1,
-        status: "in_progress",
-    },
-    {
-        id: "pea-seed-coat-next",
-        title: "碗豆－種皮形狀",
-        totalPages: 3,
-        completedPage: 1,
-        status: "not_started",
-    },
-];
+import StatusBar from "./components/main/StatusBar";
+import Library from "./components/main/Library";
 
 export default function Homepage() {
-    const navigate = useNavigate();
-
     return (
         <Box
             mih="100vh"
-            bg="#eef3f1"
+            bg="#f0f6f4"
             p="48px 40px"
             style={{ display: "flex", flexDirection: "column" }}
         >
             <Header />
-            <Box component="main" pt="2rem" pb="3rem">
-                <Group justify="space-between" align="flex-start" mb="1.5rem">
-                    <Stack gap={6}>
-                        <Title order={2} fz="1.5rem" fw={700} c="brandTeal.8">
-                            今日任務
-                        </Title>
-                        <Text fz="0.875rem" c="dimmed">
-                            請優先完成教師今日安排的教材
-                        </Text>
-                    </Stack>
-                    <Button
-                        variant="default"
-                        radius="xl"
-                        rightSection={<ArrowRight size={16} />}
-                        style={{ flexShrink: 0 }}
-                        onClick={() => navigate("/courses/library")}
-                    >
-                        查看教材書櫃
-                    </Button>
-                </Group>
-                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="1.5rem">
-                    <CurrentTaskCard
-                        eyebrow="開始實驗任務"
-                        title="碗豆－種皮形狀"
-                        totalPages={3}
-                        completedPage={1}
-                    />
-                    <MaterialProgressCard items={todayMaterials} />
-                </SimpleGrid>
+            <Box component="main" pt="16px" pb="16px">
+                <StatusBar />
+                <Library />
             </Box>
         </Box>
     );

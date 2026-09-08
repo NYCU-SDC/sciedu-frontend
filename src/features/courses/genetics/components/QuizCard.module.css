@@ -29,6 +29,10 @@
     color: var(--red-9);
 }
 
+.quizCard > .errorText {
+    margin-top: 0.375rem;
+}
+
 .quizCard p {
     font-size: 0.9rem;
     margin: 0.3125rem 0 0.75rem 0;

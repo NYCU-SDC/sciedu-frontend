@@ -2,6 +2,7 @@
 
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "../../../../shared/utils/api";
 import { submitAnswer } from "../services/submitAnswer";
 import type { QuestionResponse } from "../types/types";
 import {
@@ -157,6 +158,64 @@ describe("useAnswerSubmission", () => {
             [textQuestion.id, "TEXT", "因為等位基因分離"],
             [textQuestion.id, "TEXT", "因為等位基因分離"],
         ]);
+        expect(onSubmitted).toHaveBeenCalledTimes(1);
+        expect(onContinue).toHaveBeenCalledTimes(1);
+    });
+
+    it("continues without recording a submission when every answer already exists", async () => {
+        vi.mocked(submitAnswer).mockRejectedValue(
+            new ApiError("answer already exists", 409)
+        );
+        const onSubmitted = vi.fn();
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions,
+                answers: {
+                    [choiceQuestion.id]: "option-a",
+                    [textQuestion.id]: "因為等位基因分離",
+                },
+                isCompleted: false,
+                onSubmitted,
+                onContinue,
+            })
+        );
+
+        await act(() => result.current.submit());
+
+        expect(result.current.submissionError).toBeNull();
+        expect(result.current.submittedQuestionIds).toEqual(
+            new Set([choiceQuestion.id, textQuestion.id])
+        );
+        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onContinue).toHaveBeenCalledTimes(1);
+    });
+
+    it("completes a mixed new and duplicate submission", async () => {
+        vi.mocked(submitAnswer)
+            .mockResolvedValueOnce(submittedAnswerResponse)
+            .mockRejectedValueOnce(new ApiError("answer already exists", 409));
+        const onSubmitted = vi.fn();
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions,
+                answers: {
+                    [choiceQuestion.id]: "option-a",
+                    [textQuestion.id]: "因為等位基因分離",
+                },
+                isCompleted: false,
+                onSubmitted,
+                onContinue,
+            })
+        );
+
+        await act(() => result.current.submit());
+
+        expect(result.current.submissionError).toBeNull();
+        expect(result.current.submittedQuestionIds).toEqual(
+            new Set([choiceQuestion.id, textQuestion.id])
+        );
         expect(onSubmitted).toHaveBeenCalledTimes(1);
         expect(onContinue).toHaveBeenCalledTimes(1);
     });

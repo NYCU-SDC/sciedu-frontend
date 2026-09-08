@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { ApiError } from "../../../../shared/utils/api";
 import { submitAnswer } from "../services/submitAnswer";
 import type { CourseAnswers, QuestionResponse } from "../types/types";
 
@@ -63,6 +64,7 @@ export function useAnswerSubmission({
     >(new Set());
     const isSubmittingRef = useRef(false);
     const submittedQuestionIdsRef = useRef(new Set<string>());
+    const hasCreatedAnswerRef = useRef(false);
 
     const clearAnswerError = (questionId: string) => {
         setValidationErrors((previousErrors) => {
@@ -141,17 +143,25 @@ export function useAnswerSubmission({
             );
 
             const failedResults: PromiseRejectedResult[] = [];
-            const newlySubmittedQuestionIds: string[] = [];
+            const acceptedQuestionIds: string[] = [];
             results.forEach((result, index) => {
                 if (result.status === "fulfilled") {
                     const questionId = pendingQuestions[index].questionId;
                     submittedQuestionIdsRef.current.add(questionId);
-                    newlySubmittedQuestionIds.push(questionId);
+                    acceptedQuestionIds.push(questionId);
+                    hasCreatedAnswerRef.current = true;
+                } else if (
+                    result.reason instanceof ApiError &&
+                    result.reason.status === 409
+                ) {
+                    const questionId = pendingQuestions[index].questionId;
+                    submittedQuestionIdsRef.current.add(questionId);
+                    acceptedQuestionIds.push(questionId);
                 } else {
                     failedResults.push(result);
                 }
             });
-            if (newlySubmittedQuestionIds.length > 0) {
+            if (acceptedQuestionIds.length > 0) {
                 setSubmittedQuestionIds(
                     new Set(submittedQuestionIdsRef.current)
                 );
@@ -170,7 +180,9 @@ export function useAnswerSubmission({
             }
 
             toast.success("答案已成功送出");
-            onSubmitted?.();
+            if (hasCreatedAnswerRef.current) {
+                onSubmitted?.();
+            }
             onContinue();
         } finally {
             isSubmittingRef.current = false;

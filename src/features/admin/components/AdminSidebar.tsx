@@ -7,13 +7,11 @@ import {
     Search,
     Users,
 } from "lucide-react";
-import { useNavigate } from "react-router";
-
 import { roleLabels } from "../formatters";
 import type { User } from "../types";
 import styles from "../pages/AdminDashboardPage.module.css";
 
-export type AdminSection = "overview" | "people";
+export type AdminSection = "overview" | "experiments" | "people";
 
 type Props = {
     currentUser: User;
@@ -26,8 +24,6 @@ export default function AdminSidebar({
     activeSection,
     onNavigate,
 }: Props) {
-    const navigate = useNavigate();
-
     return (
         <aside className={styles.sidebar}>
             <div className={styles.sidebarBrand}>
@@ -44,7 +40,12 @@ export default function AdminSidebar({
                     <Search aria-hidden="true" />
                     總覽
                 </UnstyledButton>
-                <UnstyledButton onClick={() => navigate("/admin/experiments")}>
+                <UnstyledButton
+                    className={
+                        activeSection === "experiments" ? styles.navActive : ""
+                    }
+                    onClick={() => onNavigate("experiments")}
+                >
                     <FlaskConical aria-hidden="true" />
                     實驗管理
                 </UnstyledButton>

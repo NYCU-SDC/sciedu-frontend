@@ -86,6 +86,7 @@ export default function ExperimentListPage() {
                 <header className={styles.pageHeader}>
                     <Title order={1}>實驗管理</Title>
                     <Button
+                        className={styles.headerAction}
                         leftSection={<Plus size={18} aria-hidden="true" />}
                         onClick={() => navigate("/admin/experiments/new")}
                     >
@@ -234,6 +235,9 @@ export default function ExperimentListPage() {
                                                 </Table.Td>
                                                 <Table.Td>
                                                     <Badge
+                                                        className={
+                                                            styles.statusBadge
+                                                        }
                                                         color={
                                                             statusColors[
                                                                 experiment

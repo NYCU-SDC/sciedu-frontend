@@ -43,7 +43,11 @@ export default function AnswerReviewModal({
             closeOnEscape
             closeOnClickOutside
             overlayProps={{ backgroundOpacity: 0.48, blur: 2 }}
-            classNames={{ content: styles.content, body: styles.body }}
+            classNames={{
+                content: styles.content,
+                header: styles.header,
+                body: styles.body,
+            }}
         >
             <div className={styles.scrollArea} tabIndex={0}>
                 <section className={styles.section}>

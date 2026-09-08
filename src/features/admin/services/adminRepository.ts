@@ -1,5 +1,6 @@
 import { api } from "../../../shared/utils/api";
 import {
+    DEMO_EXPERIMENT_ID,
     demoCandidateUsers,
     demoCourses,
     demoCurrentUser,
@@ -22,22 +23,24 @@ import type {
 } from "../types";
 
 export const isAdminDemoMode =
-    import.meta.env.MODE !== "test" &&
-    (import.meta.env.VITE_DEMO_MODE !== "false" ||
-        (import.meta.env.DEV &&
-            import.meta.env.VITE_ADMIN_DEMO_MODE === "true"));
+    import.meta.env.VITE_ADMIN_DEMO_MODE === "true" ||
+    (import.meta.env.MODE !== "test" &&
+        import.meta.env.VITE_DEMO_MODE !== "false");
 
 const DEMO_DELAY_MS = 180;
 const MAX_PAGE_SIZE = 100;
 
-let demoParticipantState = [...demoParticipants];
 let demoExperimentState = [{ ...demoExperiment }];
-let demoCourseState = [...demoCourses];
+const demoParticipantsByExperiment = new Map<
+    string,
+    ExperimentParticipantAssignment[]
+>([[DEMO_EXPERIMENT_ID, [...demoParticipants]]]);
+const demoCoursesByExperiment = new Map<string, ExperimentCourseAssignment[]>([
+    [DEMO_EXPERIMENT_ID, [...demoCourses]],
+]);
 
 const resolveDemo = <T>(value: T): Promise<T> =>
-    new Promise((resolve) =>
-        window.setTimeout(() => resolve(value), DEMO_DELAY_MS)
-    );
+    new Promise((resolve) => setTimeout(() => resolve(value), DEMO_DELAY_MS));
 
 function toSearchParams(values: Record<string, string | number | undefined>) {
     const params = new URLSearchParams();
@@ -89,14 +92,23 @@ export function listExperiments(
 ): Promise<PaginatedResponse<Experiment>> {
     if (isAdminDemoMode) {
         const query = params.search?.trim().toLocaleLowerCase("zh-Hant") ?? "";
-        const matches = demoExperimentState.filter(
-            (experiment) =>
-                (!params.status || experiment.status === params.status) &&
-                (!query ||
-                    experiment.name
-                        .toLocaleLowerCase("zh-Hant")
-                        .includes(query))
-        );
+        const matches = demoExperimentState
+            .map((experiment) => ({
+                ...experiment,
+                participantCount:
+                    demoParticipantsByExperiment.get(experiment.id)?.length ??
+                    0,
+                courseCount:
+                    demoCoursesByExperiment.get(experiment.id)?.length ?? 0,
+            }))
+            .filter(
+                (experiment) =>
+                    (!params.status || experiment.status === params.status) &&
+                    (!query ||
+                        experiment.name
+                            .toLocaleLowerCase("zh-Hant")
+                            .includes(query))
+            );
         return resolveDemo(
             paginate(matches, params.page ?? 1, params.pageSize ?? 20)
         );
@@ -128,8 +140,10 @@ export function fetchExperiment(
             demoExperimentState[0];
         return resolveDemo({
             ...experiment,
-            participantCount: demoParticipantState.length,
-            courseCount: demoCourseState.length,
+            participantCount:
+                demoParticipantsByExperiment.get(experiment.id)?.length ?? 0,
+            courseCount:
+                demoCoursesByExperiment.get(experiment.id)?.length ?? 0,
         });
     }
     return api<ExperimentDetail>(`/api/experiments/${experimentId}`);
@@ -151,6 +165,8 @@ export function createExperiment(
             courseCount: 0,
         };
         demoExperimentState = [experiment, ...demoExperimentState];
+        demoParticipantsByExperiment.set(experiment.id, []);
+        demoCoursesByExperiment.set(experiment.id, []);
         return resolveDemo(experiment);
     }
     return api<ExperimentDetail>("/api/experiments", {
@@ -212,7 +228,13 @@ async function fetchParticipantPage(
     page: number
 ): Promise<PaginatedResponse<ExperimentParticipantAssignment>> {
     if (isAdminDemoMode) {
-        return resolveDemo(paginate(demoParticipantState, page, MAX_PAGE_SIZE));
+        return resolveDemo(
+            paginate(
+                demoParticipantsByExperiment.get(experimentId) ?? [],
+                page,
+                MAX_PAGE_SIZE
+            )
+        );
     }
     const query = toSearchParams({ page, pageSize: MAX_PAGE_SIZE });
     return api<PaginatedResponse<ExperimentParticipantAssignment>>(
@@ -231,7 +253,13 @@ async function fetchCoursePage(
     page: number
 ): Promise<PaginatedResponse<ExperimentCourseAssignment>> {
     if (isAdminDemoMode) {
-        return resolveDemo(paginate(demoCourseState, page, MAX_PAGE_SIZE));
+        return resolveDemo(
+            paginate(
+                demoCoursesByExperiment.get(experimentId) ?? [],
+                page,
+                MAX_PAGE_SIZE
+            )
+        );
     }
     const query = toSearchParams({ page, pageSize: MAX_PAGE_SIZE });
     return api<PaginatedResponse<ExperimentCourseAssignment>>(
@@ -275,14 +303,18 @@ export function addExperimentCourses(
 ): Promise<ExperimentCourseAssignment[]> {
     if (isAdminDemoMode) {
         const courseIdsSet = new Set(courseIds);
+        const assignedCourses = demoCoursesByExperiment.get(experimentId) ?? [];
         const existingIds = new Set(
-            demoCourseState.map(({ course }) => course.id)
+            assignedCourses.map(({ course }) => course.id)
         );
         const additions = demoCourses.filter(
             ({ course }) =>
                 courseIdsSet.has(course.id) && !existingIds.has(course.id)
         );
-        demoCourseState = [...demoCourseState, ...additions];
+        demoCoursesByExperiment.set(experimentId, [
+            ...assignedCourses,
+            ...additions,
+        ]);
         return resolveDemo(additions);
     }
     return api<ExperimentCourseAssignment[]>(
@@ -299,8 +331,11 @@ export async function removeExperimentCourse(
     courseId: string
 ): Promise<void> {
     if (isAdminDemoMode) {
-        demoCourseState = demoCourseState.filter(
-            ({ course }) => course.id !== courseId
+        demoCoursesByExperiment.set(
+            experimentId,
+            (demoCoursesByExperiment.get(experimentId) ?? []).filter(
+                ({ course }) => course.id !== courseId
+            )
         );
         return resolveDemo(undefined);
     }
@@ -367,8 +402,10 @@ export async function addExperimentParticipants(
         );
     }
 
+    const assignedParticipants =
+        demoParticipantsByExperiment.get(experimentId) ?? [];
     const assignedIds = new Set(
-        demoParticipantState.map((assignment) => assignment.participant.id)
+        assignedParticipants.map((assignment) => assignment.participant.id)
     );
     const assignedAt = new Date().toISOString();
     const additions = demoCandidateUsers
@@ -376,7 +413,10 @@ export async function addExperimentParticipants(
             (user) => userIds.includes(user.id) && !assignedIds.has(user.id)
         )
         .map((participant) => ({ participant, assignedAt }));
-    demoParticipantState = [...demoParticipantState, ...additions];
+    demoParticipantsByExperiment.set(experimentId, [
+        ...assignedParticipants,
+        ...additions,
+    ]);
     return resolveDemo(additions);
 }
 
@@ -392,8 +432,11 @@ export async function removeExperimentParticipant(
         return;
     }
 
-    demoParticipantState = demoParticipantState.filter(
-        ({ participant }) => participant.id !== userId
+    demoParticipantsByExperiment.set(
+        experimentId,
+        (demoParticipantsByExperiment.get(experimentId) ?? []).filter(
+            ({ participant }) => participant.id !== userId
+        )
     );
     await resolveDemo(undefined);
 }

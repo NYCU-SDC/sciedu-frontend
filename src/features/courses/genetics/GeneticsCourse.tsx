@@ -198,8 +198,6 @@ function CoursePlayer({
 
     useDocumentTitle(courseDefinition?.title ?? "教材載入中");
 
-    const currentYear = new Date().getFullYear();
-
     // Prefetch next page content when currentIndex changes
     useEffect(() => {
         const nextPage = pageRequests[currentIndex + 1];
@@ -350,11 +348,6 @@ function CoursePlayer({
                         isLastPage={index === pageRequests.length - 1}
                     />
                 ))}
-                {/* copyright footer */}
-                <footer className={styles.copyrightFooter}>
-                    ©{currentYear} Institute of Education, Science Education
-                    division, NYCU. All Rights Reserved
-                </footer>
             </div>
         </div>
     );

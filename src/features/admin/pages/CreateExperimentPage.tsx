@@ -13,7 +13,7 @@ import {
     Title,
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, UserPlus } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
@@ -211,6 +211,10 @@ export default function CreateExperimentPage() {
         currentStatus === "COMPLETED" || currentStatus === "ARCHIVED";
     const isActive = currentStatus === "ACTIVE";
     const canEditCourses = !currentStatus || currentStatus === "DRAFT";
+    const participantCount =
+        participantsQuery.data?.length ??
+        experimentQuery.data?.participantCount ??
+        0;
     const setField = <K extends keyof Draft>(field: K, value: Draft[K]) =>
         setDraft((current) => ({ ...current, [field]: value }));
 
@@ -340,8 +344,9 @@ export default function CreateExperimentPage() {
                 <header className={styles.pageHeader}>
                     <div className={styles.titleGroup}>
                         <ActionIcon
+                            className={styles.backButton}
                             variant="subtle"
-                            size={24}
+                            size={48}
                             aria-label="返回實驗列表"
                             onClick={() => navigate("/admin/experiments")}
                         >
@@ -925,24 +930,26 @@ export default function CreateExperimentPage() {
                                 參與學生
                             </Title>
                             <Title order={3} mt="md">
-                                {participantsQuery.data?.length ??
-                                    experimentQuery.data?.participantCount ??
-                                    0}{" "}
-                                人
+                                {participantCount} 人
                             </Title>
                             <p>
                                 學生名單可以在排程前加入，也可以稍後從實驗詳細頁補上。
                             </p>
                             <Button
                                 variant="default"
+                                leftSection={
+                                    <UserPlus size={18} aria-hidden="true" />
+                                }
                                 disabled={!persistedExperimentId || isReadOnly}
                                 onClick={() => setAddingStudents(true)}
                             >
-                                ＋ 加入學生
+                                加入學生
                             </Button>
-                            <div className={styles.warning}>
-                                不會阻擋排程，但目前沒有學生能看到這場實驗。
-                            </div>
+                            {participantCount === 0 && (
+                                <div className={styles.warning}>
+                                    不會阻擋排程，但目前沒有學生能看到這場實驗。
+                                </div>
+                            )}
                         </Card>
                     </div>
                 )}
@@ -963,14 +970,16 @@ export default function CreateExperimentPage() {
                         >
                             {step === 0 ? "取消" : "← 上一步"}
                         </Button>
-                        <Button
-                            variant="default"
-                            loading={isSaving}
-                            disabled={isReadOnly}
-                            onClick={() => void save({ exit: true })}
-                        >
-                            {isEditing ? "儲存變更" : "儲存草稿並離開"}
-                        </Button>
+                        {!(isEditing && step === 3) && (
+                            <Button
+                                variant="default"
+                                loading={isSaving}
+                                disabled={isReadOnly}
+                                onClick={() => void save({ exit: true })}
+                            >
+                                {isEditing ? "儲存變更" : "儲存草稿並離開"}
+                            </Button>
+                        )}
                     </Group>
                     {step < 3 ? (
                         <Button

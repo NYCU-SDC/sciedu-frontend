@@ -150,19 +150,25 @@ export default function ExperimentDetailPage() {
                         <ActionIcon
                             className={styles.backButton}
                             variant="subtle"
+                            size={48}
                             aria-label="返回實驗列表"
                             onClick={() => navigate("/admin/experiments")}
                         >
                             <ArrowLeft aria-hidden="true" />
                         </ActionIcon>
                         <Title order={1}>{experiment.name}</Title>
-                        <Badge color={statusColor} variant="light">
+                        <Badge
+                            className={styles.statusBadge}
+                            color={statusColor}
+                            variant="light"
+                        >
                             {experimentStatusLabels[experiment.status]}
                         </Badge>
                     </div>
                     <Group gap="sm">
                         {experiment.status === "ACTIVE" && (
                             <Button
+                                className={styles.headerAction}
                                 onClick={() =>
                                     navigate(
                                         `/admin/experiments/${experimentId}/edit`
@@ -174,6 +180,7 @@ export default function ExperimentDetailPage() {
                         )}
                         {experiment.status === "DRAFT" && (
                             <Button
+                                className={styles.headerAction}
                                 variant="default"
                                 onClick={() =>
                                     navigate(
@@ -186,6 +193,7 @@ export default function ExperimentDetailPage() {
                         )}
                         {experiment.status === "SCHEDULED" && (
                             <Button
+                                className={styles.headerAction}
                                 variant="default"
                                 onClick={() =>
                                     navigate(
@@ -198,6 +206,7 @@ export default function ExperimentDetailPage() {
                         )}
                         {experiment.status === "DRAFT" && (
                             <Button
+                                className={styles.headerAction}
                                 loading={statusMutation.isPending}
                                 disabled={!hasPublishedCourse}
                                 title={
@@ -214,6 +223,7 @@ export default function ExperimentDetailPage() {
                         )}
                         {experiment.status === "COMPLETED" && (
                             <Button
+                                className={styles.headerAction}
                                 loading={statusMutation.isPending}
                                 onClick={() => {
                                     if (

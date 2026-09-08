@@ -5,6 +5,15 @@
     overflow: hidden;
 }
 
+.header {
+    border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.header {
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--color-neutral-200);
+}
+
 .body {
     padding: 0;
     min-height: 0;

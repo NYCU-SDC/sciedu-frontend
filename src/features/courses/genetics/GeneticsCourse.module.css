@@ -48,17 +48,6 @@
     font-weight: 700;
 }
 
-.copyrightFooter {
-    flex-shrink: 0;
-    margin-top: 0;
-    padding: 0 2rem 0.625rem 2rem;
-    font-size: 0.75rem;
-    color: #888;
-    background-color: #ffffff;
-    box-sizing: border-box;
-    text-align: left;
-}
-
 .mobileBlocker {
     display: flex;
     flex-direction: column;
@@ -115,8 +104,5 @@
     }
     .courseWrapper {
         display: flex;
-    }
-    .copyrightFooter {
-        background-color: transparent;
     }
 }

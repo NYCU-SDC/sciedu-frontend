@@ -13,7 +13,9 @@ export function generateRQRequestFromPage({ request }: CoursePageRequest): {
             request_raw = {
                 content: [
                     { type: "text", id: request.content.descriptionId },
-                    { type: "media", id: request.content.imageId },
+                    ...request.content.imageIds.map(
+                        (id) => ({ type: "media", id }) as const
+                    ),
                     ...request.questionSections.map(
                         (section) =>
                             ({ type: "text", id: section.titleId }) as const

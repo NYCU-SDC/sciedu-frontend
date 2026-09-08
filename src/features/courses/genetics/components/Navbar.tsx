@@ -9,6 +9,8 @@ type Props = {
     highestUnlockedStep: number;
     secondaryTitle: string;
     onStepChange: (step: number) => void;
+    variant?: "classic" | "stepper";
+    stepLabels?: string[];
 };
 
 export default function Navbar({
@@ -17,7 +19,52 @@ export default function Navbar({
     highestUnlockedStep,
     secondaryTitle,
     onStepChange,
+    variant = "classic",
+    stepLabels = [],
 }: Props): JSX.Element {
+    const totalSteps = variant === "stepper" ? stepLabels.length : 3;
+
+    if (variant === "stepper") {
+        return (
+            <nav
+                className={`${styles.courseNavbar} ${styles.stepperNavbar}`}
+                aria-label="教材進度"
+            >
+                <div className={styles.stepperBrand}>
+                    <strong>生物科學推理學習</strong>
+                    <span>{secondaryTitle}</span>
+                </div>
+                <div className={styles.stepperTrack}>
+                    {stepLabels.map((label, step) => {
+                        const isActive = activeStep === step;
+                        const isComplete = step < activeStep;
+                        const isLocked = step > highestUnlockedStep;
+                        return (
+                            <button
+                                key={label}
+                                type="button"
+                                className={`${styles.stepItem} ${isActive ? styles.stepActive : ""} ${isComplete ? styles.stepComplete : ""}`}
+                                aria-current={isActive ? "page" : undefined}
+                                aria-disabled={isLocked}
+                                disabled={isLocked}
+                                onClick={() => onStepChange(step)}
+                            >
+                                <span className={styles.stepCircle}>
+                                    {isLocked ? (
+                                        <LockKeyhole size={12} />
+                                    ) : (
+                                        String(step + 1).padStart(2, "0")
+                                    )}
+                                </span>
+                                <span className={styles.stepText}>{label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </nav>
+        );
+    }
+
     return (
         <nav className={styles.courseNavbar}>
             <div className={styles.navbarContainer}>
@@ -47,7 +94,7 @@ export default function Navbar({
                         </div>
                         {/* number of pages */}
                         <div className={styles.pageProgress}>
-                            {[0, 1, 2].map((step) => {
+                            {Array.from({ length: totalSteps }, (_, step) => step).map((step) => {
                                 const isActive = activeStep === step;
                                 const isLocked = step > highestUnlockedStep;
                                 const pageNumber = String(step + 1).padStart(

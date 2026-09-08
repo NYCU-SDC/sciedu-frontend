@@ -152,3 +152,109 @@
         display: block;
     }
 }
+
+.stepperNavbar {
+    margin: 0.9375rem 2rem;
+    width: auto;
+    padding: 0;
+    min-height: 4.75rem;
+    border: 0.125rem solid var(--color-genetics-brand-teal);
+    border-radius: 0.75rem;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.stepperBrand {
+    min-width: 12.5rem;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    background: var(--color-genetics-brand-teal);
+}
+
+.stepperBrand strong {
+    font-size: 1rem;
+    color: #111;
+}
+
+.stepperBrand span {
+    font-size: 0.75rem;
+    color: #234a44;
+}
+
+.stepperTrack {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stepItem {
+    position: relative;
+    min-width: 0;
+    padding: 0.65rem 0.5rem;
+    border: 0;
+    background: #ffffff;
+    color: #71817e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.stepItem:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 0.0625rem;
+    background: #d9e8e4;
+}
+
+.stepItem:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.stepActive {
+    color: #153b35;
+    background: #edf8f5;
+    font-weight: 700;
+}
+
+.stepComplete {
+    color: #28766a;
+}
+
+.stepCircle {
+    width: 1.9rem;
+    height: 1.9rem;
+    flex: 0 0 1.9rem;
+    display: grid;
+    place-items: center;
+    border: 0.09375rem solid currentColor;
+    border-radius: 50%;
+    font-size: 0.68rem;
+}
+
+.stepActive .stepCircle,
+.stepComplete .stepCircle {
+    background: var(--color-genetics-brand-teal);
+}
+
+.stepText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.82rem;
+}
+
+@media (min-width: 64rem) {
+    .stepperNavbar {
+        display: flex;
+    }
+}

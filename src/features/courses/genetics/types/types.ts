@@ -52,7 +52,7 @@ export type MaterialType = {
 export type MaterialPage = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
     };
     questionSections: {
@@ -115,4 +115,12 @@ export type CoursePageRequest = {
     request: MaterialPage | OverviewPage | QuestionPage;
     activeNavbarTitles: number[];
     secondaryTitle: string;
+};
+
+export type CourseDefinition = {
+    id?: string;
+    code: string;
+    title: string;
+    pages: CoursePageRequest[];
+    navigation: "classic" | "stepper";
 };

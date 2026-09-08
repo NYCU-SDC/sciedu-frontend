@@ -8,6 +8,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0rem;
+    overflow-y: auto;
 }
 
 .titleRow {
@@ -34,6 +35,7 @@
 }
 
 .quizCard p {
-    font-size: 0.9rem;
+    font-size: clamp(0.72rem, 0.8vw, 0.9rem);
+    line-height: 1.55;
     margin: 0.3125rem 0 0.75rem 0;
 }

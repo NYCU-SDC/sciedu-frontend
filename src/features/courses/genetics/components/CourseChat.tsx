@@ -6,9 +6,13 @@ import styles from "./CourseChat.module.css";
 
 type Props = {
     controller: CourseChatController;
+    title?: string;
 };
 
-export default function CourseChat({ controller }: Props) {
+export default function CourseChat({
+    controller,
+    title = "教材內容討論",
+}: Props) {
     const {
         chat,
         messages,
@@ -20,6 +24,7 @@ export default function CourseChat({ controller }: Props) {
         editingDraft,
         setEditingDraft,
         errorMessage,
+        demoThinking,
         handleSend,
         handleEdit,
         handleSubmitEdit,
@@ -33,7 +38,7 @@ export default function CourseChat({ controller }: Props) {
             <header className={styles.header}>
                 <div className={styles.chatTitle}>
                     <Sparkles className={styles.icon} />
-                    <div className={styles.title}>基因性狀討論</div>
+                    <div className={styles.title}>{title}</div>
                 </div>
                 <button
                     type="button"
@@ -75,6 +80,11 @@ export default function CourseChat({ controller }: Props) {
                         onSubmitEdit={handleSubmitEdit}
                         onRegenerate={handleRegenerate}
                     />
+                    {demoThinking && (
+                        <p className={styles.status} role="status">
+                            正在思考…
+                        </p>
+                    )}
                     {errorMessage && (
                         <p className={styles.error} role="alert">
                             {errorMessage}
@@ -88,7 +98,7 @@ export default function CourseChat({ controller }: Props) {
                     value={draft}
                     onChange={setDraft}
                     onSubmit={handleSend}
-                    busy={chat.status === "streaming"}
+                    busy={demoThinking || chat.status === "streaming"}
                     onStop={chat.abort}
                     disabled={creating || chat.status === "loading"}
                 />

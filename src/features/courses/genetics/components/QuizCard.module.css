@@ -12,6 +12,74 @@
     overflow-y: auto;
 }
 
+.reviewCard {
+    overflow-y: auto;
+}
+
+.correct,
+.wrong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.correct,
+.correctAnswer {
+    color: #006b5b;
+}
+
+.wrong,
+.wrongAnswer {
+    color: #b54708;
+}
+
+.reviewAnswers {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.reviewAnswers > div {
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.65rem;
+    background: var(--color-neutral-50);
+}
+
+.reviewAnswers strong {
+    font-size: 0.75rem;
+    color: var(--color-neutral-700);
+}
+
+.reviewAnswers p {
+    margin-bottom: 0;
+}
+
+.reviewButton {
+    grid-column: 1 / -1;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--color-brand-teal-dark);
+    border-radius: 0.55rem;
+    color: var(--color-brand-teal-dark);
+    background: white;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.reviewButton:hover,
+.reviewButton:focus-visible {
+    background: var(--color-brand-teal-light);
+    outline: 2px solid transparent;
+}
+
 .titleRow {
     display: flex;
     align-items: center;

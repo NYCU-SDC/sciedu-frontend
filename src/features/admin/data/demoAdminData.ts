@@ -40,7 +40,7 @@ export const demoExperiment: ExperimentDetail = {
     createdAt,
     updatedAt,
     participantCount: 12,
-    courseCount: 4,
+    courseCount: 3,
 };
 
 const people = [
@@ -79,9 +79,9 @@ export const demoParticipants: ExperimentParticipantAssignment[] = people.map(
 export const demoCourses: ExperimentCourseAssignment[] = [
     {
         course: {
-            id: "10000000-0000-4000-8000-000000000001",
-            code: "GEN-01",
-            title: "遺傳機制推理學習",
+            id: "00000000-0000-4000-8000-000000000003",
+            code: "genetics",
+            title: "豌豆－種皮形狀",
             description: "生物學・3 頁",
             status: "PUBLISHED",
             createdAt,
@@ -91,9 +91,9 @@ export const demoCourses: ExperimentCourseAssignment[] = [
     },
     {
         course: {
-            id: "10000000-0000-4000-8000-000000000002",
-            code: "GEN-02",
-            title: "孟德爾遺傳與機率",
+            id: "00000000-0000-4000-8000-000000000001",
+            code: "brain-computer-interface",
+            title: "腦機介面",
             description: "生物學・4 頁",
             status: "PUBLISHED",
             createdAt,
@@ -103,27 +103,15 @@ export const demoCourses: ExperimentCourseAssignment[] = [
     },
     {
         course: {
-            id: "10000000-0000-4000-8000-000000000003",
-            code: "GEN-03",
-            title: "基因表現與環境",
+            id: "00000000-0000-4000-8000-000000000002",
+            code: "dire-wolf-restoration",
+            title: "恐狼復育",
             description: "生物學・3 頁",
             status: "PUBLISHED",
             createdAt,
             updatedAt,
         },
         linkedAt: "2026-06-10T09:10:00+08:00",
-    },
-    {
-        course: {
-            id: "10000000-0000-4000-8000-000000000004",
-            code: "GEN-04",
-            title: "DNA 萃取實驗",
-            description: "生物學・2 頁",
-            status: "DRAFT",
-            createdAt,
-            updatedAt,
-        },
-        linkedAt: "2026-06-10T09:15:00+08:00",
     },
 ];
 

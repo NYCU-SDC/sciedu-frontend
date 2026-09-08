@@ -17,6 +17,7 @@ import FilterBar, {
 } from "./components/FilterBar";
 import MaterialCard, { type MaterialStatus } from "./components/MaterialCard";
 import Pagination from "./components/Pagination";
+import { demoCourses } from "../demo/demoCourseCatalog";
 
 // 書櫃單一教材的資料結構
 type LibraryMaterialItem = {
@@ -32,80 +33,15 @@ type LibraryMaterialItem = {
 };
 
 // 課程資料
-const materials: LibraryMaterialItem[] = [
-    {
-        id: "pea-seed-coat-1",
-        title: "碗豆－種皮形狀",
-        subject: "遺傳學",
-        totalPages: 3,
-        completedPage: 3,
-        status: "done",
-        isToday: true,
-    },
-    {
-        id: "pea-seed-coat-2",
-        title: "碗豆－種皮形狀",
-        subject: "遺傳學",
-        totalPages: 3,
-        completedPage: 3,
-        status: "done",
-        isToday: true,
-    },
-    {
-        id: "pea-seed-coat-3",
-        title: "碗豆－種皮形狀",
-        subject: "遺傳學",
-        totalPages: 3,
-        completedPage: 1,
-        status: "in_progress",
-        isToday: true,
-    },
-    {
-        id: "pea-seed-coat-4",
-        title: "碗豆－種皮形狀",
-        subject: "遺傳學",
-        totalPages: 3,
-        completedPage: 1,
-        status: "in_progress",
-        isToday: false,
-    },
-    {
-        id: "pea-seed-coat-5",
-        title: "碗豆－種皮形狀",
-        subject: "遺傳學",
-        totalPages: 3,
-        completedPage: 0,
-        status: "not_started",
-        isToday: false,
-    },
-    {
-        id: "pea-seed-coat-6",
-        title: "碗豆－種皮形狀",
-        subject: "細胞學",
-        totalPages: 3,
-        completedPage: 0,
-        status: "not_started",
-        isToday: false,
-    },
-    {
-        id: "pea-seed-coat-7",
-        title: "碗豆－種皮形狀",
-        subject: "細胞學",
-        totalPages: 3,
-        completedPage: 0,
-        status: "not_started",
-        isToday: false,
-    },
-    {
-        id: "pea-seed-coat-8",
-        title: "碗豆－種皮形狀",
-        subject: "細胞學",
-        totalPages: 3,
-        completedPage: 1,
-        status: "in_progress",
-        isToday: false,
-    },
-];
+const materials: LibraryMaterialItem[] = demoCourses.map((course) => ({
+    id: course.id,
+    title: course.title,
+    subject: course.subject,
+    totalPages: course.definition.pages.length,
+    completedPage: course.completedPage,
+    status: course.status,
+    isToday: course.isToday,
+}));
 
 // 從教材資料中萃取出不重複的「科目清單」，給 FilterBar.tsx 下拉選單用
 const subjectOptions = Array.from(
@@ -282,7 +218,7 @@ export default function MaterialLibrary() {
                                     completedPage={item.completedPage}
                                     status={item.status}
                                     onContinue={() =>
-                                        navigate("/courses/summary")
+                                        navigate(`/course/${item.id}`)
                                     }
                                 />
                             ))}

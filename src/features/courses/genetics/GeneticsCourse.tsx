@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 
 import { api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -17,6 +18,12 @@ import {
 } from "./components/useCourseChatController";
 
 import { coursePageRequests } from "./assets/courseResource";
+import {
+    fetchCourseDefinition,
+    isCourseUuid,
+} from "./services/fetchCourseDefinition";
+import { DEMO_MODE, getDemoCourse } from "../demo/demoCourseCatalog";
+import type { DemoQuestionReview } from "../demo/demoCourseCatalog";
 import type {
     CourseAnswer,
     CourseAnswers,
@@ -30,6 +37,9 @@ type PageContentProps = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    reviewMode: boolean;
+    reviews: Record<string, DemoQuestionReview>;
+    isLastPage: boolean;
 };
 
 type CoursePageProps = PageContentProps & {
@@ -43,6 +53,9 @@ function CoursePage({
     isCompleted,
     onNext,
     onAnswerChange,
+    reviewMode,
+    reviews,
+    isLastPage,
 }: Omit<CoursePageProps, "chat">) {
     // Keep one controller mounted for each page so every page owns an
     // independent chat session and retains it while the student navigates.
@@ -61,6 +74,9 @@ function CoursePage({
                 isCompleted={isCompleted}
                 onNext={onNext}
                 onAnswerChange={onAnswerChange}
+                reviewMode={reviewMode}
+                reviews={reviews}
+                isLastPage={isLastPage}
             />
         </section>
     );
@@ -73,6 +89,9 @@ function PageContent({
     isCompleted,
     onNext,
     onAnswerChange,
+    reviewMode,
+    reviews,
+    isLastPage,
 }: PageContentProps) {
     switch (data.request.type) {
         case "material":
@@ -84,6 +103,9 @@ function PageContent({
                     isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
+                    reviewMode={reviewMode}
+                    reviews={reviews}
+                    isLastPage={isLastPage}
                 />
             );
         case "questions":
@@ -95,16 +117,46 @@ function PageContent({
                     isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
+                    reviewMode={reviewMode}
+                    reviews={reviews}
+                    isLastPage={isLastPage}
                 />
             );
         case "overview":
-            return <Overview data={data} chat={chat} onNext={onNext} />;
+            return (
+                <Overview
+                    data={data}
+                    chat={chat}
+                    onNext={onNext}
+                    reviewMode={reviewMode}
+                    isLastPage={isLastPage}
+                />
+            );
         default:
             return null;
     }
 }
 
 export default function GeneticsCourse() {
+    const { id = "genetics" } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
+    const reviewMode = searchParams.get("mode") === "review";
+    return (
+        <CoursePlayer
+            key={`${id}-${reviewMode ? "review" : "answer"}`}
+            courseId={id}
+            reviewMode={reviewMode}
+        />
+    );
+}
+
+function CoursePlayer({
+    courseId,
+    reviewMode,
+}: {
+    courseId: string;
+    reviewMode: boolean;
+}) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
     const [completedQuestionPages, setCompletedQuestionPages] = useState(
@@ -115,14 +167,36 @@ export default function GeneticsCourse() {
     >({});
     const queryClient = useQueryClient();
     const posthog = usePostHog();
+    const navigate = useNavigate();
+    const demoCourse = getDemoCourse(courseId);
+    const remoteCourse = useQuery({
+        queryKey: ["course-definition", courseId],
+        queryFn: () => fetchCourseDefinition(courseId),
+        enabled: !DEMO_MODE && isCourseUuid(courseId),
+    });
+    const fallbackDefinition = {
+        id: courseId,
+        code: "genetics",
+        title: "豌豆－種皮形狀",
+        pages: coursePageRequests,
+        navigation: "classic" as const,
+    };
+    const courseDefinition = DEMO_MODE
+        ? demoCourse?.definition
+        : isCourseUuid(courseId)
+          ? remoteCourse.data
+          : fallbackDefinition;
 
     const pageRequests = useMemo(
-        () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
-        []
+        () =>
+            [...(courseDefinition?.pages ?? [])].sort(
+                (a, b) => a.pageIndex - b.pageIndex
+            ),
+        [courseDefinition]
     );
     const currentPage = pageRequests[currentIndex];
 
-    useDocumentTitle("基因");
+    useDocumentTitle(courseDefinition?.title ?? "教材載入中");
 
     const currentYear = new Date().getFullYear();
 
@@ -140,9 +214,20 @@ export default function GeneticsCourse() {
     }, [pageRequests, currentIndex, queryClient]);
 
     const handleNext = () => {
+        if (!currentPage || !courseDefinition) return;
+        if (currentIndex === pageRequests.length - 1) {
+            if (reviewMode) {
+                navigate("/courses");
+            } else {
+                navigate(
+                    `/courses/summary?courseId=${encodeURIComponent(courseDefinition.id ?? courseId)}`
+                );
+            }
+            return;
+        }
         const nextIndex = Math.min(
             currentIndex + 1,
-            highestUnlockedIndex + 1,
+            reviewMode ? pageRequests.length - 1 : highestUnlockedIndex + 1,
             pageRequests.length - 1
         );
 
@@ -160,6 +245,7 @@ export default function GeneticsCourse() {
     };
 
     const handlePageComplete = () => {
+        if (!currentPage) return;
         if (currentPage.request.type !== "overview") {
             setCompletedQuestionPages((previousPages) => {
                 const nextPages = new Set(previousPages);
@@ -172,7 +258,7 @@ export default function GeneticsCourse() {
 
     const handleStepChange = (step: number) => {
         const isOutsideCourse = step < 0 || step >= pageRequests.length;
-        const isLocked = step > highestUnlockedIndex;
+        const isLocked = !reviewMode && step > highestUnlockedIndex;
 
         if (isOutsideCourse || isLocked) return;
 
@@ -198,6 +284,22 @@ export default function GeneticsCourse() {
         }));
     };
 
+    if (!DEMO_MODE && isCourseUuid(courseId) && remoteCourse.isLoading) {
+        return <CourseStatus message="教材載入中…" />;
+    }
+
+    if (!DEMO_MODE && isCourseUuid(courseId) && remoteCourse.isError) {
+        return <CourseStatus message="目前無法載入這份教材" isError />;
+    }
+
+    if (!courseDefinition || !currentPage) {
+        return <CourseStatus message="找不到教材內容" isError />;
+    }
+
+    const unlockedIndex = reviewMode
+        ? pageRequests.length - 1
+        : highestUnlockedIndex;
+
     return (
         <div
             className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
@@ -222,36 +324,53 @@ export default function GeneticsCourse() {
                 <Navbar
                     activeTitles={currentPage.activeNavbarTitles}
                     activeStep={currentIndex}
-                    highestUnlockedStep={highestUnlockedIndex}
+                    highestUnlockedStep={unlockedIndex}
                     secondaryTitle={currentPage.secondaryTitle}
                     onStepChange={handleStepChange}
+                    variant={courseDefinition.navigation}
+                    stepLabels={pageRequests.map((page) => page.secondaryTitle)}
                 />
-                {pageRequests
-                    .slice(0, highestUnlockedIndex + 1)
-                    .map((page, index) => (
-                        <CoursePage
-                            key={page.pageIndex}
-                            isActive={index === currentIndex}
-                            data={page}
-                            answers={answersByPage[page.pageIndex] ?? {}}
-                            isCompleted={completedQuestionPages.has(
-                                page.pageIndex
-                            )}
-                            onNext={handlePageComplete}
-                            onAnswerChange={(questionId, answer) =>
-                                handleAnswerChange(
-                                    page.pageIndex,
-                                    questionId,
-                                    answer
-                                )
-                            }
-                        />
-                    ))}
+                {pageRequests.slice(0, unlockedIndex + 1).map((page, index) => (
+                    <CoursePage
+                        key={page.pageIndex}
+                        isActive={index === currentIndex}
+                        data={page}
+                        answers={answersByPage[page.pageIndex] ?? {}}
+                        isCompleted={completedQuestionPages.has(page.pageIndex)}
+                        onNext={handlePageComplete}
+                        onAnswerChange={(questionId, answer) =>
+                            handleAnswerChange(
+                                page.pageIndex,
+                                questionId,
+                                answer
+                            )
+                        }
+                        reviewMode={reviewMode}
+                        reviews={demoCourse?.reviews ?? {}}
+                        isLastPage={index === pageRequests.length - 1}
+                    />
+                ))}
                 {/* copyright footer */}
                 <footer className={styles.copyrightFooter}>
                     ©{currentYear} Institute of Education, Science Education
                     division, NYCU. All Rights Reserved
                 </footer>
+            </div>
+        </div>
+    );
+}
+
+function CourseStatus({
+    message,
+    isError = false,
+}: {
+    message: string;
+    isError?: boolean;
+}) {
+    return (
+        <div className={styles.courseContainer}>
+            <div className={styles.courseWrapper}>
+                <p role={isError ? "alert" : "status"}>{message}</p>
             </div>
         </div>
     );

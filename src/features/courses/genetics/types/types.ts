@@ -43,7 +43,7 @@ export type CourseAnswers = Record<string, CourseAnswer>;
 export type MaterialType = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
         questionSections: MaterialQuestionSection[];
     };

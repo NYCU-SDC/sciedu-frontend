@@ -6,6 +6,9 @@ import { MAX_TEXT_ANSWER_LENGTH } from "./useAnswerSubmission";
 import styles from "./QuizCard.module.css";
 import CourseContentModal from "./CourseContentModal";
 import ExpandButton from "./ExpandButton";
+import AnswerReviewModal from "./AnswerReviewModal";
+import { BookOpenText, CheckCircle2, XCircle } from "lucide-react";
+import type { DemoQuestionReview } from "../../demo/demoCourseCatalog";
 
 type Props = {
     question: {
@@ -19,6 +22,8 @@ type Props = {
     disabled?: boolean;
     validationError?: string;
     onAnswerChange: (answer: string) => void;
+    review?: DemoQuestionReview;
+    onAskReview?: (question: string) => void;
 };
 
 export default function QuizCard({
@@ -29,6 +34,8 @@ export default function QuizCard({
     disabled = false,
     validationError,
     onAnswerChange,
+    review,
+    onAskReview,
 }: Props) {
     const [expanded, setExpanded] = useState(false);
 
@@ -82,20 +89,69 @@ export default function QuizCard({
     }
 
     return (
-        <div className={`${styles.quizCard} expandableCourseContent`}>
-            <ExpandButton
-                label={`展開題目 ${question.title}`}
-                onClick={() => setExpanded(true)}
-            />
+        <div
+            className={`${styles.quizCard} expandableCourseContent ${review ? styles.reviewCard : ""}`}
+        >
+            {!review && (
+                <ExpandButton
+                    label={`展開題目 ${question.title}`}
+                    onClick={() => setExpanded(true)}
+                />
+            )}
             <div className={styles.titleRow}>
                 <h3>{question.title}</h3>
+                {review && (
+                    <span
+                        className={
+                            review.isCorrect ? styles.correct : styles.wrong
+                        }
+                    >
+                        {review.isCorrect ? (
+                            <CheckCircle2 size={16} aria-hidden="true" />
+                        ) : (
+                            <XCircle size={16} aria-hidden="true" />
+                        )}
+                        {review.isCorrect ? "答對" : "答錯"}
+                    </span>
+                )}
             </div>
             {isLoading ? (
                 <Skeleton width="100%" height="1rem" />
             ) : (
                 <>
                     <p>{question.data?.content}</p>
-                    {answerField()}
+                    {review ? (
+                        <div className={styles.reviewAnswers}>
+                            <div>
+                                <strong>你的答案</strong>
+                                <p
+                                    className={
+                                        review.isCorrect
+                                            ? styles.correctAnswer
+                                            : styles.wrongAnswer
+                                    }
+                                >
+                                    {review.studentAnswer}
+                                </p>
+                            </div>
+                            <div>
+                                <strong>正確答案</strong>
+                                <p className={styles.correctAnswer}>
+                                    {review.correctAnswer}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.reviewButton}
+                                onClick={() => setExpanded(true)}
+                            >
+                                <BookOpenText size={17} aria-hidden="true" />
+                                展開詳解
+                            </button>
+                        </div>
+                    ) : (
+                        answerField()
+                    )}
                     {validationError && (
                         <span className={styles.errorText} role="alert">
                             {validationError}
@@ -103,16 +159,27 @@ export default function QuizCard({
                     )}
                 </>
             )}
-            <CourseContentModal
-                opened={expanded}
-                title={`題目 ${question.title}`}
-                onClose={() => setExpanded(false)}
-            >
-                <div className={styles.modalQuestion}>
-                    <p>{question.data?.content}</p>
-                    {answerField(true)}
-                </div>
-            </CourseContentModal>
+            {review ? (
+                <AnswerReviewModal
+                    opened={expanded}
+                    title={`題目 ${question.title}`}
+                    question={question.data?.content ?? ""}
+                    review={review}
+                    onClose={() => setExpanded(false)}
+                    onAsk={(text) => onAskReview?.(text)}
+                />
+            ) : (
+                <CourseContentModal
+                    opened={expanded}
+                    title={`題目 ${question.title}`}
+                    onClose={() => setExpanded(false)}
+                >
+                    <div className={styles.modalQuestion}>
+                        <p>{question.data?.content}</p>
+                        {answerField(true)}
+                    </div>
+                </CourseContentModal>
+            )}
         </div>
     );
 }

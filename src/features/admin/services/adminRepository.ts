@@ -22,12 +22,17 @@ import type {
 } from "../types";
 
 export const isAdminDemoMode =
-    import.meta.env.DEV && import.meta.env.VITE_ADMIN_DEMO_MODE === "true";
+    import.meta.env.MODE !== "test" &&
+    (import.meta.env.VITE_DEMO_MODE !== "false" ||
+        (import.meta.env.DEV &&
+            import.meta.env.VITE_ADMIN_DEMO_MODE === "true"));
 
 const DEMO_DELAY_MS = 180;
 const MAX_PAGE_SIZE = 100;
 
 let demoParticipantState = [...demoParticipants];
+let demoExperimentState = [{ ...demoExperiment }];
+let demoCourseState = [...demoCourses];
 
 const resolveDemo = <T>(value: T): Promise<T> =>
     new Promise((resolve) =>
@@ -84,18 +89,16 @@ export function listExperiments(
 ): Promise<PaginatedResponse<Experiment>> {
     if (isAdminDemoMode) {
         const query = params.search?.trim().toLocaleLowerCase("zh-Hant") ?? "";
-        const matches =
-            (!params.status || demoExperiment.status === params.status) &&
-            (!query ||
-                demoExperiment.name
-                    .toLocaleLowerCase("zh-Hant")
-                    .includes(query));
+        const matches = demoExperimentState.filter(
+            (experiment) =>
+                (!params.status || experiment.status === params.status) &&
+                (!query ||
+                    experiment.name
+                        .toLocaleLowerCase("zh-Hant")
+                        .includes(query))
+        );
         return resolveDemo(
-            paginate(
-                matches ? [demoExperiment] : [],
-                params.page ?? 1,
-                params.pageSize ?? 20
-            )
+            paginate(matches, params.page ?? 1, params.pageSize ?? 20)
         );
     }
 
@@ -120,10 +123,13 @@ export function fetchExperiment(
     experimentId: string
 ): Promise<ExperimentDetail> {
     if (isAdminDemoMode) {
+        const experiment =
+            demoExperimentState.find((item) => item.id === experimentId) ??
+            demoExperimentState[0];
         return resolveDemo({
-            ...demoExperiment,
+            ...experiment,
             participantCount: demoParticipantState.length,
-            courseCount: demoCourses.length,
+            courseCount: demoCourseState.length,
         });
     }
     return api<ExperimentDetail>(`/api/experiments/${experimentId}`);
@@ -132,6 +138,21 @@ export function fetchExperiment(
 export function createExperiment(
     payload: EditableExperimentPayload
 ): Promise<ExperimentDetail> {
+    if (isAdminDemoMode) {
+        const now = new Date().toISOString();
+        const experiment: ExperimentDetail = {
+            ...payload,
+            id: crypto.randomUUID(),
+            status: "DRAFT",
+            createdBy: demoCurrentUser.id,
+            createdAt: now,
+            updatedAt: now,
+            participantCount: 0,
+            courseCount: 0,
+        };
+        demoExperimentState = [experiment, ...demoExperimentState];
+        return resolveDemo(experiment);
+    }
     return api<ExperimentDetail>("/api/experiments", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -142,6 +163,20 @@ export function updateExperiment(
     experimentId: string,
     payload: EditableExperimentPayload
 ): Promise<ExperimentDetail> {
+    if (isAdminDemoMode) {
+        const current =
+            demoExperimentState.find((item) => item.id === experimentId) ??
+            demoExperimentState[0];
+        const updated = {
+            ...current,
+            ...payload,
+            updatedAt: new Date().toISOString(),
+        };
+        demoExperimentState = demoExperimentState.map((item) =>
+            item.id === updated.id ? updated : item
+        );
+        return resolveDemo(updated);
+    }
     return api<ExperimentDetail>(`/api/experiments/${experimentId}`, {
         method: "PUT",
         body: JSON.stringify(payload),
@@ -152,6 +187,20 @@ export function updateExperimentStatus(
     experimentId: string,
     status: ExperimentStatus
 ): Promise<ExperimentDetail> {
+    if (isAdminDemoMode) {
+        const current =
+            demoExperimentState.find((item) => item.id === experimentId) ??
+            demoExperimentState[0];
+        const updated = {
+            ...current,
+            status,
+            updatedAt: new Date().toISOString(),
+        };
+        demoExperimentState = demoExperimentState.map((item) =>
+            item.id === updated.id ? updated : item
+        );
+        return resolveDemo(updated);
+    }
     return api<ExperimentDetail>(`/api/experiments/${experimentId}/status`, {
         method: "PUT",
         body: JSON.stringify({ status }),
@@ -182,7 +231,7 @@ async function fetchCoursePage(
     page: number
 ): Promise<PaginatedResponse<ExperimentCourseAssignment>> {
     if (isAdminDemoMode) {
-        return resolveDemo(paginate(demoCourses, page, MAX_PAGE_SIZE));
+        return resolveDemo(paginate(demoCourseState, page, MAX_PAGE_SIZE));
     }
     const query = toSearchParams({ page, pageSize: MAX_PAGE_SIZE });
     return api<PaginatedResponse<ExperimentCourseAssignment>>(
@@ -226,9 +275,15 @@ export function addExperimentCourses(
 ): Promise<ExperimentCourseAssignment[]> {
     if (isAdminDemoMode) {
         const courseIdsSet = new Set(courseIds);
-        return resolveDemo(
-            demoCourses.filter(({ course }) => courseIdsSet.has(course.id))
+        const existingIds = new Set(
+            demoCourseState.map(({ course }) => course.id)
         );
+        const additions = demoCourses.filter(
+            ({ course }) =>
+                courseIdsSet.has(course.id) && !existingIds.has(course.id)
+        );
+        demoCourseState = [...demoCourseState, ...additions];
+        return resolveDemo(additions);
     }
     return api<ExperimentCourseAssignment[]>(
         `/api/experiments/${experimentId}/courses`,
@@ -243,7 +298,12 @@ export async function removeExperimentCourse(
     experimentId: string,
     courseId: string
 ): Promise<void> {
-    if (isAdminDemoMode) return resolveDemo(undefined);
+    if (isAdminDemoMode) {
+        demoCourseState = demoCourseState.filter(
+            ({ course }) => course.id !== courseId
+        );
+        return resolveDemo(undefined);
+    }
     await api<void>(`/api/experiments/${experimentId}/courses/${courseId}`, {
         method: "DELETE",
     });

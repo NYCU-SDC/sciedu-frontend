@@ -1,6 +1,8 @@
 import { Card, Text, Title } from "@mantine/core";
-
-export type MaterialStatus = "done" | "in_progress" | "not_started";
+import {
+    getMaterialProgressLabel,
+    type MaterialStatus,
+} from "../../materialProgress";
 
 export type MaterialListItem = {
     id: string;
@@ -25,19 +27,6 @@ const statusColor: Record<MaterialStatus, string> = {
     in_progress: "#925800",
     not_started: "var(--color-neutral-600)",
 };
-
-function getProgressLabel(item: MaterialListItem, status: MaterialStatus) {
-    switch (status) {
-        case "done":
-            return `共 ${item.totalPages} 頁．已完成全部`;
-
-        case "in_progress":
-            return `共 ${item.totalPages} 頁．已完成第 ${item.completedPage} 頁`;
-
-        case "not_started":
-            return `共 ${item.totalPages} 頁．尚未開始`;
-    }
-}
 
 type Props = {
     items: MaterialListItem[];
@@ -140,7 +129,7 @@ export default function MaterialProgressCard({ items }: Props) {
                                     ff={FONT_FAMILY}
                                     c="var(--color-neutral-600)"
                                 >
-                                    {getProgressLabel(item, status)}
+                                    {getMaterialProgressLabel(item)}
                                 </Text>
                             </div>
                             <Text

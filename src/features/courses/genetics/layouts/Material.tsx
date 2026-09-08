@@ -17,6 +17,8 @@ import type { CourseChatController } from "../components/useCourseChatController
 import { useAnswerSubmission } from "../components/useAnswerSubmission";
 import CourseContentModal from "../components/CourseContentModal";
 import ExpandButton from "../components/ExpandButton";
+import { DEMO_MODE, getDemoMediaUrl } from "../../demo/demoCourseCatalog";
+import type { DemoQuestionReview } from "../../demo/demoCourseCatalog";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
@@ -27,6 +29,9 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    reviewMode?: boolean;
+    reviews?: Record<string, DemoQuestionReview>;
+    isLastPage?: boolean;
 };
 
 export default function Material({
@@ -36,6 +41,9 @@ export default function Material({
     isCompleted,
     onNext,
     onAnswerChange,
+    reviewMode = false,
+    reviews = {},
+    isLastPage = false,
 }: Props) {
     const req = data.request as MaterialPage;
 
@@ -118,9 +126,14 @@ export default function Material({
                         data-image-count={req.content.imageIds.length}
                     >
                         {req.content.imageIds.map((imageId, index) => {
-                            const imageUrl = `${BASE_URL}/api/content/media/${imageId}`;
+                            const imageUrl =
+                                (DEMO_MODE && getDemoMediaUrl(imageId)) ||
+                                `${BASE_URL}/api/content/media/${imageId}`;
                             return imageErrors[imageId] ? (
-                                <span className={styles.errorText} key={imageId}>
+                                <span
+                                    className={styles.errorText}
+                                    key={imageId}
+                                >
                                     圖片 {index + 1} 載入失敗
                                 </span>
                             ) : (
@@ -208,6 +221,18 @@ export default function Material({
                                             answer
                                         )
                                     }
+                                    review={
+                                        reviewMode
+                                            ? reviews[section.questionId]
+                                            : undefined
+                                    }
+                                    onAskReview={(question) =>
+                                        chat.handleMockQuestion(
+                                            question,
+                                            reviews[section.questionId]
+                                                ?.mockReply
+                                        )
+                                    }
                                 />
                             );
                         })}
@@ -228,17 +253,21 @@ export default function Material({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={submit}
-                        disabled={isSubmitting}
+                        onClick={reviewMode ? onNext : submit}
+                        disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
-                        {isSubmitting
-                            ? "答案送出中…"
-                            : submissionError
-                              ? "重試送出"
-                              : isCompleted
-                                ? "前往下一頁"
-                                : "送出並前往下一頁"}
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : isSubmitting
+                              ? "答案送出中…"
+                              : submissionError
+                                ? "重試送出"
+                                : isCompleted
+                                  ? "前往下一頁"
+                                  : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </main>

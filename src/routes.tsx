@@ -116,7 +116,10 @@ const adminRoutes: RouteObject[] = [
 const enableChatRoutes = ["llm", "dev"].includes(APP_MODE);
 const enableCourseRoutes = ["edu", "dev"].includes(APP_MODE);
 const enableAdminDemo =
-    import.meta.env.DEV && import.meta.env.VITE_ADMIN_DEMO_MODE === "true";
+    import.meta.env.MODE !== "test" &&
+    (import.meta.env.VITE_DEMO_MODE !== "false" ||
+        (import.meta.env.DEV &&
+            import.meta.env.VITE_ADMIN_DEMO_MODE === "true"));
 
 export const router = createBrowserRouter([
     ...(enableCourseRoutes && enableAdminDemo

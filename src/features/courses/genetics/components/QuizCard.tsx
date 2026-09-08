@@ -1,6 +1,7 @@
-import { Skeleton, CheckboxGroup, TextArea } from "@radix-ui/themes";
+import { Skeleton, RadioGroup, TextArea } from "@radix-ui/themes";
 import type { QuestionResponse } from "../types/types";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
+import { MAX_TEXT_ANSWER_LENGTH } from "./useAnswerSubmission";
 import styles from "./QuizCard.module.css";
 
 type Props = {
@@ -11,8 +12,10 @@ type Props = {
     };
     isLoading: boolean;
     error: string | null;
-    answer: string | string[];
-    onAnswerChange: (answer: string | string[]) => void;
+    answer: string;
+    disabled?: boolean;
+    validationError?: string;
+    onAnswerChange: (answer: string) => void;
 };
 
 export default function QuizCard({
@@ -20,6 +23,8 @@ export default function QuizCard({
     isLoading,
     error,
     answer,
+    disabled = false,
+    validationError,
     onAnswerChange,
 }: Props) {
     if (error) {
@@ -44,17 +49,19 @@ export default function QuizCard({
                 <>
                     <p>{question.data?.content}</p>
                     {question.data?.type === "CHOICE" && (
-                        <CheckboxGroup.Root
+                        <RadioGroup.Root
                             className={styles.radioGroup}
-                            value={Array.isArray(answer) ? answer : []}
+                            value={answer}
                             onValueChange={onAnswerChange}
+                            disabled={disabled}
+                            aria-invalid={Boolean(validationError)}
                         >
                             {question.data?.options.map((opt) => (
-                                <CheckboxGroup.Item value={opt.id} key={opt.id}>
+                                <RadioGroup.Item value={opt.id} key={opt.id}>
                                     {opt.label}. {opt.content}
-                                </CheckboxGroup.Item>
+                                </RadioGroup.Item>
                             ))}
-                        </CheckboxGroup.Root>
+                        </RadioGroup.Root>
                     )}
                     {question.data?.type === "TEXT" && (
                         <TextArea
@@ -62,11 +69,19 @@ export default function QuizCard({
                             placeholder="在此輸入答案..."
                             variant="soft"
                             color="gray"
-                            value={typeof answer === "string" ? answer : ""}
+                            value={answer}
+                            maxLength={MAX_TEXT_ANSWER_LENGTH}
+                            disabled={disabled}
+                            aria-invalid={Boolean(validationError)}
                             onChange={(event) =>
                                 onAnswerChange(event.target.value)
                             }
                         />
+                    )}
+                    {validationError && (
+                        <span className={styles.errorText} role="alert">
+                            {validationError}
+                        </span>
                     )}
                 </>
             )}

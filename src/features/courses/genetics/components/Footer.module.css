@@ -31,3 +31,11 @@
     align-items: flex-end;
     gap: 0.5rem;
 }
+
+.submissionMessage {
+    margin: 0;
+    color: var(--red-9);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-align: center;
+}

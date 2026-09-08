@@ -27,6 +27,7 @@ type PageContentProps = {
     data: CoursePageRequest;
     chat: CourseChatController;
     answers: CourseAnswers;
+    isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
 };
@@ -39,6 +40,7 @@ function CoursePage({
     isActive,
     data,
     answers,
+    isCompleted,
     onNext,
     onAnswerChange,
 }: Omit<CoursePageProps, "chat">) {
@@ -56,6 +58,7 @@ function CoursePage({
                 data={data}
                 chat={chat}
                 answers={answers}
+                isCompleted={isCompleted}
                 onNext={onNext}
                 onAnswerChange={onAnswerChange}
             />
@@ -67,6 +70,7 @@ function PageContent({
     data,
     chat,
     answers,
+    isCompleted,
     onNext,
     onAnswerChange,
 }: PageContentProps) {
@@ -77,6 +81,7 @@ function PageContent({
                     data={data}
                     chat={chat}
                     answers={answers}
+                    isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
                 />
@@ -87,6 +92,7 @@ function PageContent({
                     data={data}
                     chat={chat}
                     answers={answers}
+                    isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
                 />
@@ -101,6 +107,9 @@ function PageContent({
 export default function GeneticsCourse() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
+    const [completedQuestionPages, setCompletedQuestionPages] = useState(
+        new Set<number>()
+    );
     const [answersByPage, setAnswersByPage] = useState<
         Record<number, CourseAnswers>
     >({});
@@ -148,6 +157,17 @@ export default function GeneticsCourse() {
             Math.max(previousIndex, nextIndex)
         );
         setCurrentIndex(nextIndex);
+    };
+
+    const handlePageComplete = () => {
+        if (currentPage.request.type !== "overview") {
+            setCompletedQuestionPages((previousPages) => {
+                const nextPages = new Set(previousPages);
+                nextPages.add(currentPage.pageIndex);
+                return nextPages;
+            });
+        }
+        handleNext();
     };
 
     const handleStepChange = (step: number) => {
@@ -214,7 +234,10 @@ export default function GeneticsCourse() {
                             isActive={index === currentIndex}
                             data={page}
                             answers={answersByPage[page.pageIndex] ?? {}}
-                            onNext={handleNext}
+                            isCompleted={completedQuestionPages.has(
+                                page.pageIndex
+                            )}
+                            onNext={handlePageComplete}
                             onAnswerChange={(questionId, answer) =>
                                 handleAnswerChange(
                                     page.pageIndex,

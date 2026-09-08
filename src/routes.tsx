@@ -10,14 +10,11 @@ import LoginPage from "./features/auth/pages/LoginPage";
 import NotFoundPage from "./shared/components/NotFoundPage";
 import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
-<<<<<<< HEAD
 import Homepage from "./features/courses/Homepage/Homepage";
 import MaterialLibrary from "./features/courses/MaterialLibrary/MaterialLibrary";
 import Summary from "./features/courses/Summary/Summary";
-=======
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage";
 import RequireAdminRole from "./features/admin/components/RequireAdminRole";
->>>>>>> origin/main
 
 const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 

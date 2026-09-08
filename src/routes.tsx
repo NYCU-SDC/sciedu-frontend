@@ -10,6 +10,8 @@ import LoginPage from "./features/auth/pages/LoginPage";
 import NotFoundPage from "./shared/components/NotFoundPage";
 import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
+import Homepage from "./features/courses/Homepage/Homepage";
+import MaterialLibrary from "./features/courses/MaterialLibrary/MaterialLibrary";
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage";
 import RequireAdminRole from "./features/admin/components/RequireAdminRole";
 
@@ -37,8 +39,16 @@ const chatRoutes: RouteObject[] = [
 
 const courseRoutes: RouteObject[] = [
     {
+        path: "/courses",
+        element: <Homepage />,
+    },
+    {
         path: "/course/:id",
         element: <GeneticsCourse />,
+    },
+    {
+        path: "/courses/library",
+        element: <MaterialLibrary />,
     },
 ];
 

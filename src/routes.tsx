@@ -12,6 +12,7 @@ import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
 import Homepage from "./features/courses/Homepage/Homepage";
 import MaterialLibrary from "./features/courses/MaterialLibrary/MaterialLibrary";
+import Summary from "./features/courses/Summary/Summary";
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage";
 import RequireAdminRole from "./features/admin/components/RequireAdminRole";
 
@@ -49,6 +50,10 @@ const courseRoutes: RouteObject[] = [
     {
         path: "/courses/library",
         element: <MaterialLibrary />,
+    },
+    {
+        path: "/courses/summary",
+        element: <Summary />,
     },
 ];
 

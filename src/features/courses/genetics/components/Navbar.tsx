@@ -94,7 +94,10 @@ export default function Navbar({
                         </div>
                         {/* number of pages */}
                         <div className={styles.pageProgress}>
-                            {Array.from({ length: totalSteps }, (_, step) => step).map((step) => {
+                            {Array.from(
+                                { length: totalSteps },
+                                (_, step) => step
+                            ).map((step) => {
                                 const isActive = activeStep === step;
                                 const isLocked = step > highestUnlockedStep;
                                 const pageNumber = String(step + 1).padStart(

@@ -1,0 +1,685 @@
+.shell,
+.pageStatus {
+    --admin-ink: #004038;
+    --admin-deep: #004d43;
+    --admin-active: #0e6258;
+    --admin-accent: #63cabe;
+    --admin-canvas: #f0f6f4;
+    --admin-border: #d4d4d4;
+    min-height: 100vh;
+    color: var(--admin-ink);
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
+}
+
+.shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--admin-canvas);
+}
+.pageStatus {
+    display: grid;
+    place-items: center;
+    background: var(--admin-canvas);
+}
+.sidebar {
+    display: flex;
+    width: 20rem;
+    height: 100vh;
+    flex: 0 0 20rem;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1rem;
+    overflow: hidden;
+    background: var(--admin-deep);
+    color: #fff;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5625rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.brand svg {
+    width: 2rem;
+    height: 2rem;
+    color: #77d5c6;
+}
+.nav {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+}
+.nav button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 1.25rem;
+    text-align: left;
+}
+.nav button:hover:not(:disabled),
+.nav .navActive {
+    background: var(--admin-active);
+}
+.nav button:disabled {
+    opacity: 0.72;
+}
+.nav svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 1rem;
+    border-top: 1px solid rgb(255 255 255 / 20%);
+}
+.profile > span {
+    display: flex;
+    flex-direction: column;
+}
+.profile strong {
+    font-size: 1.25rem;
+}
+.profile small {
+    color: #d4d4d4;
+    font-size: 0.875rem;
+}
+.main {
+    min-width: 0;
+    flex: 1;
+    padding: 1rem 2rem 2rem;
+    overflow-y: auto;
+}
+.pageHeader {
+    display: flex;
+    min-height: 5.375rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #fff;
+}
+.pageHeader h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    line-height: 1.4;
+}
+.titleGroup {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 1rem;
+}
+.backButton {
+    color: var(--admin-deep);
+}
+.contentStack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+.card {
+    border: 1px solid #e5e5e5;
+    background: #fff;
+}
+.listIntro {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0.25rem 0 0.75rem;
+}
+.listIntro h2,
+.sectionTitle {
+    margin: 0;
+    font-size: 1.25rem;
+}
+.muted {
+    margin: 0.35rem 0 0;
+    color: #737373;
+    font-size: 0.875rem;
+}
+.filters {
+    display: grid;
+    grid-template-columns:
+        minmax(15rem, 1fr) repeat(3, minmax(8rem, 0.35fr))
+        auto;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+}
+.tableCard {
+    overflow: hidden;
+}
+.tableTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+}
+.tableScroll {
+    overflow-x: auto;
+}
+.table th {
+    background: #f5f5f5;
+    color: var(--admin-ink);
+    white-space: nowrap;
+}
+.table td {
+    color: var(--admin-ink);
+    white-space: nowrap;
+}
+.clickableRow {
+    cursor: pointer;
+}
+.clickableRow:hover td {
+    background: #f4fbf9;
+}
+.experimentName {
+    font-weight: 700;
+}
+.tableFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    color: #525252;
+    font-size: 0.875rem;
+}
+.summary {
+    display: grid;
+    grid-template-columns: minmax(17rem, 2fr) repeat(4, 1fr);
+    gap: 1.5rem;
+    padding: 1.375rem 1.75rem;
+}
+.metric {
+    min-width: 0;
+}
+.metric span {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #525252;
+    font-size: 0.875rem;
+}
+.metric strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.1rem;
+}
+.tabs {
+    padding: 0.5rem;
+}
+.tabsList::before {
+    border: 0;
+}
+.tabsTab {
+    border: 0;
+    border-radius: 0.5rem;
+    color: #616b69;
+}
+.tabsTab[data-active] {
+    background: var(--admin-accent);
+    color: #0e564d;
+}
+.detailGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    gap: 1rem;
+    padding-top: 0.625rem;
+}
+.settingsCard,
+.noticeCard,
+.coursesCard,
+.participantsCard {
+    padding: 1.5rem 1.75rem;
+}
+.settingRows {
+    margin-top: 1.25rem;
+}
+.settingRow {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.45fr) 1fr;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+.settingRow:last-child {
+    border-bottom: 0;
+}
+.settingRow span {
+    color: #616b69;
+}
+.settingRow strong {
+    text-align: right;
+}
+.lock {
+    margin-left: 0.4rem;
+    color: #a1a1a1;
+    font-size: 0.75rem;
+}
+.noticeList {
+    padding-left: 1.1rem;
+    line-height: 2;
+}
+.warning {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #fff0da;
+    color: #a65b00;
+    font-size: 0.875rem;
+}
+.courseHeader,
+.participantToolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.courseList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+.courseRow {
+    display: grid;
+    grid-template-columns: 3rem minmax(12rem, 1.5fr) minmax(11rem, 0.7fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem;
+    border: 1px solid #d8dedc;
+    border-radius: 0.75rem;
+}
+.courseIndex {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 0.5rem;
+    background: #edf5f3;
+    font-weight: 700;
+}
+.courseMeta {
+    color: #737373;
+    font-size: 0.875rem;
+}
+.progressText {
+    margin-bottom: 0.35rem;
+}
+.participantToolbar {
+    padding-bottom: 1rem;
+}
+.participantControls {
+    display: flex;
+    gap: 0.625rem;
+}
+.empty {
+    padding: 3rem;
+    color: #737373;
+    text-align: center;
+}
+.stepper {
+    display: flex;
+    flex-direction: row;
+    height: 7rem;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0 2rem;
+    list-style: none;
+}
+.step {
+    display: flex;
+    min-width: 0;
+    height: 4rem;
+    flex: 0 1 15.625rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0;
+}
+.stepBody {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.125rem;
+    white-space: nowrap;
+}
+.stepBody strong {
+    color: #525252;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.375rem;
+}
+.stepActive .stepBody strong {
+    color: var(--admin-ink);
+    font-weight: 700;
+}
+.stepBody small {
+    color: #a1a1a1;
+    font-size: 0.75rem;
+    line-height: 1.0625rem;
+}
+.stepIcon {
+    display: grid;
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 1px solid #e5e5e5;
+    border-radius: 999px;
+    background: #f5f5f5;
+    color: #525252;
+    font-size: 0.875rem;
+}
+.stepIconCurrent {
+    border-color: #005f55;
+    background: #005f55;
+    color: #fff;
+}
+.stepIconComplete {
+    border-color: #62cab8;
+    background: #62cab8;
+    color: #005f55;
+}
+.stepSeparator {
+    margin-left: auto;
+    color: #e5e5e5;
+    font-size: 1.125rem;
+}
+.formGrid {
+    display: grid;
+    min-height: 46.875rem;
+    grid-template-columns: minmax(0, 1fr) 22.75rem;
+    align-items: start;
+    gap: 1.25rem;
+    overflow: hidden;
+    background: #fff;
+}
+.formCard {
+    padding: 1.75rem 2rem;
+}
+.formGrid > .formCard {
+    min-height: 43.125rem;
+}
+.formCard .sectionTitle {
+    font-size: 1.5rem;
+    line-height: 2.125rem;
+}
+.formCard > .muted {
+    margin-top: 1.5rem;
+}
+.formFields {
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.helpCard {
+    display: flex;
+    min-height: 22.75rem;
+    flex-direction: column;
+    gap: 1.125rem;
+    padding: 1.75rem;
+}
+.helpCard p,
+.helpCard .guidanceItem,
+.helpCard .activeNotice {
+    margin: 0;
+}
+.guidanceItem {
+    width: 100%;
+    margin-top: 1rem;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+.timezoneNotice {
+    width: fit-content;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: #62cab8;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+.formCard :global(.mantine-Input-input) {
+    min-height: 3.25rem;
+    border-color: #e5e5e5;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+.formCard :global(textarea.mantine-Input-input) {
+    min-height: 6.5rem;
+}
+.formCard :global(.mantine-Input-label) {
+    margin-bottom: 0.5rem;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.formCard :global(.mantine-Input-description) {
+    margin-top: 0.5rem;
+    color: #a1a1a1;
+    font-size: 0.75rem;
+}
+.formCard :global(.mantine-InputWrapper-root) {
+    display: flex;
+    flex-direction: column;
+}
+.formCard :global(.mantine-InputWrapper-label) {
+    order: 1;
+}
+.formCard :global(.mantine-Input-wrapper) {
+    order: 2;
+}
+.formCard :global(.mantine-InputWrapper-description) {
+    order: 3;
+}
+.formCard :global(.mantine-InputWrapper-error) {
+    order: 4;
+}
+.fieldGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+.choiceGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+.choice {
+    min-width: 12.125rem;
+    padding: 0.9rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.5rem;
+}
+.choice:has(input:checked) {
+    border-color: var(--admin-accent);
+    background: #f3fbfa;
+}
+.settingBlock {
+    display: flex;
+    flex-direction: column;
+}
+.settingBlock > strong {
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+}
+.settingBlock > small {
+    margin-top: 0.25rem;
+    color: #737373;
+    font-size: 0.75rem;
+    line-height: 1.0625rem;
+}
+.teachingHelp {
+    min-height: 27.625rem;
+}
+.activeNotice {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #edf5f3;
+    color: #525252;
+    font-size: 0.75rem;
+}
+.activeNotice strong {
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+}
+.formFooter {
+    display: flex;
+    height: 4rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0;
+    background: #fff;
+}
+.formFooter button {
+    height: 2.75rem;
+    padding-inline: 1.125rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+.formFooter button:disabled {
+    border-color: #e5e5e5;
+    background: #fff;
+    color: #004038;
+    opacity: 1;
+}
+.coursePicker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+.pickerRow {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.5rem;
+}
+.pickerRow:has(input:checked) {
+    border-color: var(--admin-accent);
+    background: #f3fbfa;
+}
+.reviewGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    background: #fff;
+}
+.gapNote {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ffd8a8;
+    border-radius: 0.5rem;
+    background: #fff4e6;
+    color: #8a4b00;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 75rem) {
+    .sidebar {
+        width: 15rem;
+        flex-basis: 15rem;
+    }
+    .brand {
+        padding-inline: 1rem;
+        font-size: 1.25rem;
+    }
+    .filters {
+        grid-template-columns: 1fr 1fr;
+    }
+    .summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .summary .metric:first-child {
+        grid-column: 1 / -1;
+    }
+    .formGrid,
+    .detailGrid,
+    .reviewGrid {
+        grid-template-columns: 1fr;
+    }
+    .formGrid {
+        min-height: auto;
+        overflow: visible;
+    }
+}
+
+@media (max-width: 48rem) {
+    .shell {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+    .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        padding: 0.75rem;
+    }
+    .nav {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+    .nav button {
+        width: auto;
+        flex: 0 0 auto;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+    .profile {
+        display: none;
+    }
+    .main {
+        padding: 1rem;
+    }
+    .pageHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .pageHeader h1 {
+        font-size: 2rem;
+    }
+    .filters,
+    .fieldGrid,
+    .choiceGrid {
+        grid-template-columns: 1fr;
+    }
+    .summary {
+        grid-template-columns: 1fr 1fr;
+    }
+    .courseRow {
+        grid-template-columns: auto 1fr;
+    }
+    .courseRow > :nth-child(n + 3) {
+        grid-column: 2;
+    }
+    .participantToolbar,
+    .participantControls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

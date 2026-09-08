@@ -1,8 +1,11 @@
 import { Skeleton, RadioGroup, TextArea } from "@radix-ui/themes";
+import { useState } from "react";
 import type { QuestionResponse } from "../types/types";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import { MAX_TEXT_ANSWER_LENGTH } from "./useAnswerSubmission";
 import styles from "./QuizCard.module.css";
+import CourseContentModal from "./CourseContentModal";
+import ExpandButton from "./ExpandButton";
 
 type Props = {
     question: {
@@ -27,6 +30,46 @@ export default function QuizCard({
     validationError,
     onAnswerChange,
 }: Props) {
+    const [expanded, setExpanded] = useState(false);
+
+    const answerField = (inModal = false) => {
+        if (question.data?.type === "CHOICE") {
+            return (
+                <RadioGroup.Root
+                    className={styles.radioGroup}
+                    value={answer}
+                    onValueChange={onAnswerChange}
+                    disabled={disabled}
+                    aria-invalid={Boolean(validationError)}
+                >
+                    {question.data.options.map((option) => (
+                        <RadioGroup.Item value={option.id} key={option.id}>
+                            {option.label}. {option.content}
+                        </RadioGroup.Item>
+                    ))}
+                </RadioGroup.Root>
+            );
+        }
+
+        if (question.data?.type === "TEXT") {
+            return (
+                <TextArea
+                    className={`${TextAreaStyle.textInput} ${inModal ? styles.modalAnswer : ""}`}
+                    placeholder="在此輸入答案..."
+                    variant="soft"
+                    color="gray"
+                    value={answer}
+                    maxLength={MAX_TEXT_ANSWER_LENGTH}
+                    disabled={disabled}
+                    aria-invalid={Boolean(validationError)}
+                    onChange={(event) => onAnswerChange(event.target.value)}
+                />
+            );
+        }
+
+        return null;
+    };
+
     if (error) {
         return (
             <div className={styles.quizCard}>
@@ -39,7 +82,11 @@ export default function QuizCard({
     }
 
     return (
-        <div className={styles.quizCard}>
+        <div className={`${styles.quizCard} expandableCourseContent`}>
+            <ExpandButton
+                label={`展開題目 ${question.title}`}
+                onClick={() => setExpanded(true)}
+            />
             <div className={styles.titleRow}>
                 <h3>{question.title}</h3>
             </div>
@@ -48,36 +95,7 @@ export default function QuizCard({
             ) : (
                 <>
                     <p>{question.data?.content}</p>
-                    {question.data?.type === "CHOICE" && (
-                        <RadioGroup.Root
-                            className={styles.radioGroup}
-                            value={answer}
-                            onValueChange={onAnswerChange}
-                            disabled={disabled}
-                            aria-invalid={Boolean(validationError)}
-                        >
-                            {question.data?.options.map((opt) => (
-                                <RadioGroup.Item value={opt.id} key={opt.id}>
-                                    {opt.label}. {opt.content}
-                                </RadioGroup.Item>
-                            ))}
-                        </RadioGroup.Root>
-                    )}
-                    {question.data?.type === "TEXT" && (
-                        <TextArea
-                            className={TextAreaStyle.textInput}
-                            placeholder="在此輸入答案..."
-                            variant="soft"
-                            color="gray"
-                            value={answer}
-                            maxLength={MAX_TEXT_ANSWER_LENGTH}
-                            disabled={disabled}
-                            aria-invalid={Boolean(validationError)}
-                            onChange={(event) =>
-                                onAnswerChange(event.target.value)
-                            }
-                        />
-                    )}
+                    {answerField()}
                     {validationError && (
                         <span className={styles.errorText} role="alert">
                             {validationError}
@@ -85,6 +103,16 @@ export default function QuizCard({
                     )}
                 </>
             )}
+            <CourseContentModal
+                opened={expanded}
+                title={`題目 ${question.title}`}
+                onClose={() => setExpanded(false)}
+            >
+                <div className={styles.modalQuestion}>
+                    <p>{question.data?.content}</p>
+                    {answerField(true)}
+                </div>
+            </CourseContentModal>
         </div>
     );
 }

@@ -15,6 +15,8 @@ import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { useAnswerSubmission } from "../components/useAnswerSubmission";
+import CourseContentModal from "../components/CourseContentModal";
+import ExpandButton from "../components/ExpandButton";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
@@ -49,8 +51,12 @@ export default function Material({
             ),
     });
 
-    const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
-    const [imageError, setImageError] = useState(false);
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+    const [expandedImage, setExpandedImage] = useState<{
+        src: string;
+        alt: string;
+    } | null>(null);
+    const [descriptionExpanded, setDescriptionExpanded] = useState(false);
     const quesTitleQueries = useQueries({
         queries: req.questionSections.map((section) => ({
             queryKey: ["content", "text", section.titleId],
@@ -107,21 +113,52 @@ export default function Material({
             <main className={styles.overviewContent}>
                 {/* left section */}
                 <section className={styles.courseSection}>
-                    <div className={styles.imageContainer}>
-                        {imageError ? (
-                            <span className={styles.errorText}>
-                                圖片載入失敗
-                            </span>
-                        ) : (
-                            <img
-                                src={imageUrl}
-                                alt="教材"
-                                onError={() => setImageError(true)}
-                            />
-                        )}
+                    <div
+                        className={styles.imageContainer}
+                        data-image-count={req.content.imageIds.length}
+                    >
+                        {req.content.imageIds.map((imageId, index) => {
+                            const imageUrl = `${BASE_URL}/api/content/media/${imageId}`;
+                            return imageErrors[imageId] ? (
+                                <span className={styles.errorText} key={imageId}>
+                                    圖片 {index + 1} 載入失敗
+                                </span>
+                            ) : (
+                                <div
+                                    className={`${styles.imageCell} expandableCourseContent`}
+                                    key={imageId}
+                                >
+                                    <img
+                                        src={imageUrl}
+                                        alt={`教材圖片 ${index + 1}`}
+                                        onError={() =>
+                                            setImageErrors((previous) => ({
+                                                ...previous,
+                                                [imageId]: true,
+                                            }))
+                                        }
+                                    />
+                                    <ExpandButton
+                                        label={`放大教材圖片 ${index + 1}`}
+                                        onClick={() =>
+                                            setExpandedImage({
+                                                src: imageUrl,
+                                                alt: `教材圖片 ${index + 1}`,
+                                            })
+                                        }
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    <div className={styles.courseDescriptionWrapper}>
+                    <div
+                        className={`${styles.courseDescriptionWrapper} expandableCourseContent`}
+                    >
+                        <ExpandButton
+                            label="展開教材文字"
+                            onClick={() => setDescriptionExpanded(true)}
+                        />
                         <div className={styles.courseDescription}>
                             {descriptionLoading ? (
                                 <Skeleton minHeight="4rem" />
@@ -205,6 +242,26 @@ export default function Material({
                     </Button>
                 </aside>
             </main>
+            <CourseContentModal
+                opened={descriptionExpanded}
+                title="教材文字"
+                onClose={() => setDescriptionExpanded(false)}
+            >
+                <p>{description?.content}</p>
+            </CourseContentModal>
+            <CourseContentModal
+                opened={expandedImage !== null}
+                title={expandedImage?.alt ?? "教材圖片"}
+                onClose={() => setExpandedImage(null)}
+            >
+                {expandedImage && (
+                    <img
+                        className={styles.modalImage}
+                        src={expandedImage.src}
+                        alt={expandedImage.alt}
+                    />
+                )}
+            </CourseContentModal>
         </div>
     );
 }

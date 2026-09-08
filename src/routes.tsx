@@ -12,6 +12,8 @@ import RouteErrorBoundary from "./shared/components/RouteErrorBoundary";
 import RequireAuth from "./shared/auth/RequireAuth";
 import Homepage from "./features/courses/Homepage/Homepage";
 import MaterialLibrary from "./features/courses/MaterialLibrary/MaterialLibrary";
+import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage";
+import RequireAdminRole from "./features/admin/components/RequireAdminRole";
 
 const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
@@ -50,10 +52,34 @@ const courseRoutes: RouteObject[] = [
     },
 ];
 
+const adminRoutes: RouteObject[] = [
+    {
+        path: "/admin",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <AdminDashboardPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
+];
+
 const enableChatRoutes = ["llm", "dev"].includes(APP_MODE);
 const enableCourseRoutes = ["edu", "dev"].includes(APP_MODE);
+const enableAdminDemo =
+    import.meta.env.DEV && import.meta.env.VITE_ADMIN_DEMO_MODE === "true";
 
 export const router = createBrowserRouter([
+    ...(enableCourseRoutes && enableAdminDemo
+        ? [
+              {
+                  path: "/admin",
+                  element: <AdminDashboardPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+          ]
+        : []),
     {
         element: <AuthProvider />,
         errorElement: <RouteErrorBoundary />,
@@ -64,6 +90,7 @@ export const router = createBrowserRouter([
             },
             ...(enableChatRoutes ? chatRoutes : []),
             ...(enableCourseRoutes ? courseRoutes : []),
+            ...(enableCourseRoutes && !enableAdminDemo ? adminRoutes : []),
             {
                 path: "*",
                 element: <NotFoundPage />,

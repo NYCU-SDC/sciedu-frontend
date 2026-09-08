@@ -76,9 +76,32 @@ jobs:
             - name: Run tsc
               run: pnpm typecheck
 
+    Test:
+        name: Run tests with Vitest
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 11
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run tests
+              run: pnpm test
+
     Build-Push-Image:
         name: Build Docker image
-        needs: [Lint, Format, TypeCheck]
+        needs: [Lint, Format, TypeCheck, Test]
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code

@@ -16,7 +16,27 @@ export type QuestionResponse = {
     options: QuestionOption[];
 };
 
-export type CourseAnswer = string | string[];
+export type ChoiceAnswerSubmissionRequest = {
+    selectedOptionId: string;
+};
+
+export type TextAnswerSubmissionRequest = {
+    textAnswer: string;
+};
+
+export type AnswerSubmissionRequest =
+    | ChoiceAnswerSubmissionRequest
+    | TextAnswerSubmissionRequest;
+
+export type SubmittedAnswerResponse = {
+    id: string;
+    questionId: string;
+    selectedOptionId?: string;
+    textAnswer?: string;
+    createdAt: string;
+};
+
+export type CourseAnswer = string;
 
 export type CourseAnswers = Record<string, CourseAnswer>;
 

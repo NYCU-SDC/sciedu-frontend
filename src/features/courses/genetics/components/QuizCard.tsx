@@ -38,6 +38,9 @@ export default function QuizCard({
     onAskReview,
 }: Props) {
     const [expanded, setExpanded] = useState(false);
+    const modalTitle = question.title.startsWith("題目")
+        ? question.title
+        : `題目 ${question.title}`;
 
     const answerField = (inModal = false) => {
         if (question.data?.type === "CHOICE") {
@@ -94,7 +97,7 @@ export default function QuizCard({
         >
             {!review && (
                 <ExpandButton
-                    label={`展開題目 ${question.title}`}
+                    label={`展開${modalTitle}`}
                     onClick={() => setExpanded(true)}
                 />
             )}
@@ -162,7 +165,7 @@ export default function QuizCard({
             {review ? (
                 <AnswerReviewModal
                     opened={expanded}
-                    title={`題目 ${question.title}`}
+                    title={modalTitle}
                     question={question.data?.content ?? ""}
                     review={review}
                     onClose={() => setExpanded(false)}
@@ -171,7 +174,7 @@ export default function QuizCard({
             ) : (
                 <CourseContentModal
                     opened={expanded}
-                    title={`題目 ${question.title}`}
+                    title={modalTitle}
                     onClose={() => setExpanded(false)}
                 >
                     <div className={styles.modalQuestion}>

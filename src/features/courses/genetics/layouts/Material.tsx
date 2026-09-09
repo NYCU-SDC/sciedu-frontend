@@ -182,9 +182,6 @@ export default function Material({
                             )}
                         </div>
                     </div>
-                    <div className={styles.questionHeader}>
-                        <h2>請根據左圖回答下列問題</h2>
-                    </div>
                     <div className={styles.questionList}>
                         {req.questionSections.map((section, i) => {
                             const titleQuery = quesTitleQueries[i];
@@ -194,7 +191,16 @@ export default function Material({
                                     key={section.questionId}
                                     question={{
                                         id: section.questionId,
-                                        title: titleQuery.data?.content ?? "",
+                                        title: (() => {
+                                            const originalTitle =
+                                                titleQuery.data?.content ?? "";
+                                            const numericTitle = originalTitle
+                                                .trim()
+                                                .match(/^(\d+)[.．、]?$/);
+                                            return numericTitle
+                                                ? `題目 ${numericTitle[1]}`
+                                                : originalTitle;
+                                        })(),
                                         data: contentQuery.data,
                                     }}
                                     isLoading={contentQuery.isLoading}

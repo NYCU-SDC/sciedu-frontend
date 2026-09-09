@@ -429,6 +429,7 @@
 }
 .formCard {
     padding: 1.75rem 2rem;
+    container-type: inline-size;
 }
 .formGrid > .formCard {
     min-height: 43.125rem;
@@ -510,8 +511,23 @@
 }
 .fieldGrid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
+}
+
+.fieldGrid > * {
+    min-width: 0;
+}
+
+.fieldGrid input[type="datetime-local"] {
+    min-width: 0;
+    padding-inline: 0.75rem;
+}
+
+@container (max-width: 44rem) {
+    .fieldGrid {
+        grid-template-columns: 1fr;
+    }
 }
 .choiceGrid {
     display: flex;

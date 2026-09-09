@@ -98,19 +98,12 @@
 }
 
 .questionList {
-    flex: 0.9;
+    flex: 1;
     display: flex;
     padding: 0;
     overflow: hidden;
     flex-direction: row;
     gap: 0.5rem;
-}
-
-.questionHeader h2 {
-    font-size: 1.25rem;
-    font-weight: medium;
-    color: var(--neutral-700);
-    margin: 0;
 }
 
 .radioGroup {

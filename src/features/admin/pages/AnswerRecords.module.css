@@ -183,6 +183,13 @@
 
 .questionHeader > div {
     min-width: 0;
+    flex: 1;
+}
+
+.questionHeader :global(.mantine-Badge-root) {
+    min-width: 4.5rem;
+    flex: 0 0 4.5rem;
+    justify-content: center;
 }
 
 .questionHeader p {

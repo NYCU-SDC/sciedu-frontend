@@ -110,6 +110,7 @@ export default function ExperimentListPage() {
                         type="search"
                         aria-label="搜尋實驗名稱"
                         placeholder="搜尋實驗名稱"
+                        maxLength={200}
                         value={search}
                         onChange={(event) => {
                             setSearch(event.currentTarget.value);
@@ -219,10 +220,12 @@ export default function ExperimentListPage() {
                                                     if (
                                                         event.key === "Enter" ||
                                                         event.key === " "
-                                                    )
+                                                    ) {
+                                                        event.preventDefault();
                                                         navigate(
                                                             `/admin/experiments/${experiment.id}`
                                                         );
+                                                    }
                                                 }}
                                             >
                                                 <Table.Td

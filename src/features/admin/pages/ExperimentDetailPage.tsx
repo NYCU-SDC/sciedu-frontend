@@ -527,6 +527,7 @@ export default function ExperimentDetailPage() {
                                 <TextInput
                                     type="search"
                                     placeholder="搜尋姓名或郵件"
+                                    maxLength={200}
                                     value={search}
                                     onChange={(event) =>
                                         setSearch(event.currentTarget.value)

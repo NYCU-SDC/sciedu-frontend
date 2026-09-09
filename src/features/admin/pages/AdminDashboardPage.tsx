@@ -18,6 +18,7 @@ import {
     Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Navigate, useSearchParams } from "react-router";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";
@@ -44,9 +45,10 @@ const PAGE_SIZE = 10;
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
     const queryClient = useQueryClient();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    const [activeSection, setActiveSection] =
-        useState<AdminSection>("overview");
+    const activeSection: AdminSection =
+        searchParams.get("section") === "people" ? "people" : "overview";
     const [selectedExperimentId, setSelectedExperimentId] = useState("");
     const [tableView, setTableView] = useState<TableView>("participants");
     const [query, setQuery] = useState("");
@@ -164,7 +166,7 @@ export default function AdminDashboardPage() {
     };
 
     const switchSection = (section: AdminSection) => {
-        setActiveSection(section);
+        setSearchParams(section === "people" ? { section: "people" } : {});
         resetTable();
     };
 
@@ -175,7 +177,7 @@ export default function AdminDashboardPage() {
         return <div className={styles.pageStatus}>實驗總覽載入失敗</div>;
     }
     if (experiments.length === 0) {
-        return <div className={styles.pageStatus}>目前沒有可管理的實驗</div>;
+        return <Navigate replace to="/admin/experiments" />;
     }
     if (experimentQuery.isError) {
         return <div className={styles.pageStatus}>實驗資料載入失敗</div>;

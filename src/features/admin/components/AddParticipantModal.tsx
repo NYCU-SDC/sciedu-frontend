@@ -24,6 +24,8 @@ type Props = {
     onClose: () => void;
 };
 
+const MAX_PARTICIPANTS_PER_REQUEST = 100;
+
 export default function AddParticipantModal({ experimentId, onClose }: Props) {
     const queryClient = useQueryClient();
     const [query, setQuery] = useState("");
@@ -59,7 +61,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
         setSelectedIds((previous) => {
             const next = new Set(previous);
             if (next.has(userId)) next.delete(userId);
-            else next.add(userId);
+            else if (next.size < MAX_PARTICIPANTS_PER_REQUEST) next.add(userId);
             return next;
         });
     };
@@ -84,6 +86,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                     autoFocus
                     type="search"
                     placeholder="搜尋姓名或郵件"
+                    maxLength={200}
                     aria-label="搜尋可加入的學生"
                     value={query}
                     onChange={(event) => setQuery(event.currentTarget.value)}
@@ -104,7 +107,12 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                         </Text>
                     )}
                     {candidatesQuery.data?.map((candidate) => {
-                        const isAvailable = !candidate.isAssigned;
+                        const isSelected = selectedIds.has(candidate.user.id);
+                        const hasReachedLimit =
+                            selectedIds.size >= MAX_PARTICIPANTS_PER_REQUEST &&
+                            !isSelected;
+                        const isAvailable =
+                            !candidate.isAssigned && !hasReachedLimit;
                         return (
                             <label
                                 key={candidate.user.id}
@@ -113,7 +121,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                                 }`}
                             >
                                 <Checkbox
-                                    checked={selectedIds.has(candidate.user.id)}
+                                    checked={isSelected}
                                     disabled={!isAvailable}
                                     onChange={() =>
                                         toggleCandidate(candidate.user.id)
@@ -141,7 +149,11 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                                             : styles.conflict
                                     }
                                 >
-                                    {isAvailable ? "可加入" : "已加入本實驗"}
+                                    {candidate.isAssigned
+                                        ? "已加入本實驗"
+                                        : hasReachedLimit
+                                          ? "已達單次上限"
+                                          : "可加入"}
                                 </Text>
                             </label>
                         );
@@ -160,7 +172,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                     className={styles.mantineModalFooter}
                 >
                     <Text size="sm" c="dimmed">
-                        已選擇 {selectedIds.size} 位學生
+                        已選擇 {selectedIds.size} 位學生（單次最多 100 位）
                     </Text>
                     <Group gap="sm">
                         <Button variant="default" onClick={onClose}>

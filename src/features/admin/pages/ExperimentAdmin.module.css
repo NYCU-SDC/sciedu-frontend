@@ -3,6 +3,7 @@
     --admin-ink: #004038;
     --admin-deep: #004d43;
     --admin-active: #0e6258;
+    --admin-hover: #07584f;
     --admin-accent: #63cabe;
     --admin-canvas: #f0f6f4;
     --admin-border: #d4d4d4;
@@ -66,11 +67,21 @@
     font-size: 1.25rem;
     text-align: left;
 }
-.nav button:hover:not(:disabled),
 .nav .navActive {
     background: var(--admin-active);
 }
+
+.nav button:hover:not(:disabled):not(.navActive) {
+    background: var(--admin-hover);
+}
+
+.nav button:focus-visible {
+    outline: 2px solid #77d5c6;
+    outline-offset: 2px;
+}
+
 .nav button:disabled {
+    cursor: not-allowed;
     opacity: 0.72;
 }
 .nav svg {

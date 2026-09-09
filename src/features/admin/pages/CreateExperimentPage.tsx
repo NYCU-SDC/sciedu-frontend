@@ -41,8 +41,8 @@ type Draft = {
     startsAt: string;
     endsAt: string;
     maxAttempts: string;
-    result: "score" | "explanations";
-    release: "page" | "course";
+    result: "hidden" | "score" | "explanations";
+    release: "page" | "course" | "never";
     courseIds: string[];
 };
 
@@ -155,12 +155,17 @@ export default function CreateExperimentPage() {
             ),
             result: experiment.configuration.showExplanations
                 ? "explanations"
-                : "score",
+                : experiment.configuration.showScore
+                  ? "score"
+                  : "hidden",
             release:
                 experiment.configuration.correctAnswerReleaseMode ===
                 "AFTER_PAGE_SUBMISSION"
                     ? "page"
-                    : "course",
+                    : experiment.configuration.correctAnswerReleaseMode ===
+                        "NEVER"
+                      ? "never"
+                      : "course",
             courseIds: (assignedCoursesQuery.data ?? []).map(
                 ({ course }) => course.id
             ),
@@ -205,12 +210,18 @@ export default function CreateExperimentPage() {
         draft.endsAt &&
         draft.startsAt < draft.endsAt
     );
-    const canContinueCourses = draft.courseIds.length > 0;
+    const canContinueCourses = selectedCourses.some(
+        (course) => course.status === "PUBLISHED"
+    );
     const currentStatus = experimentQuery.data?.status;
     const isReadOnly =
         currentStatus === "COMPLETED" || currentStatus === "ARCHIVED";
     const isActive = currentStatus === "ACTIVE";
     const canEditCourses = !currentStatus || currentStatus === "DRAFT";
+    const participantCount =
+        participantsQuery.data?.length ??
+        experimentQuery.data?.participantCount ??
+        0;
     const setField = <K extends keyof Draft>(field: K, value: Draft[K]) =>
         setDraft((current) => ({ ...current, [field]: value }));
 
@@ -235,13 +246,16 @@ export default function CreateExperimentPage() {
         configuration: {
             maxAttempts: Number(draft.maxAttempts),
             allowRetry: Number(draft.maxAttempts) > 1,
-            showScore: true,
+            showScore: draft.result !== "hidden",
             showExplanations: draft.result === "explanations",
-            gradingMode: "AUTOMATIC",
+            gradingMode:
+                experimentQuery.data?.configuration.gradingMode ?? "AUTOMATIC",
             correctAnswerReleaseMode:
                 draft.release === "page"
                     ? "AFTER_PAGE_SUBMISSION"
-                    : "AFTER_COURSE_COMPLETION",
+                    : draft.release === "never"
+                      ? "NEVER"
+                      : "AFTER_COURSE_COMPLETION",
         },
     });
 
@@ -261,11 +275,20 @@ export default function CreateExperimentPage() {
         const additions = draft.courseIds.filter((id) => !persisted.has(id));
         const removals = persistedCourseIds.filter((id) => !selected.has(id));
 
-        await Promise.all([
-            additions.length ? addExperimentCourses(id, additions) : null,
-            ...removals.map((courseId) => removeExperimentCourse(id, courseId)),
-        ]);
-        setPersistedCourseIds([...draft.courseIds]);
+        const syncedCourseIds = new Set(persistedCourseIds);
+        try {
+            for (let index = 0; index < additions.length; index += 100) {
+                const batch = additions.slice(index, index + 100);
+                await addExperimentCourses(id, batch);
+                batch.forEach((courseId) => syncedCourseIds.add(courseId));
+            }
+            for (const courseId of removals) {
+                await removeExperimentCourse(id, courseId);
+                syncedCourseIds.delete(courseId);
+            }
+        } finally {
+            setPersistedCourseIds([...syncedCourseIds]);
+        }
         setCoursesTouched(false);
     };
 
@@ -550,23 +573,29 @@ export default function CreateExperimentPage() {
                                 <div className={styles.settingBlock}>
                                     <strong>評分方式 *</strong>
                                     <small>本階段僅支援自動評分。</small>
-                                    <div className={styles.choiceGrid}>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                value="automatic"
-                                                label="自動評分"
-                                                checked
-                                                readOnly
-                                            />
-                                        </label>
-                                        <label className={styles.choice}>
-                                            <Radio
-                                                disabled
-                                                value="manual"
-                                                label="人工評分（即將推出）"
-                                            />
-                                        </label>
-                                    </div>
+                                    <Radio.Group
+                                        value={
+                                            experimentQuery.data?.configuration
+                                                .gradingMode ?? "AUTOMATIC"
+                                        }
+                                    >
+                                        <div className={styles.choiceGrid}>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    value="AUTOMATIC"
+                                                    label="自動評分"
+                                                    readOnly
+                                                />
+                                            </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    disabled
+                                                    value="MANUAL"
+                                                    label="人工評分（即將推出）"
+                                                />
+                                            </label>
+                                        </div>
+                                    </Radio.Group>
                                 </div>
                                 <div className={styles.settingBlock}>
                                     <strong>重新作答 *</strong>
@@ -643,6 +672,15 @@ export default function CreateExperimentPage() {
                                                     label="顯示分數與詳解"
                                                 />
                                             </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
+                                                    value="hidden"
+                                                    label="不顯示分數與詳解"
+                                                />
+                                            </label>
                                         </div>
                                     </Radio.Group>
                                 </div>
@@ -675,6 +713,15 @@ export default function CreateExperimentPage() {
                                                     }
                                                     value="course"
                                                     label="整份教材完成後公開"
+                                                />
+                                            </label>
+                                            <label className={styles.choice}>
+                                                <Radio
+                                                    disabled={
+                                                        isActive || isReadOnly
+                                                    }
+                                                    value="never"
+                                                    label="不公開正確答案"
                                                 />
                                             </label>
                                         </div>
@@ -812,6 +859,9 @@ export default function CreateExperimentPage() {
                                         <Button
                                             variant="subtle"
                                             size="xs"
+                                            disabled={
+                                                !canEditCourses || isSaving
+                                            }
                                             onClick={() =>
                                                 toggleCourse(course.id)
                                             }
@@ -925,10 +975,7 @@ export default function CreateExperimentPage() {
                                 參與學生
                             </Title>
                             <Title order={3} mt="md">
-                                {participantsQuery.data?.length ??
-                                    experimentQuery.data?.participantCount ??
-                                    0}{" "}
-                                人
+                                {participantCount} 人
                             </Title>
                             <p>
                                 學生名單可以在排程前加入，也可以稍後從實驗詳細頁補上。
@@ -940,9 +987,11 @@ export default function CreateExperimentPage() {
                             >
                                 ＋ 加入學生
                             </Button>
-                            <div className={styles.warning}>
-                                不會阻擋排程，但目前沒有學生能看到這場實驗。
-                            </div>
+                            {participantCount === 0 && (
+                                <div className={styles.warning}>
+                                    不會阻擋排程，但目前沒有學生能看到這場實驗。
+                                </div>
+                            )}
                         </Card>
                     </div>
                 )}

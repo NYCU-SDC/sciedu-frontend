@@ -79,7 +79,7 @@ export default function ExperimentAdminShell({
                                 ? styles.navActive
                                 : undefined
                         }
-                        onClick={() => navigate("/admin")}
+                        onClick={() => navigate("/admin?section=people")}
                     >
                         <Users aria-hidden="true" />
                         人員管理

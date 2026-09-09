@@ -7,6 +7,8 @@ import {
     demoParticipants,
 } from "../data/demoAdminData";
 import type {
+    Course,
+    EditableExperimentPayload,
     Experiment,
     ExperimentCourseAssignment,
     ExperimentDetail,
@@ -16,6 +18,7 @@ import type {
     ParticipantCandidate,
     User,
     UserListParams,
+    ExperimentStatus,
 } from "../types";
 
 export const isAdminDemoMode =
@@ -126,6 +129,35 @@ export function fetchExperiment(
     return api<ExperimentDetail>(`/api/experiments/${experimentId}`);
 }
 
+export function createExperiment(
+    payload: EditableExperimentPayload
+): Promise<ExperimentDetail> {
+    return api<ExperimentDetail>("/api/experiments", {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+}
+
+export function updateExperiment(
+    experimentId: string,
+    payload: EditableExperimentPayload
+): Promise<ExperimentDetail> {
+    return api<ExperimentDetail>(`/api/experiments/${experimentId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+    });
+}
+
+export function updateExperimentStatus(
+    experimentId: string,
+    status: ExperimentStatus
+): Promise<ExperimentDetail> {
+    return api<ExperimentDetail>(`/api/experiments/${experimentId}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+    });
+}
+
 async function fetchParticipantPage(
     experimentId: string,
     page: number
@@ -162,6 +194,59 @@ export function listExperimentCourses(
     experimentId: string
 ): Promise<ExperimentCourseAssignment[]> {
     return collectAllPages((page) => fetchCoursePage(experimentId, page));
+}
+
+async function fetchCourseCandidatePage(
+    page: number
+): Promise<PaginatedResponse<Course>> {
+    if (isAdminDemoMode) {
+        return resolveDemo(
+            paginate(
+                demoCourses.map(({ course }) => course),
+                page,
+                MAX_PAGE_SIZE
+            )
+        );
+    }
+    const query = toSearchParams({
+        page,
+        pageSize: MAX_PAGE_SIZE,
+        status: "PUBLISHED",
+    });
+    return api<PaginatedResponse<Course>>(`/api/courses?${query}`);
+}
+
+export function listExperimentCourseCandidates(): Promise<Course[]> {
+    return collectAllPages(fetchCourseCandidatePage);
+}
+
+export function addExperimentCourses(
+    experimentId: string,
+    courseIds: string[]
+): Promise<ExperimentCourseAssignment[]> {
+    if (isAdminDemoMode) {
+        const courseIdsSet = new Set(courseIds);
+        return resolveDemo(
+            demoCourses.filter(({ course }) => courseIdsSet.has(course.id))
+        );
+    }
+    return api<ExperimentCourseAssignment[]>(
+        `/api/experiments/${experimentId}/courses`,
+        {
+            method: "POST",
+            body: JSON.stringify({ courseIds }),
+        }
+    );
+}
+
+export async function removeExperimentCourse(
+    experimentId: string,
+    courseId: string
+): Promise<void> {
+    if (isAdminDemoMode) return resolveDemo(undefined);
+    await api<void>(`/api/experiments/${experimentId}/courses/${courseId}`, {
+        method: "DELETE",
+    });
 }
 
 async function fetchUserPage(

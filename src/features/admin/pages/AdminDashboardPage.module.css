@@ -3,6 +3,7 @@
     --admin-ink: #004038;
     --admin-sidebar: #004d43;
     --admin-sidebar-active: #0e6258;
+    --admin-sidebar-hover: #07584f;
     --admin-canvas: #f0f6f4;
     --admin-border: #d4d4d4;
     min-height: 100vh;
@@ -77,9 +78,17 @@
     text-align: left;
 }
 
-.sidebarNav button:hover:not(:disabled),
 .sidebarNav .navActive {
     background: var(--admin-sidebar-active);
+}
+
+.sidebarNav button:hover:not(:disabled):not(.navActive) {
+    background: var(--admin-sidebar-hover);
+}
+
+.sidebarNav button:focus-visible {
+    outline: 2px solid #77d5c6;
+    outline-offset: 2px;
 }
 
 .sidebarNav button:disabled {

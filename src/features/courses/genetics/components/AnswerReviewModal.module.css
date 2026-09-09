@@ -1,0 +1,65 @@
+.content {
+    max-height: min(86vh, 52rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.header {
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.body {
+    padding: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.scrollArea {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem;
+    overscroll-behavior: contain;
+}
+
+.section {
+    margin-bottom: 1.25rem;
+}
+
+.section h3 {
+    margin: 0 0 0.45rem;
+    color: var(--color-brand-teal-dark);
+    font-size: 0.95rem;
+}
+
+.section p {
+    margin: 0;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.answer {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: var(--color-neutral-50);
+}
+
+.footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-neutral-200);
+    background: white;
+}
+
+.input {
+    flex: 1;
+}

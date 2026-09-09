@@ -23,23 +23,48 @@
     flex-direction: column;
     gap: 0.75rem;
     padding: 0.5rem 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    overflow: hidden;
 }
 
 .imageContainer {
-    flex: 0 0 20rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    flex: 1.7;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.35rem;
     overflow: hidden;
     border: 0.125rem solid var(--color-genetics-brand-teal);
     border-radius: 1rem;
 }
 
-.imageContainer img {
+.imageContainer[data-image-count="1"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}
+
+.imageContainer[data-image-count="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+}
+
+.imageContainer[data-image-count="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+}
+
+.imageCell {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.imageCell img {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -51,38 +76,34 @@
 }
 
 .courseDescriptionWrapper {
-    flex: 0 0 auto;
-    min-height: 7.5rem;
+    position: relative;
+    flex: 1;
+    min-height: 0;
     border: 0.125rem solid var(--color-genetics-brand-teal);
     border-radius: 1rem;
     overflow: hidden;
 }
 
 .courseDescription {
-    min-height: 100%;
+    height: 100%;
     overflow-y: auto;
     background-color: #ffffff;
 }
 
 .courseDescription p {
-    margin: 0.5rem 0.5rem 1rem 0.5rem;
+    margin: 0.5rem 0.75rem 1rem;
+    font-size: clamp(0.72rem, 0.8vw, 0.875rem);
+    line-height: 1.65;
+    white-space: pre-wrap;
 }
 
 .questionList {
-    flex: 0 0 auto;
-    min-height: 12rem;
+    flex: 1;
     display: flex;
     padding: 0;
-    overflow: visible;
+    overflow: hidden;
     flex-direction: row;
     gap: 0.5rem;
-}
-
-.questionHeader h2 {
-    font-size: 1.25rem;
-    font-weight: medium;
-    color: var(--neutral-700);
-    margin: 0;
 }
 
 .radioGroup {
@@ -98,4 +119,11 @@
     flex-direction: column;
     gap: 0.75rem;
     padding-bottom: 0.5rem;
+}
+
+.modalImage {
+    display: block;
+    width: 100%;
+    max-height: 68vh;
+    object-fit: contain;
 }

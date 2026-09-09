@@ -56,7 +56,7 @@ export const coursePageRequests: CoursePageRequest[] = [
         request: {
             type: "material",
             content: {
-                imageId: PAGE_1_IMAGE,
+                imageIds: [PAGE_1_IMAGE],
                 descriptionId: PAGE_1_DESCRIPTION,
             },
             questionSections: [

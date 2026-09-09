@@ -19,6 +19,8 @@ import {
     MAX_TEXT_ANSWER_LENGTH,
     useAnswerSubmission,
 } from "../components/useAnswerSubmission";
+import QuizCard from "../components/QuizCard";
+import type { DemoQuestionReview } from "../../demo/demoCourseCatalog";
 
 type Props = {
     data: CoursePageRequest;
@@ -27,6 +29,9 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    reviewMode?: boolean;
+    reviews?: Record<string, DemoQuestionReview>;
+    isLastPage?: boolean;
 };
 
 export default function Questions({
@@ -36,6 +41,9 @@ export default function Questions({
     isCompleted,
     onNext,
     onAnswerChange,
+    reviewMode = false,
+    reviews = {},
+    isLastPage = false,
 }: Props) {
     const req = data.request as QuestionPage;
     const posthog = usePostHog();
@@ -191,6 +199,41 @@ export default function Questions({
                                     const isError = result?.isError ?? false;
                                     const titleError =
                                         titleQuery?.isError ?? false;
+
+                                    if (reviewMode) {
+                                        return (
+                                            <QuizCard
+                                                key={question.questionId}
+                                                question={{
+                                                    id: question.questionId,
+                                                    title:
+                                                        titleQuery?.data
+                                                            ?.content ?? "",
+                                                    data: result?.data,
+                                                }}
+                                                isLoading={isLoading}
+                                                error={
+                                                    isError || titleError
+                                                        ? "載入失敗"
+                                                        : null
+                                                }
+                                                answer=""
+                                                disabled
+                                                onAnswerChange={() => undefined}
+                                                review={
+                                                    reviews[question.questionId]
+                                                }
+                                                onAskReview={(text) =>
+                                                    chat.handleMockQuestion(
+                                                        text,
+                                                        reviews[
+                                                            question.questionId
+                                                        ]?.mockReply
+                                                    )
+                                                }
+                                            />
+                                        );
+                                    }
 
                                     return (
                                         <div
@@ -358,17 +401,21 @@ export default function Questions({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={submit}
-                        disabled={isSubmitting}
+                        onClick={reviewMode ? onNext : submit}
+                        disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
-                        {isSubmitting
-                            ? "答案送出中…"
-                            : submissionError
-                              ? "重試送出"
-                              : isCompleted
-                                ? "前往下一頁"
-                                : "送出並前往下一頁"}
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : isSubmitting
+                              ? "答案送出中…"
+                              : submissionError
+                                ? "重試送出"
+                                : isCompleted
+                                  ? "前往下一頁"
+                                  : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </div>

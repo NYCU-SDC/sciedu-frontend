@@ -15,6 +15,10 @@ import QuizCard from "../components/QuizCard";
 import CourseChat from "../components/CourseChat";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { useAnswerSubmission } from "../components/useAnswerSubmission";
+import CourseContentModal from "../components/CourseContentModal";
+import ExpandButton from "../components/ExpandButton";
+import { DEMO_MODE, getDemoMediaUrl } from "../../demo/demoCourseCatalog";
+import type { DemoQuestionReview } from "../../demo/demoCourseCatalog";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
@@ -25,6 +29,9 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    reviewMode?: boolean;
+    reviews?: Record<string, DemoQuestionReview>;
+    isLastPage?: boolean;
 };
 
 export default function Material({
@@ -34,6 +41,9 @@ export default function Material({
     isCompleted,
     onNext,
     onAnswerChange,
+    reviewMode = false,
+    reviews = {},
+    isLastPage = false,
 }: Props) {
     const req = data.request as MaterialPage;
 
@@ -49,8 +59,12 @@ export default function Material({
             ),
     });
 
-    const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
-    const [imageError, setImageError] = useState(false);
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+    const [expandedImage, setExpandedImage] = useState<{
+        src: string;
+        alt: string;
+    } | null>(null);
+    const [descriptionExpanded, setDescriptionExpanded] = useState(false);
     const quesTitleQueries = useQueries({
         queries: req.questionSections.map((section) => ({
             queryKey: ["content", "text", section.titleId],
@@ -107,21 +121,57 @@ export default function Material({
             <main className={styles.overviewContent}>
                 {/* left section */}
                 <section className={styles.courseSection}>
-                    <div className={styles.imageContainer}>
-                        {imageError ? (
-                            <span className={styles.errorText}>
-                                圖片載入失敗
-                            </span>
-                        ) : (
-                            <img
-                                src={imageUrl}
-                                alt="教材"
-                                onError={() => setImageError(true)}
-                            />
-                        )}
+                    <div
+                        className={styles.imageContainer}
+                        data-image-count={req.content.imageIds.length}
+                    >
+                        {req.content.imageIds.map((imageId, index) => {
+                            const imageUrl =
+                                (DEMO_MODE && getDemoMediaUrl(imageId)) ||
+                                `${BASE_URL}/api/content/media/${imageId}`;
+                            return imageErrors[imageId] ? (
+                                <span
+                                    className={styles.errorText}
+                                    key={imageId}
+                                >
+                                    圖片 {index + 1} 載入失敗
+                                </span>
+                            ) : (
+                                <div
+                                    className={`${styles.imageCell} expandableCourseContent`}
+                                    key={imageId}
+                                >
+                                    <img
+                                        src={imageUrl}
+                                        alt={`教材圖片 ${index + 1}`}
+                                        onError={() =>
+                                            setImageErrors((previous) => ({
+                                                ...previous,
+                                                [imageId]: true,
+                                            }))
+                                        }
+                                    />
+                                    <ExpandButton
+                                        label={`放大教材圖片 ${index + 1}`}
+                                        onClick={() =>
+                                            setExpandedImage({
+                                                src: imageUrl,
+                                                alt: `教材圖片 ${index + 1}`,
+                                            })
+                                        }
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    <div className={styles.courseDescriptionWrapper}>
+                    <div
+                        className={`${styles.courseDescriptionWrapper} expandableCourseContent`}
+                    >
+                        <ExpandButton
+                            label="展開教材文字"
+                            onClick={() => setDescriptionExpanded(true)}
+                        />
                         <div className={styles.courseDescription}>
                             {descriptionLoading ? (
                                 <Skeleton minHeight="4rem" />
@@ -132,9 +182,6 @@ export default function Material({
                             )}
                         </div>
                     </div>
-                    <div className={styles.questionHeader}>
-                        <h2>請根據左圖回答下列問題</h2>
-                    </div>
                     <div className={styles.questionList}>
                         {req.questionSections.map((section, i) => {
                             const titleQuery = quesTitleQueries[i];
@@ -144,7 +191,16 @@ export default function Material({
                                     key={section.questionId}
                                     question={{
                                         id: section.questionId,
-                                        title: titleQuery.data?.content ?? "",
+                                        title: (() => {
+                                            const originalTitle =
+                                                titleQuery.data?.content ?? "";
+                                            const numericTitle = originalTitle
+                                                .trim()
+                                                .match(/^(\d+)[.．、]?$/);
+                                            return numericTitle
+                                                ? `題目 ${numericTitle[1]}`
+                                                : originalTitle;
+                                        })(),
                                         data: contentQuery.data,
                                     }}
                                     isLoading={contentQuery.isLoading}
@@ -171,6 +227,18 @@ export default function Material({
                                             answer
                                         )
                                     }
+                                    review={
+                                        reviewMode
+                                            ? reviews[section.questionId]
+                                            : undefined
+                                    }
+                                    onAskReview={(question) =>
+                                        chat.handleMockQuestion(
+                                            question,
+                                            reviews[section.questionId]
+                                                ?.mockReply
+                                        )
+                                    }
                                 />
                             );
                         })}
@@ -191,20 +259,44 @@ export default function Material({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={submit}
-                        disabled={isSubmitting}
+                        onClick={reviewMode ? onNext : submit}
+                        disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
-                        {isSubmitting
-                            ? "答案送出中…"
-                            : submissionError
-                              ? "重試送出"
-                              : isCompleted
-                                ? "前往下一頁"
-                                : "送出並前往下一頁"}
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : isSubmitting
+                              ? "答案送出中…"
+                              : submissionError
+                                ? "重試送出"
+                                : isCompleted
+                                  ? "前往下一頁"
+                                  : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </main>
+            <CourseContentModal
+                opened={descriptionExpanded}
+                title="教材文字"
+                onClose={() => setDescriptionExpanded(false)}
+            >
+                <p>{description?.content}</p>
+            </CourseContentModal>
+            <CourseContentModal
+                opened={expandedImage !== null}
+                title={expandedImage?.alt ?? "教材圖片"}
+                onClose={() => setExpandedImage(null)}
+            >
+                {expandedImage && (
+                    <img
+                        className={styles.modalImage}
+                        src={expandedImage.src}
+                        alt={expandedImage.alt}
+                    />
+                )}
+            </CourseContentModal>
         </div>
     );
 }

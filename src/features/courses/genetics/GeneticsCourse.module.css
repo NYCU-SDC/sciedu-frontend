@@ -36,15 +36,16 @@
     display: none;
 }
 
-.copyrightFooter {
-    flex-shrink: 0;
-    margin-top: 0;
-    padding: 0 2rem 0.625rem 2rem;
-    font-size: 0.75rem;
-    color: #888;
-    background-color: #ffffff;
-    box-sizing: border-box;
-    text-align: left;
+.courseStatus {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(to bottom, #fdfefe, #d2e1e4);
+    color: #31534d;
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
 }
 
 .mobileBlocker {
@@ -103,8 +104,5 @@
     }
     .courseWrapper {
         display: flex;
-    }
-    .copyrightFooter {
-        background-color: transparent;
     }
 }

@@ -17,6 +17,7 @@ import {
     Plus,
     Search,
 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -44,9 +45,13 @@ const PAGE_SIZE = 10;
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const initialSection =
+        searchParams.get("section") === "people" ? "people" : "overview";
 
     const [activeSection, setActiveSection] =
-        useState<AdminSection>("overview");
+        useState<AdminSection>(initialSection);
     const [selectedExperimentId, setSelectedExperimentId] = useState("");
     const [tableView, setTableView] = useState<TableView>("participants");
     const [query, setQuery] = useState("");
@@ -164,7 +169,18 @@ export default function AdminDashboardPage() {
     };
 
     const switchSection = (section: AdminSection) => {
+        if (section === "experiments") {
+            navigate("/admin/experiments");
+            return;
+        }
+        if (section === "answers") {
+            navigate("/admin/answers");
+            return;
+        }
         setActiveSection(section);
+        navigate(section === "people" ? "/admin?section=people" : "/admin", {
+            replace: true,
+        });
         resetTable();
     };
 

@@ -1,7 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import { Button, Card, Text, Title } from "@mantine/core";
+import {
+    getMaterialProgressLabel,
+    type MaterialStatus,
+} from "../../materialProgress";
 
-export type MaterialStatus = "done" | "in_progress" | "not_started";
+export type { MaterialStatus } from "../../materialProgress";
 
 const statusLabel: Record<MaterialStatus, string> = {
     done: "已完成",
@@ -14,20 +18,6 @@ const statusColor: Record<MaterialStatus, string> = {
     in_progress: "#925800",
     not_started: "#925800",
 };
-
-function getMetaText(
-    status: MaterialStatus,
-    totalPages: number,
-    completedPage: number
-) {
-    if (status === "done") {
-        return `共 ${totalPages} 頁．已全部完成`;
-    }
-    if (status === "in_progress") {
-        return `共 ${totalPages} 頁．已完成第 ${completedPage} 頁`;
-    }
-    return `共 ${totalPages} 頁．尚未開始`;
-}
 
 type Props = {
     title: string;
@@ -67,7 +57,11 @@ export default function MaterialCard({
                 {title}
             </Title>
             <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
-                {getMetaText(status, totalPages, completedPage)}
+                {getMaterialProgressLabel({
+                    status,
+                    totalPages,
+                    completedPage,
+                })}
             </Text>
             <Button
                 radius="16px"

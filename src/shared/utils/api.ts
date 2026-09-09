@@ -1,3 +1,8 @@
+import {
+    DEMO_MODE,
+    getDemoApiResponse,
+} from "../../features/courses/demo/demoCourseCatalog";
+
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 export class ApiError extends Error {
@@ -13,6 +18,14 @@ export async function api<T>(
     path: string,
     options: RequestInit = {}
 ): Promise<T> {
+    if (DEMO_MODE) {
+        const demoResponse = getDemoApiResponse(path, options);
+        if (demoResponse !== undefined) {
+            await new Promise((resolve) => window.setTimeout(resolve, 120));
+            return demoResponse as T;
+        }
+    }
+
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),

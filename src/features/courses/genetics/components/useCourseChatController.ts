@@ -5,6 +5,7 @@ import type { Message } from "../../../chat/types/chat";
 import useChat from "../../../chat/services/useChat";
 import { startChat } from "../../../chat/services/startChat";
 import { CHAT_HISTORY_QUERY_KEY } from "../../../../shared/network/chat";
+import { DEMO_MODE } from "../../demo/demoCourseCatalog";
 
 export function useCourseChatController() {
     const queryClient = useQueryClient();
@@ -17,6 +18,8 @@ export function useCourseChatController() {
     );
     const [editingDraft, setEditingDraft] = useState("");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [demoMessages, setDemoMessages] = useState<Message[]>([]);
+    const [demoThinking, setDemoThinking] = useState(false);
     const chatGenerationRef = useRef(0);
 
     useEffect(
@@ -32,10 +35,11 @@ export function useCourseChatController() {
         streamingContent,
     } = chat;
 
-    const busy =
-        creating || chat.status === "streaming" || chat.status === "loading";
+    const busy = DEMO_MODE
+        ? demoThinking
+        : creating || chat.status === "streaming" || chat.status === "loading";
 
-    const messages = useMemo<Message[]>(() => {
+    const remoteMessages = useMemo<Message[]>(() => {
         if (streamingContent === null || !streamingMessageId) {
             return baseMessages;
         }
@@ -65,9 +69,48 @@ export function useCourseChatController() {
         ];
     }, [baseMessages, streamingMessageId, streamingContent]);
 
+    const messages = DEMO_MODE ? demoMessages : remoteMessages;
+
+    const sendDemoMessage = (text: string, reply?: string) => {
+        const trimmed = text.trim();
+        if (!trimmed || demoThinking) return;
+        const createdAt = new Date().toISOString();
+        const userMessage: Message = {
+            id: `demo-user-${Date.now()}`,
+            role: "user",
+            content: trimmed,
+            status: "completed",
+            createdAt,
+        };
+        setDraft("");
+        setDemoMessages((current) => [...current, userMessage]);
+        setDemoThinking(true);
+        window.setTimeout(() => {
+            setDemoMessages((current) => [
+                ...current,
+                {
+                    id: `demo-assistant-${Date.now()}`,
+                    role: "assistant",
+                    content:
+                        reply ??
+                        "這個問題可以先從教材中的觀察證據出發，再連結對應的科學機制。試著把主張、證據與推理分成三句，就能形成完整回答。",
+                    previousID: userMessage.id,
+                    status: "completed",
+                    createdAt: new Date().toISOString(),
+                },
+            ]);
+            setDemoThinking(false);
+        }, 800);
+    };
+
     const handleSend = async (text: string) => {
         const trimmed = text.trim();
         if (!trimmed || busy) return;
+
+        if (DEMO_MODE) {
+            sendDemoMessage(trimmed);
+            return;
+        }
 
         setDraft("");
         setErrorMessage(null);
@@ -154,6 +197,12 @@ export function useCourseChatController() {
     };
 
     const handleRefresh = () => {
+        if (DEMO_MODE) {
+            setDemoMessages([]);
+            setDemoThinking(false);
+            setDraft("");
+            return;
+        }
         chatGenerationRef.current += 1;
         chat.abort();
         setChatID(null);
@@ -175,7 +224,9 @@ export function useCourseChatController() {
         editingDraft,
         setEditingDraft,
         errorMessage: errorMessage ?? chat.error?.message ?? null,
+        demoThinking,
         handleSend,
+        handleMockQuestion: sendDemoMessage,
         handleEdit,
         handleSubmitEdit,
         handleCancelEdit,

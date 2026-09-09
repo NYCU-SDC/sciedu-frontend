@@ -12,9 +12,17 @@ type Props = {
     data: CoursePageRequest;
     chat: CourseChatController;
     onNext: () => void;
+    reviewMode?: boolean;
+    isLastPage?: boolean;
 };
 
-export default function Overview({ data, chat, onNext }: Props) {
+export default function Overview({
+    data,
+    chat,
+    onNext,
+    reviewMode = false,
+    isLastPage = false,
+}: Props) {
     const req = data.request as OverviewPage;
 
     const allTextIds = useMemo(
@@ -103,7 +111,11 @@ export default function Overview({ data, chat, onNext }: Props) {
                         onClick={onNext}
                         radius="full"
                     >
-                        送出並前往下一頁
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </div>

@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Button, Card, Text, Title } from "@mantine/core";
+import { getMaterialProgressLabel } from "../../materialProgress";
 
 type Props = {
     eyebrow: string;
@@ -39,7 +40,11 @@ export default function CurrentTaskCard({
                 {title}
             </Title>
             <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
-                共 {totalPages} 頁．已完成第 {completedPage} 頁
+                {getMaterialProgressLabel({
+                    status: "in_progress",
+                    totalPages,
+                    completedPage,
+                })}
             </Text>
             <Button
                 radius="16px"

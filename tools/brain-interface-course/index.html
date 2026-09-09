@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>腦機介面教材匯入</title>
+        <style>
+            body {
+                max-width: 860px;
+                margin: 40px auto;
+                padding: 0 24px;
+                font:
+                    16px/1.6 system-ui,
+                    sans-serif;
+                color: #183b3a;
+            }
+            h1 {
+                margin-bottom: 4px;
+            }
+            .summary {
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin: 24px 0;
+            }
+            .pill {
+                padding: 6px 12px;
+                border-radius: 999px;
+                background: #e7f5f2;
+            }
+            label {
+                display: grid;
+                gap: 6px;
+                margin: 16px 0;
+            }
+            input {
+                padding: 10px 12px;
+                border: 1px solid #9bb;
+                border-radius: 8px;
+            }
+            button {
+                padding: 10px 18px;
+                border: 0;
+                border-radius: 8px;
+                color: white;
+                background: #16796f;
+                cursor: pointer;
+            }
+            button:disabled {
+                opacity: 0.5;
+                cursor: wait;
+            }
+            pre {
+                min-height: 180px;
+                padding: 16px;
+                overflow: auto;
+                border-radius: 10px;
+                color: #dff;
+                background: #102b2a;
+                white-space: pre-wrap;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>腦機介面教材匯入</h1>
+        <p>
+            只建立 DRAFT。每完成一個資源就保存
+            checkpoint；重新執行時會驗證並沿用既有 UUID。
+        </p>
+        <div class="summary">
+            <span class="pill">4 頁</span><span class="pill">8 圖片</span>
+            <span class="pill">8 隱藏圖說</span
+            ><span class="pill">5 簡答題</span>
+        </div>
+        <label
+            >後端網址<input
+                id="baseUrl"
+                value="https://dev.sciedu.sdc.nycu.club"
+        /></label>
+        <label
+            >輸入 <strong>PUBLISH DRAFT</strong> 才能執行<input
+                id="confirmation"
+                autocomplete="off"
+        /></label>
+        <button id="publish">建立／繼續匯入</button>
+        <button id="download" type="button">下載 UUID mapping</button>
+        <pre id="log">等待執行。</pre>
+        <script type="module">
+            const manifest = await fetch("./course-manifest.json").then(
+                (response) => response.json()
+            );
+            const storageKey = `brain-interface-course:${manifest.schemaVersion}`;
+            let state = JSON.parse(
+                localStorage.getItem(storageKey) ||
+                    '{"resources":{},"pages":{}}'
+            );
+            const logElement = document.querySelector("#log");
+            const publishButton = document.querySelector("#publish");
+            const log = (message) => {
+                logElement.textContent += `\n${message}`;
+                logElement.scrollTop = logElement.scrollHeight;
+            };
+            const checkpoint = () =>
+                localStorage.setItem(storageKey, JSON.stringify(state));
+            const idOf = (body) => body?.id || body?.data?.id;
+
+            async function request(baseUrl, path, init = {}) {
+                const response = await fetch(`${baseUrl}${path}`, {
+                    credentials: "include",
+                    ...init,
+                });
+                const body = await response.json().catch(() => undefined);
+                if (!response.ok)
+                    throw new Error(
+                        `${init.method || "GET"} ${path}: ${response.status} ${body?.detail || response.statusText}`
+                    );
+                return body;
+            }
+
+            async function validExisting(baseUrl, kind, id) {
+                const endpoint =
+                    kind === "text"
+                        ? `/api/content/text/${id}`
+                        : kind === "media"
+                          ? `/api/content/media/${id}`
+                          : `/api/questions/${id}`;
+                return fetch(`${baseUrl}${endpoint}`, {
+                    credentials: "include",
+                })
+                    .then((response) => response.ok)
+                    .catch(() => false);
+            }
+
+            async function resource(baseUrl, key, kind, payload) {
+                const existing = state.resources[key];
+                if (
+                    existing &&
+                    (await validExisting(baseUrl, kind, existing))
+                ) {
+                    log(`沿用 ${key}: ${existing}`);
+                    return existing;
+                }
+                let body;
+                if (kind === "media") {
+                    const image = await fetch(
+                        `/@fs/${encodeURI(manifest.source.imageDirectory)}/${encodeURIComponent(payload)}`
+                    ).then((response) => {
+                        if (!response.ok)
+                            throw new Error(`無法讀取圖片 ${payload}`);
+                        return response.blob();
+                    });
+                    const form = new FormData();
+                    form.append("content", image, payload);
+                    body = await request(baseUrl, "/api/content/media", {
+                        method: "POST",
+                        body: form,
+                    });
+                } else {
+                    const endpoint =
+                        kind === "text"
+                            ? "/api/content/text"
+                            : "/api/questions";
+                    body = await request(baseUrl, endpoint, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(
+                            kind === "text"
+                                ? { content: payload }
+                                : { type: "TEXT", content: payload }
+                        ),
+                    });
+                }
+                const id = idOf(body);
+                if (!id) throw new Error(`${key} 回應缺少 UUID`);
+                state.resources[key] = id;
+                checkpoint();
+                log(`建立 ${key}: ${id}`);
+                return id;
+            }
+
+            async function ensureBlock(
+                baseUrl,
+                pageId,
+                type,
+                resourceId,
+                displayOrder
+            ) {
+                const page = await request(baseUrl, `/api/pages/${pageId}`);
+                if (
+                    (page.blocks || []).some(
+                        (block) =>
+                            block.type === type &&
+                            block.resourceId === resourceId &&
+                            block.displayOrder === displayOrder
+                    )
+                )
+                    return;
+                await request(baseUrl, `/api/pages/${pageId}/blocks`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        type,
+                        resourceId,
+                        displayOrder,
+                        required: true,
+                    }),
+                });
+            }
+
+            async function publish() {
+                if (
+                    document.querySelector("#confirmation").value !==
+                    "PUBLISH DRAFT"
+                ) {
+                    log("確認文字不正確，未執行。");
+                    return;
+                }
+                publishButton.disabled = true;
+                logElement.textContent = "開始檢查登入狀態…";
+                try {
+                    const baseUrl = document
+                        .querySelector("#baseUrl")
+                        .value.replace(/\/$/, "");
+                    await request(baseUrl, "/api/auth/session");
+                    if (!state.courseId) {
+                        const course = await request(baseUrl, "/api/courses", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                code: manifest.course.code,
+                                title: manifest.course.title,
+                                description: manifest.course.description,
+                            }),
+                        });
+                        state.courseId = idOf(course);
+                        checkpoint();
+                        log(`建立 DRAFT course: ${state.courseId}`);
+                    } else
+                        await request(
+                            baseUrl,
+                            `/api/courses/${state.courseId}`
+                        );
+                    let existingPages = await request(
+                        baseUrl,
+                        `/api/courses/${state.courseId}/pages`
+                    );
+                    for (const page of manifest.pages) {
+                        let pageId =
+                            state.pages[page.key] ||
+                            existingPages.find(
+                                (item) => item.title === page.title
+                            )?.id;
+                        if (!pageId) {
+                            const created = await request(
+                                baseUrl,
+                                `/api/courses/${state.courseId}/pages`,
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                        title: page.title,
+                                        displayOrder: page.displayOrder,
+                                    }),
+                                }
+                            );
+                            pageId = idOf(created);
+                        }
+                        state.pages[page.key] = pageId;
+                        checkpoint();
+                        log(`頁面 ${page.title}: ${pageId}`);
+                        const description = await resource(
+                            baseUrl,
+                            `${page.key}:description`,
+                            "text",
+                            page.description
+                        );
+                        await ensureBlock(
+                            baseUrl,
+                            pageId,
+                            "TEXT",
+                            description,
+                            0
+                        );
+                        for (const [index, image] of page.images.entries()) {
+                            const mediaOrder = (index + 1) * 10;
+                            const media = await resource(
+                                baseUrl,
+                                image.key,
+                                "media",
+                                image.file
+                            );
+                            const caption = await resource(
+                                baseUrl,
+                                `${image.key}:caption`,
+                                "text",
+                                image.caption
+                            );
+                            await ensureBlock(
+                                baseUrl,
+                                pageId,
+                                "MEDIA",
+                                media,
+                                mediaOrder
+                            );
+                            await ensureBlock(
+                                baseUrl,
+                                pageId,
+                                "TEXT",
+                                caption,
+                                mediaOrder + 1
+                            );
+                        }
+                        for (const [
+                            index,
+                            question,
+                        ] of page.questions.entries()) {
+                            const titleOrder = 100 + index * 10;
+                            const label = await resource(
+                                baseUrl,
+                                `${question.key}:label`,
+                                "text",
+                                question.label
+                            );
+                            const prompt = await resource(
+                                baseUrl,
+                                question.key,
+                                "question",
+                                question.content
+                            );
+                            await ensureBlock(
+                                baseUrl,
+                                pageId,
+                                "TEXT",
+                                label,
+                                titleOrder
+                            );
+                            await ensureBlock(
+                                baseUrl,
+                                pageId,
+                                "QUESTION",
+                                prompt,
+                                titleOrder + 1
+                            );
+                        }
+                    }
+                    state.completedAt = new Date().toISOString();
+                    checkpoint();
+                    log(`完成。學生路由：/course/${state.courseId}`);
+                } catch (error) {
+                    log(`失敗：${error.message}`);
+                } finally {
+                    publishButton.disabled = false;
+                }
+            }
+            publishButton.addEventListener("click", publish);
+            document
+                .querySelector("#download")
+                .addEventListener("click", () => {
+                    const blob = new Blob([JSON.stringify(state, null, 2)], {
+                        type: "application/json",
+                    });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "brain-interface-course-uuids.json";
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                });
+        </script>
+    </body>
+</html>

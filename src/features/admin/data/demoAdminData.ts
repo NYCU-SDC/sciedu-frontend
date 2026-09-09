@@ -106,7 +106,7 @@ export const demoCourses: ExperimentCourseAssignment[] = [
             id: "00000000-0000-4000-8000-000000000002",
             code: "dire-wolf-restoration",
             title: "恐狼復育",
-            description: "生物學・3 頁",
+            description: "生物學・4 頁",
             status: "PUBLISHED",
             createdAt,
             updatedAt,

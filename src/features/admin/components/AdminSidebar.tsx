@@ -11,7 +11,7 @@ import { roleLabels } from "../formatters";
 import type { User } from "../types";
 import styles from "../pages/AdminDashboardPage.module.css";
 
-export type AdminSection = "overview" | "experiments" | "people";
+export type AdminSection = "overview" | "experiments" | "people" | "answers";
 
 type Props = {
     currentUser: User;
@@ -62,9 +62,14 @@ export default function AdminSidebar({
                     <Users aria-hidden="true" />
                     人員管理
                 </UnstyledButton>
-                <UnstyledButton disabled>
+                <UnstyledButton
+                    className={
+                        activeSection === "answers" ? styles.navActive : ""
+                    }
+                    onClick={() => onNavigate("answers")}
+                >
                     <CheckCircle2 aria-hidden="true" />
-                    作答紀錄（未開放）
+                    作答紀錄
                 </UnstyledButton>
             </nav>
             <div className={styles.profile}>

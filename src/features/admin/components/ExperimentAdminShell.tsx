@@ -7,7 +7,7 @@ import AdminSidebar from "./AdminSidebar";
 import dashboardStyles from "../pages/AdminDashboardPage.module.css";
 import styles from "../pages/ExperimentAdmin.module.css";
 
-type Section = "overview" | "experiments" | "people";
+type Section = "overview" | "experiments" | "people" | "answers";
 
 export default function ExperimentAdminShell({
     activeSection,
@@ -39,6 +39,8 @@ export default function ExperimentAdminShell({
                 onNavigate={(section) => {
                     if (section === "experiments") {
                         navigate("/admin/experiments");
+                    } else if (section === "answers") {
+                        navigate("/admin/answers");
                     } else {
                         navigate(`/admin?section=${section}`);
                     }

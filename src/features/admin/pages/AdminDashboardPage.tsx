@@ -173,6 +173,10 @@ export default function AdminDashboardPage() {
             navigate("/admin/experiments");
             return;
         }
+        if (section === "answers") {
+            navigate("/admin/answers");
+            return;
+        }
         setActiveSection(section);
         navigate(section === "people" ? "/admin?section=people" : "/admin", {
             replace: true,

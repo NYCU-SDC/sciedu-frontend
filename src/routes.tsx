@@ -18,6 +18,8 @@ import RequireAdminRole from "./features/admin/components/RequireAdminRole";
 import ExperimentListPage from "./features/admin/pages/ExperimentListPage";
 import ExperimentDetailPage from "./features/admin/pages/ExperimentDetailPage";
 import CreateExperimentPage from "./features/admin/pages/CreateExperimentPage";
+import AnswerRecordsPage from "./features/admin/pages/AnswerRecordsPage";
+import AnswerRecordDetailPage from "./features/admin/pages/AnswerRecordDetailPage";
 
 const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
@@ -111,6 +113,26 @@ const adminRoutes: RouteObject[] = [
             </RequireAuth>
         ),
     },
+    {
+        path: "/admin/answers",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <AnswerRecordsPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
+    {
+        path: "/admin/answers/:attemptId",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <AnswerRecordDetailPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
 ];
 
 const enableChatRoutes = ["llm", "dev"].includes(APP_MODE);
@@ -147,6 +169,16 @@ export const router = createBrowserRouter([
               {
                   path: "/admin/experiments/:experimentId/edit",
                   element: <CreateExperimentPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+              {
+                  path: "/admin/answers",
+                  element: <AnswerRecordsPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+              {
+                  path: "/admin/answers/:attemptId",
+                  element: <AnswerRecordDetailPage />,
                   errorElement: <RouteErrorBoundary />,
               },
           ]

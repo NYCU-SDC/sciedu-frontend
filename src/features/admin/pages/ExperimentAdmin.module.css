@@ -1,144 +1,3 @@
-.shell,
-.pageStatus {
-    --admin-ink: #004038;
-    --admin-deep: #004d43;
-    --admin-active: #0e6258;
-    --admin-hover: #07584f;
-    --admin-accent: #63cabe;
-    --admin-canvas: #f0f6f4;
-    --admin-border: #d4d4d4;
-    min-height: 100vh;
-    color: var(--admin-ink);
-    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
-}
-
-.shell {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-    background: var(--admin-canvas);
-}
-.pageStatus {
-    display: grid;
-    place-items: center;
-    background: var(--admin-canvas);
-}
-.sidebar {
-    display: flex;
-    width: 20rem;
-    height: 100vh;
-    flex: 0 0 20rem;
-    flex-direction: column;
-    gap: 0.625rem;
-    padding: 1rem;
-    overflow: hidden;
-    background: var(--admin-deep);
-    color: #fff;
-}
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.5625rem 2rem;
-    font-size: 1.5rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-.brand svg {
-    width: 2rem;
-    height: 2rem;
-    color: #77d5c6;
-}
-.nav {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.625rem 1rem;
-}
-.nav button {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 1.25rem;
-    text-align: left;
-}
-.nav .navActive {
-    background: var(--admin-active);
-}
-
-.nav button:hover:not(:disabled):not(.navActive) {
-    background: var(--admin-hover);
-}
-
-.nav button:focus-visible {
-    outline: 2px solid #77d5c6;
-    outline-offset: 2px;
-}
-
-.nav button:disabled {
-    cursor: not-allowed;
-    opacity: 0.72;
-}
-.nav svg {
-    width: 1.5rem;
-    height: 1.5rem;
-}
-.profile {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 1rem;
-    border-top: 1px solid rgb(255 255 255 / 20%);
-}
-.profile > span {
-    display: flex;
-    flex-direction: column;
-}
-.profile strong {
-    font-size: 1.25rem;
-}
-.profile small {
-    color: #d4d4d4;
-    font-size: 0.875rem;
-}
-.main {
-    min-width: 0;
-    flex: 1;
-    padding: 1rem 2rem 2rem;
-    overflow-y: auto;
-}
-.pageHeader {
-    display: flex;
-    min-height: 5.375rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    background: #fff;
-}
-.pageHeader h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    line-height: 1.4;
-}
-.titleGroup {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 1rem;
-}
-.backButton {
-    color: var(--admin-deep);
-}
-.contentStack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-}
 .card {
     border: 1px solid #e5e5e5;
     background: #fff;
@@ -611,14 +470,6 @@
 }
 
 @media (max-width: 75rem) {
-    .sidebar {
-        width: 15rem;
-        flex-basis: 15rem;
-    }
-    .brand {
-        padding-inline: 1rem;
-        font-size: 1.25rem;
-    }
     .filters {
         grid-template-columns: 1fr 1fr;
     }
@@ -640,40 +491,6 @@
 }
 
 @media (max-width: 48rem) {
-    .shell {
-        display: block;
-        height: auto;
-        overflow: visible;
-    }
-    .sidebar {
-        position: static;
-        width: 100%;
-        height: auto;
-        padding: 0.75rem;
-    }
-    .nav {
-        flex-direction: row;
-        overflow-x: auto;
-    }
-    .nav button {
-        width: auto;
-        flex: 0 0 auto;
-        padding: 0.75rem;
-        font-size: 1rem;
-    }
-    .profile {
-        display: none;
-    }
-    .main {
-        padding: 1rem;
-    }
-    .pageHeader {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-    .pageHeader h1 {
-        font-size: 2rem;
-    }
     .filters,
     .fieldGrid,
     .choiceGrid {
@@ -693,4 +510,14 @@
         align-items: stretch;
         flex-direction: column;
     }
+}
+.statusBadge {
+    width: max-content;
+    min-width: max-content;
+    flex: 0 0 auto;
+}
+
+.statusBadge :global(.mantine-Badge-label) {
+    overflow: visible;
+    white-space: nowrap;
 }

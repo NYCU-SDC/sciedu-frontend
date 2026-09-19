@@ -14,7 +14,9 @@ import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useDocumentTitle } from "../../../shared/hooks";
-import ExperimentAdminShell from "../components/ExperimentAdminShell";
+import AdminLayout from "../components/AdminLayout";
+import AdminPage from "../components/AdminPage";
+import AdminPageHeader from "../components/AdminPageHeader";
 import {
     experimentStatusLabels,
     formatDateTime,
@@ -81,17 +83,19 @@ export default function ExperimentListPage() {
 
     const experiments = experimentsQuery.data?.items ?? [];
     return (
-        <ExperimentAdminShell activeSection="experiments">
-            <div className={styles.contentStack}>
-                <header className={styles.pageHeader}>
-                    <Title order={1}>實驗管理</Title>
-                    <Button
-                        leftSection={<Plus size={18} aria-hidden="true" />}
-                        onClick={() => navigate("/admin/experiments/new")}
-                    >
-                        新增實驗
-                    </Button>
-                </header>
+        <AdminLayout>
+            <AdminPage>
+                <AdminPageHeader
+                    title="實驗管理"
+                    actions={
+                        <Button
+                            leftSection={<Plus size={18} aria-hidden="true" />}
+                            onClick={() => navigate("/admin/experiments/new")}
+                        >
+                            新增實驗
+                        </Button>
+                    }
+                />
 
                 <section className={styles.listIntro}>
                     <div>
@@ -237,6 +241,9 @@ export default function ExperimentListPage() {
                                                 </Table.Td>
                                                 <Table.Td>
                                                     <Badge
+                                                        className={
+                                                            styles.statusBadge
+                                                        }
                                                         color={
                                                             statusColors[
                                                                 experiment
@@ -327,7 +334,7 @@ export default function ExperimentListPage() {
                         </Group>
                     </footer>
                 </Card>
-            </div>
-        </ExperimentAdminShell>
+            </AdminPage>
+        </AdminLayout>
     );
 }

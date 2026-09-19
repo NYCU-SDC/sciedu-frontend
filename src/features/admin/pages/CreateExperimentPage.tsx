@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    ActionIcon,
     Badge,
     Button,
     Card,
@@ -13,14 +12,17 @@ import {
     Title,
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import { ApiError } from "../../../shared/utils/api";
 import AddParticipantModal from "../components/AddParticipantModal";
-import ExperimentAdminShell from "../components/ExperimentAdminShell";
+import AdminLayout from "../components/AdminLayout";
+import AdminPage from "../components/AdminPage";
+import AdminPageHeader from "../components/AdminPageHeader";
+import AdminPageState from "../components/AdminPageState";
 import {
     addExperimentCourses,
     createExperiment,
@@ -348,37 +350,29 @@ export default function CreateExperimentPage() {
         isEditing &&
         (experimentQuery.isPending || assignedCoursesQuery.isPending)
     ) {
-        return <div className={styles.pageStatus}>載入實驗資料中⋯</div>;
+        return <AdminPageState>載入實驗資料中⋯</AdminPageState>;
     }
     if (
         isEditing &&
         (experimentQuery.isError || assignedCoursesQuery.isError)
     ) {
-        return <div className={styles.pageStatus}>實驗資料載入失敗</div>;
+        return <AdminPageState>實驗資料載入失敗</AdminPageState>;
     }
 
     return (
-        <ExperimentAdminShell activeSection="experiments">
-            <div className={styles.contentStack}>
-                <header className={styles.pageHeader}>
-                    <div className={styles.titleGroup}>
-                        <ActionIcon
-                            variant="subtle"
-                            size={24}
-                            aria-label="返回實驗列表"
-                            onClick={() => navigate("/admin/experiments")}
-                        >
-                            <ArrowLeft aria-hidden="true" />
-                        </ActionIcon>
-                        <Title order={1}>
-                            {isEditing
-                                ? "編輯實驗"
-                                : step === 3
-                                  ? "確認並排程"
-                                  : "新增實驗"}
-                        </Title>
-                    </div>
-                </header>
+        <AdminLayout>
+            <AdminPage>
+                <AdminPageHeader
+                    title={
+                        isEditing
+                            ? "編輯實驗"
+                            : step === 3
+                              ? "確認並排程"
+                              : "新增實驗"
+                    }
+                    backLabel="返回實驗列表"
+                    onBack={() => navigate("/admin/experiments")}
+                />
 
                 <Card
                     className={`${styles.card} ${styles.stepper}`}
@@ -1055,13 +1049,13 @@ export default function CreateExperimentPage() {
                         </Button>
                     )}
                 </footer>
-            </div>
+            </AdminPage>
             {isAddingStudents && persistedExperimentId && (
                 <AddParticipantModal
                     experimentId={persistedExperimentId}
                     onClose={() => setAddingStudents(false)}
                 />
             )}
-        </ExperimentAdminShell>
+        </AdminLayout>
     );
 }

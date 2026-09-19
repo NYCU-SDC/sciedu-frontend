@@ -14,14 +14,17 @@ import {
     Title,
 } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MoreVertical, Plus, Search, Trash2 } from "lucide-react";
+import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import { ApiError } from "../../../shared/utils/api";
 import AddParticipantModal from "../components/AddParticipantModal";
-import ExperimentAdminShell from "../components/ExperimentAdminShell";
+import AdminLayout from "../components/AdminLayout";
+import AdminPage from "../components/AdminPage";
+import AdminPageHeader from "../components/AdminPageHeader";
+import AdminPageState from "../components/AdminPageState";
 import {
     experimentStatusLabels,
     formatDateTime,
@@ -116,10 +119,10 @@ export default function ExperimentDetailPage() {
     }, [participantsQuery.data, role, search]);
 
     if (experimentQuery.isPending) {
-        return <div className={styles.pageStatus}>載入實驗詳細資料中⋯</div>;
+        return <AdminPageState>載入實驗詳細資料中⋯</AdminPageState>;
     }
     if (experimentQuery.isError || !experimentQuery.data) {
-        return <div className={styles.pageStatus}>實驗詳細資料載入失敗</div>;
+        return <AdminPageState>實驗詳細資料載入失敗</AdminPageState>;
     }
 
     const experiment = experimentQuery.data;
@@ -143,90 +146,92 @@ export default function ExperimentDetailPage() {
               : "gray";
 
     return (
-        <ExperimentAdminShell activeSection="experiments">
-            <div className={styles.contentStack}>
-                <header className={styles.pageHeader}>
-                    <div className={styles.titleGroup}>
-                        <ActionIcon
-                            className={styles.backButton}
-                            variant="subtle"
-                            aria-label="返回實驗列表"
-                            onClick={() => navigate("/admin/experiments")}
+        <AdminLayout>
+            <AdminPage>
+                <AdminPageHeader
+                    title={experiment.name}
+                    backLabel="返回實驗列表"
+                    onBack={() => navigate("/admin/experiments")}
+                    afterTitle={
+                        <Badge
+                            className={styles.statusBadge}
+                            color={statusColor}
+                            variant="light"
                         >
-                            <ArrowLeft aria-hidden="true" />
-                        </ActionIcon>
-                        <Title order={1}>{experiment.name}</Title>
-                        <Badge color={statusColor} variant="light">
                             {experimentStatusLabels[experiment.status]}
                         </Badge>
-                    </div>
-                    <Group gap="sm">
-                        {experiment.status === "ACTIVE" && (
-                            <Button
-                                onClick={() =>
-                                    navigate(
-                                        `/admin/experiments/${experimentId}/edit`
-                                    )
-                                }
-                            >
-                                延長結束時間
-                            </Button>
-                        )}
-                        {experiment.status === "DRAFT" && (
-                            <Button
-                                variant="default"
-                                onClick={() =>
-                                    navigate(
-                                        `/admin/experiments/${experimentId}/edit`
-                                    )
-                                }
-                            >
-                                編輯實驗
-                            </Button>
-                        )}
-                        {experiment.status === "SCHEDULED" && (
-                            <Button
-                                variant="default"
-                                onClick={() =>
-                                    navigate(
-                                        `/admin/experiments/${experimentId}/edit`
-                                    )
-                                }
-                            >
-                                編輯實驗
-                            </Button>
-                        )}
-                        {experiment.status === "DRAFT" && (
-                            <Button
-                                loading={statusMutation.isPending}
-                                disabled={!hasPublishedCourse}
-                                title={
-                                    !hasPublishedCourse
-                                        ? "排程前至少需要一份已發布教材"
-                                        : undefined
-                                }
-                                onClick={() =>
-                                    statusMutation.mutate("SCHEDULED")
-                                }
-                            >
-                                排程實驗
-                            </Button>
-                        )}
-                        {experiment.status === "COMPLETED" && (
-                            <Button
-                                loading={statusMutation.isPending}
-                                onClick={() => {
-                                    if (
-                                        window.confirm("確定要封存這場實驗嗎？")
-                                    )
-                                        statusMutation.mutate("ARCHIVED");
-                                }}
-                            >
-                                封存實驗
-                            </Button>
-                        )}
-                    </Group>
-                </header>
+                    }
+                    actions={
+                        <Group gap="sm">
+                            {experiment.status === "ACTIVE" && (
+                                <Button
+                                    onClick={() =>
+                                        navigate(
+                                            `/admin/experiments/${experimentId}/edit`
+                                        )
+                                    }
+                                >
+                                    延長結束時間
+                                </Button>
+                            )}
+                            {experiment.status === "DRAFT" && (
+                                <Button
+                                    variant="default"
+                                    onClick={() =>
+                                        navigate(
+                                            `/admin/experiments/${experimentId}/edit`
+                                        )
+                                    }
+                                >
+                                    編輯實驗
+                                </Button>
+                            )}
+                            {experiment.status === "SCHEDULED" && (
+                                <Button
+                                    variant="default"
+                                    onClick={() =>
+                                        navigate(
+                                            `/admin/experiments/${experimentId}/edit`
+                                        )
+                                    }
+                                >
+                                    編輯實驗
+                                </Button>
+                            )}
+                            {experiment.status === "DRAFT" && (
+                                <Button
+                                    loading={statusMutation.isPending}
+                                    disabled={!hasPublishedCourse}
+                                    title={
+                                        !hasPublishedCourse
+                                            ? "排程前至少需要一份已發布教材"
+                                            : undefined
+                                    }
+                                    onClick={() =>
+                                        statusMutation.mutate("SCHEDULED")
+                                    }
+                                >
+                                    排程實驗
+                                </Button>
+                            )}
+                            {experiment.status === "COMPLETED" && (
+                                <Button
+                                    loading={statusMutation.isPending}
+                                    onClick={() => {
+                                        if (
+                                            window.confirm(
+                                                "確定要封存這場實驗嗎？"
+                                            )
+                                        )
+                                            statusMutation.mutate("ARCHIVED");
+                                    }}
+                                >
+                                    封存實驗
+                                </Button>
+                            )}
+                        </Group>
+                    }
+                />
 
                 <Card
                     className={`${styles.card} ${styles.summary}`}
@@ -667,13 +672,13 @@ export default function ExperimentDetailPage() {
                         )}
                     </Card>
                 )}
-            </div>
+            </AdminPage>
             {isAddingStudents && (
                 <AddParticipantModal
                     experimentId={experimentId}
                     onClose={() => setAddingStudents(false)}
                 />
             )}
-        </ExperimentAdminShell>
+        </AdminLayout>
     );
 }

@@ -17,7 +17,7 @@ import {
     addExperimentParticipants,
     listParticipantCandidates,
 } from "../services/adminRepository";
-import styles from "../pages/AdminDashboardPage.module.css";
+import styles from "./AddParticipantModal.module.css";
 
 type Props = {
     experimentId: string;
@@ -76,9 +76,9 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
             radius="lg"
             overlayProps={{ backgroundOpacity: 0.72, blur: 1 }}
             classNames={{
-                content: styles.mantineModal,
-                header: styles.mantineModalHeader,
-                body: styles.mantineModalBody,
+                content: styles.modal,
+                header: styles.header,
+                body: styles.body,
             }}
         >
             <Stack gap="sm">
@@ -92,7 +92,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                     onChange={(event) => setQuery(event.currentTarget.value)}
                     leftSection={<Search size={16} aria-hidden="true" />}
                     radius="md"
-                    classNames={{ input: styles.mantineTextInput }}
+                    classNames={{ input: styles.searchInput }}
                 />
 
                 <Stack gap="sm" className={styles.candidateList}>
@@ -169,7 +169,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                     justify="space-between"
                     align="center"
                     pt="md"
-                    className={styles.mantineModalFooter}
+                    className={styles.footer}
                 >
                     <Text size="sm" c="dimmed">
                         已選擇 {selectedIds.size} 位學生（單次最多 100 位）

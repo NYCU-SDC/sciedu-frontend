@@ -428,6 +428,16 @@
     text-align: center;
 }
 
+.dashboardEmpty {
+    display: flex;
+    min-height: 18rem;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+}
+
 @media (max-width: 75rem) {
     .experimentCardContent {
         align-items: flex-start;

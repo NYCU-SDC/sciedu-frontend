@@ -4,16 +4,16 @@ import { Button, Card, Text, Title } from "@mantine/core";
 type Props = {
     eyebrow: string;
     title: string;
-    totalPages: number;
-    completedPage: number;
+    description?: string;
+    buttonLabel?: string;
     onContinue?: () => void;
 };
 
 export default function CurrentTaskCard({
     eyebrow,
     title,
-    totalPages,
-    completedPage,
+    description,
+    buttonLabel = "查看教材書櫃",
     onContinue,
 }: Props) {
     return (
@@ -39,7 +39,7 @@ export default function CurrentTaskCard({
                 {title}
             </Title>
             <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
-                共 {totalPages} 頁．已完成第 {completedPage} 頁
+                {description || "查看這個實驗目前已發布的教材。"}
             </Text>
             <Button
                 radius="16px"
@@ -47,7 +47,7 @@ export default function CurrentTaskCard({
                 onClick={onContinue}
                 styles={{
                     root: {
-                        width: "164px",
+                        minWidth: "164px",
                         height: "48px",
                         padding: "12px 18px",
                         backgroundColor: "#005f55",
@@ -70,7 +70,7 @@ export default function CurrentTaskCard({
                     },
                 }}
             >
-                繼續目前任務
+                {buttonLabel}
             </Button>
         </Card>
     );

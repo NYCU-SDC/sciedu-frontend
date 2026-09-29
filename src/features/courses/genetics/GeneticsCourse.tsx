@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
+import { useParams } from "react-router";
 
-import { api } from "../../../shared/utils/api";
+import { ApiError, api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
+import { useCurrentExperimentCourses } from "../services/currentExperimentQueries";
 import { generateRQRequestFromPage } from "./services/fetchPageContent";
 
 import styles from "./GeneticsCourse.module.css";
@@ -16,7 +18,10 @@ import {
     type CourseChatController,
 } from "./components/useCourseChatController";
 
-import { coursePageRequests } from "./assets/courseResource";
+import {
+    fetchCourseDefinition,
+    isCourseUuid,
+} from "./services/fetchCourseDefinition";
 import type {
     CourseAnswer,
     CourseAnswers,
@@ -105,6 +110,11 @@ function PageContent({
 }
 
 export default function GeneticsCourse() {
+    const { id = "" } = useParams<{ id: string }>();
+    return <CoursePlayer key={id} courseId={id} />;
+}
+
+function CoursePlayer({ courseId }: { courseId: string }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
     const [completedQuestionPages, setCompletedQuestionPages] = useState(
@@ -115,14 +125,37 @@ export default function GeneticsCourse() {
     >({});
     const queryClient = useQueryClient();
     const posthog = usePostHog();
+    const currentExperiment = useCurrentExperimentCourses();
+    const isValidCourseId = isCourseUuid(courseId);
+    const isAssignedCourse = currentExperiment.courses.some(
+        (course) => course.id === courseId
+    );
+    const courseQuery = useQuery({
+        queryKey: ["courses", courseId, "definition"],
+        queryFn: () => fetchCourseDefinition(courseId),
+        enabled:
+            isValidCourseId &&
+            !currentExperiment.isPending &&
+            !currentExperiment.error &&
+            currentExperiment.experiment?.status === "ACTIVE" &&
+            isAssignedCourse,
+        retry: (count, error) =>
+            !(
+                error instanceof ApiError &&
+                [401, 403, 404].includes(error.status)
+            ) && count < 1,
+    });
 
     const pageRequests = useMemo(
-        () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
-        []
+        () =>
+            [...(courseQuery.data?.pages ?? [])].sort(
+                (a, b) => a.pageIndex - b.pageIndex
+            ),
+        [courseQuery.data?.pages]
     );
     const currentPage = pageRequests[currentIndex];
 
-    useDocumentTitle("基因");
+    useDocumentTitle(courseQuery.data?.title ?? "教材");
 
     const currentYear = new Date().getFullYear();
 
@@ -140,6 +173,7 @@ export default function GeneticsCourse() {
     }, [pageRequests, currentIndex, queryClient]);
 
     const handleNext = () => {
+        if (!currentPage) return;
         const nextIndex = Math.min(
             currentIndex + 1,
             highestUnlockedIndex + 1,
@@ -160,6 +194,7 @@ export default function GeneticsCourse() {
     };
 
     const handlePageComplete = () => {
+        if (!currentPage) return;
         if (currentPage.request.type !== "overview") {
             setCompletedQuestionPages((previousPages) => {
                 const nextPages = new Set(previousPages);
@@ -198,6 +233,81 @@ export default function GeneticsCourse() {
         }));
     };
 
+    if (!isValidCourseId) {
+        return <CourseStatus message="教材連結格式不正確" />;
+    }
+
+    if (currentExperiment.isPending) {
+        return <CourseStatus message="正在確認目前實驗…" />;
+    }
+
+    if (currentExperiment.error) {
+        const status =
+            currentExperiment.error instanceof ApiError
+                ? currentExperiment.error.status
+                : undefined;
+        return (
+            <CourseStatus
+                message={
+                    status === 401
+                        ? "登入狀態已失效，請重新登入"
+                        : status === 403
+                          ? "你沒有查看目前實驗的權限"
+                          : "目前無法確認實驗教材"
+                }
+                onRetry={
+                    status !== undefined && status < 500
+                        ? undefined
+                        : currentExperiment.refetch
+                }
+            />
+        );
+    }
+
+    if (
+        !currentExperiment.experiment ||
+        currentExperiment.experiment.status !== "ACTIVE"
+    ) {
+        return <CourseStatus message="目前沒有進行中的實驗" />;
+    }
+
+    if (!isAssignedCourse) {
+        return <CourseStatus message="這份教材不在目前實驗中" />;
+    }
+
+    if (courseQuery.isPending) {
+        return <CourseStatus message="教材載入中…" />;
+    }
+
+    if (courseQuery.isError) {
+        const status =
+            courseQuery.error instanceof ApiError
+                ? courseQuery.error.status
+                : undefined;
+        const message =
+            status === 401
+                ? "登入狀態已失效，請重新登入"
+                : status === 403
+                  ? "你沒有查看這份教材的權限"
+                  : status === 404
+                    ? "找不到這份教材"
+                    : "目前無法載入這份教材";
+        return (
+            <CourseStatus
+                message={message}
+                onRetry={
+                    status !== undefined && status < 500
+                        ? undefined
+                        : courseQuery.refetch
+                }
+            />
+        );
+    }
+
+    if (!currentPage) {
+        return <CourseStatus message="這份教材目前沒有可顯示的內容" />;
+    }
+
     return (
         <div
             className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
@@ -224,6 +334,7 @@ export default function GeneticsCourse() {
                     activeStep={currentIndex}
                     highestUnlockedStep={highestUnlockedIndex}
                     secondaryTitle={currentPage.secondaryTitle}
+                    totalSteps={pageRequests.length}
                     onStepChange={handleStepChange}
                 />
                 {pageRequests
@@ -253,6 +364,25 @@ export default function GeneticsCourse() {
                     division, NYCU. All Rights Reserved
                 </footer>
             </div>
+        </div>
+    );
+}
+
+function CourseStatus({
+    message,
+    onRetry,
+}: {
+    message: string;
+    onRetry?: () => void;
+}) {
+    return (
+        <div className={styles.courseStatus} role="status">
+            <span>{message}</span>
+            {onRetry && (
+                <button type="button" onClick={onRetry}>
+                    重新載入
+                </button>
+            )}
         </div>
     );
 }

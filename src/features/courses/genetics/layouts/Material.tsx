@@ -49,8 +49,7 @@ export default function Material({
             ),
     });
 
-    const imageUrl = `${BASE_URL}/api/content/media/${req.content.imageId}`;
-    const [imageError, setImageError] = useState(false);
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
     const quesTitleQueries = useQueries({
         queries: req.questionSections.map((section) => ({
             queryKey: ["content", "text", section.titleId],
@@ -108,16 +107,27 @@ export default function Material({
                 {/* left section */}
                 <section className={styles.courseSection}>
                     <div className={styles.imageContainer}>
-                        {imageError ? (
-                            <span className={styles.errorText}>
-                                圖片載入失敗
-                            </span>
-                        ) : (
-                            <img
-                                src={imageUrl}
-                                alt="教材"
-                                onError={() => setImageError(true)}
-                            />
+                        {req.content.imageIds.map((imageId, index) =>
+                            imageErrors[imageId] ? (
+                                <span
+                                    className={styles.errorText}
+                                    key={imageId}
+                                >
+                                    圖片 {index + 1} 載入失敗
+                                </span>
+                            ) : (
+                                <img
+                                    key={imageId}
+                                    src={`${BASE_URL}/api/content/media/${imageId}`}
+                                    alt={`教材圖片 ${index + 1}`}
+                                    onError={() =>
+                                        setImageErrors((current) => ({
+                                            ...current,
+                                            [imageId]: true,
+                                        }))
+                                    }
+                                />
+                            )
                         )}
                     </div>
 

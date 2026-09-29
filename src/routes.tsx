@@ -44,19 +44,35 @@ const chatRoutes: RouteObject[] = [
 const courseRoutes: RouteObject[] = [
     {
         path: "/courses",
-        element: <Homepage />,
+        element: (
+            <RequireAuth>
+                <Homepage />
+            </RequireAuth>
+        ),
     },
     {
         path: "/course/:id",
-        element: <GeneticsCourse />,
+        element: (
+            <RequireAuth>
+                <GeneticsCourse />
+            </RequireAuth>
+        ),
     },
     {
         path: "/courses/library",
-        element: <MaterialLibrary />,
+        element: (
+            <RequireAuth>
+                <MaterialLibrary />
+            </RequireAuth>
+        ),
     },
     {
         path: "/courses/summary",
-        element: <Summary />,
+        element: (
+            <RequireAuth>
+                <Summary />
+            </RequireAuth>
+        ),
     },
 ];
 

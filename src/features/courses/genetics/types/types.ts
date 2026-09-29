@@ -43,7 +43,7 @@ export type CourseAnswers = Record<string, CourseAnswer>;
 export type MaterialType = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
         questionSections: MaterialQuestionSection[];
     };
@@ -52,7 +52,7 @@ export type MaterialType = {
 export type MaterialPage = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
     };
     questionSections: {
@@ -116,3 +116,31 @@ export type CoursePageRequest = {
     activeNavbarTitles: number[];
     secondaryTitle: string;
 };
+
+export type CourseNavigation =
+    | {
+          variant: "classic";
+          mainTitle: string;
+          sectionTitles: string[];
+      }
+    | {
+          variant: "stepper";
+          mainTitle: string;
+      };
+
+export type CourseDefinition = {
+    id: string;
+    code: string;
+    title: string;
+    pages: CoursePageRequest[];
+    navigation: CourseNavigation;
+};
+
+export type CourseQuestionReview = {
+    isCorrect: boolean;
+    studentAnswer: string;
+    correctAnswer: string;
+    explanation: string;
+};
+
+export type CourseReviews = Record<string, CourseQuestionReview>;

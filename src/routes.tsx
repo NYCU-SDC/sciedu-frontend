@@ -47,7 +47,7 @@ const courseRoutes: RouteObject[] = [
         element: <Homepage />,
     },
     {
-        path: "/course/:id",
+        path: "/course/:courseId",
         element: <GeneticsCourse />,
     },
     {

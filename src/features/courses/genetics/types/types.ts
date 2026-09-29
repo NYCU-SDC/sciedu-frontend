@@ -31,9 +31,32 @@ export type AnswerSubmissionRequest =
 export type SubmittedAnswerResponse = {
     id: string;
     questionId: string;
+    experimentId: string;
+    userId: string;
     selectedOptionId?: string;
     textAnswer?: string;
     createdAt: string;
+};
+
+export type AnswerResultStatus = "PENDING" | "GRADED" | "FAILED";
+
+export type AnswerGradingMethod = "DETERMINISTIC" | "MANUAL" | "LLM";
+
+export type AnswerResultResponse = {
+    answerId: string;
+    questionId: string;
+    status: AnswerResultStatus;
+    method?: AnswerGradingMethod;
+    resultVisible: boolean;
+    isCorrect?: boolean;
+    gradedAt?: string;
+};
+
+export type AnswerReviewState = {
+    result?: AnswerResultResponse;
+    isLoading: boolean;
+    isError: boolean;
+    isUnavailable?: boolean;
 };
 
 export type CourseAnswer = string;

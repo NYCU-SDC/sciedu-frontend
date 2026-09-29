@@ -1,8 +1,9 @@
 import { Skeleton, RadioGroup, TextArea } from "@radix-ui/themes";
-import type { QuestionResponse } from "../types/types";
+import type { AnswerReviewState, QuestionResponse } from "../types/types";
 import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import { MAX_TEXT_ANSWER_LENGTH } from "./useAnswerSubmission";
 import styles from "./QuizCard.module.css";
+import AnswerResultBadge from "./AnswerResultBadge";
 
 type Props = {
     question: {
@@ -15,6 +16,8 @@ type Props = {
     answer: string;
     disabled?: boolean;
     validationError?: string;
+    showReview?: boolean;
+    reviewState?: AnswerReviewState;
     onAnswerChange: (answer: string) => void;
 };
 
@@ -25,6 +28,8 @@ export default function QuizCard({
     answer,
     disabled = false,
     validationError,
+    showReview = false,
+    reviewState,
     onAnswerChange,
 }: Props) {
     if (error) {
@@ -42,6 +47,14 @@ export default function QuizCard({
         <div className={styles.quizCard}>
             <div className={styles.titleRow}>
                 <h3>{question.title}</h3>
+                {showReview && (
+                    <AnswerResultBadge
+                        result={reviewState?.result}
+                        isLoading={reviewState?.isLoading}
+                        isError={reviewState?.isError}
+                        isUnavailable={reviewState?.isUnavailable}
+                    />
+                )}
             </div>
             {isLoading ? (
                 <Skeleton width="100%" height="1rem" />

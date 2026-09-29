@@ -1,0 +1,33 @@
+.badge {
+    margin-left: auto;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.correct {
+    color: #006c5b;
+    background: #dff5ee;
+}
+
+.wrong {
+    color: #8a3b00;
+    background: #fff0dc;
+}
+
+.pending {
+    color: #725500;
+    background: #fff6cf;
+}
+
+.warning {
+    color: #a61b1b;
+    background: #ffe5e5;
+}
+
+.neutral {
+    color: #525252;
+    background: #eeeeee;
+}

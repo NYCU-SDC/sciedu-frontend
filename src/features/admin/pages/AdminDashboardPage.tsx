@@ -17,7 +17,7 @@ import {
     Search,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Navigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";
@@ -46,6 +46,7 @@ const PAGE_SIZE = 10;
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
     const activeSection =
@@ -168,7 +169,39 @@ export default function AdminDashboardPage() {
         return <AdminPageState>實驗總覽載入失敗</AdminPageState>;
     }
     if (experiments.length === 0) {
-        return <Navigate replace to="/admin/experiments" />;
+        const isPeopleSection = activeSection === "people";
+
+        return (
+            <AdminLayout>
+                <AdminPage>
+                    <AdminPageHeader
+                        title={isPeopleSection ? "人員管理" : "實驗總覽"}
+                    />
+                    <Card
+                        component="section"
+                        radius="lg"
+                        withBorder
+                        className={styles.dashboardEmpty}
+                    >
+                        <Text fw={700} size="lg">
+                            {isPeopleSection
+                                ? "目前沒有可管理的人員"
+                                : "目前沒有實驗資料"}
+                        </Text>
+                        <Text c="dimmed" size="sm">
+                            建立第一場實驗後，即可在此查看總覽並管理參與人員。
+                        </Text>
+                        <Button
+                            color="brandTeal"
+                            leftSection={<Plus size={16} aria-hidden="true" />}
+                            onClick={() => navigate("/admin/experiments/new")}
+                        >
+                            新增實驗
+                        </Button>
+                    </Card>
+                </AdminPage>
+            </AdminLayout>
+        );
     }
     if (experimentQuery.isError) {
         return <AdminPageState>實驗資料載入失敗</AdminPageState>;

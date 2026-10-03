@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { usePostHog } from "@posthog/react";
-import type { Message } from "../types/chat";
+import { toast } from "sonner";
+import ChatRecovery from "../components/ChatRecovery";
 import useChat from "../services/useChat";
 import Thread from "../components/Thread";
 import Composer from "../components/Composer";
@@ -20,48 +21,17 @@ export default function ChatConversationPage() {
 
     const busy = chat.status === "streaming" || chat.status === "loading";
 
-    const {
-        messages: baseMessages,
-        streamingMessageId,
-        streamingContent,
-    } = chat;
+    const messages = chat.messages;
+    const baseMessages = messages;
 
-    // Overlay the live stream buffer onto its message (or append a placeholder
-    // if the cache hasn't caught up to the streaming reply yet).
-    const messages = useMemo<Message[]>(() => {
-        if (streamingContent === null || !streamingMessageId) {
-            return baseMessages;
+    const handleSend = async (text: string) => {
+        try {
+            posthog.capture("message_sent", { chat_id: chatID });
+            await chat.sendMessage({ content: text });
+            setDraft("");
+        } catch {
+            toast.error("傳送失敗，請重試。");
         }
-
-        if (baseMessages.some((message) => message.id === streamingMessageId)) {
-            return baseMessages.map((message) =>
-                message.id === streamingMessageId
-                    ? {
-                          ...message,
-                          content: streamingContent,
-                          status: "streaming",
-                      }
-                    : message
-            );
-        }
-
-        return [
-            ...baseMessages,
-            {
-                id: streamingMessageId,
-                role: "assistant",
-                content: streamingContent,
-                previousID: baseMessages.at(-1)?.id,
-                status: "streaming",
-                createdAt: new Date().toISOString(),
-            },
-        ];
-    }, [baseMessages, streamingMessageId, streamingContent]);
-
-    const handleSend = (text: string) => {
-        posthog.capture("message_sent", { chat_id: chatID });
-        void chat.sendMessage({ content: text });
-        setDraft("");
     };
 
     // Seed the editor draft when entering edit mode.
@@ -72,15 +42,19 @@ export default function ChatConversationPage() {
         setEditingMessageId(messageId);
     };
 
-    const handleSubmitEdit = () => {
+    const handleSubmitEdit = async () => {
         if (!editingMessageId) return;
         posthog.capture("message_edited", {
             chat_id: chatID,
             message_id: editingMessageId,
         });
-        void chat.editAndSend(editingMessageId, editingDraft);
-        setEditingMessageId(null);
-        setEditingDraft("");
+        try {
+            await chat.editAndSend(editingMessageId, editingDraft);
+            setEditingMessageId(null);
+            setEditingDraft("");
+        } catch {
+            toast.error("編輯訊息傳送失敗，請重試。");
+        }
     };
 
     const handleCancelEdit = () => {
@@ -93,7 +67,9 @@ export default function ChatConversationPage() {
             chat_id: chatID,
             message_id: userMessageId,
         });
-        void chat.resend(userMessageId);
+        void chat
+            .resend(userMessageId)
+            .catch(() => toast.error("重新生成失敗，請重試。"));
     };
 
     return (
@@ -111,6 +87,7 @@ export default function ChatConversationPage() {
                 onSubmitEdit={handleSubmitEdit}
                 onRegenerate={handleRegenerate}
             />
+            <ChatRecovery chat={chat} />
             <div className={styles.dock}>
                 <div className={styles.dockInner}>
                     <Composer
@@ -118,6 +95,10 @@ export default function ChatConversationPage() {
                         onChange={setDraft}
                         onSubmit={handleSend}
                         busy={chat.status === "streaming"}
+                        disabled={
+                            chat.status === "loading" ||
+                            Boolean(chat.recoveryMessage)
+                        }
                         onStop={chat.abort}
                     />
                 </div>

@@ -176,20 +176,23 @@ export default function Sidebar({
                                 {group.label}
                             </div>
                             {group.items.map((chat) => (
-                                <button
+                                <div
                                     key={chat.id}
-                                    type="button"
                                     className={styles.histItem}
                                     data-active={chat.id === activeChatId}
-                                    onClick={() => onSelect(chat)}
-                                    title={chat.title}
                                 >
-                                    <span className={styles.histTitle}>
+                                    <button
+                                        type="button"
+                                        className={styles.histTitle}
+                                        onClick={() => onSelect(chat)}
+                                        title={chat.title}
+                                    >
                                         {chat.title}
-                                    </span>
+                                    </button>
                                     <button
                                         className={styles.histDel}
-                                        role="button"
+                                        type="button"
+                                        disabled={deletingChatId === chat.id}
                                         title="刪除"
                                         aria-label={`刪除對話 ${chat.title}`}
                                         data-busy={deletingChatId === chat.id}
@@ -200,7 +203,7 @@ export default function Sidebar({
                                     >
                                         <Trash2 size={15} strokeWidth={1.6} />
                                     </button>
-                                </button>
+                                </div>
                             ))}
                         </div>
                     ))}

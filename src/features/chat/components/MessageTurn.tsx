@@ -7,16 +7,16 @@ import "katex/dist/katex.min.css";
 import { ChevronLeft, ChevronRight, Pencil, RefreshCw } from "lucide-react";
 import type {
     BranchDirection,
-    Message,
+    MessageView,
     MessageBranchState,
 } from "../types/chat";
 import { parseAssistantContent } from "./parseAssistantContent";
 import { normalizeMath } from "./normalizeMath";
-import ThinkingBlock from "./ThinkingBlock";
+
 import styles from "./MessageTurn.module.css";
 
 type Props = {
-    message: Message;
+    message: MessageView;
     branchState: MessageBranchState;
     actionsDisabled: boolean;
     isEditing: boolean;
@@ -169,46 +169,104 @@ function UserEditor({
     );
 }
 
-function AssistantMessage({
-    message,
-}: Pick<Props, "message" | "actionsDisabled" | "onRegenerate">) {
-    const streaming = message.status === "streaming";
-    const { answer, thought, isThinking } = parseAssistantContent(
-        message.content
+function RichText({ text }: { text: string }) {
+    const normalized = useMemo(() => normalizeMath(text), [text]);
+    return (
+        <div className={styles.rich}>
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={{
+                    table: ({ node: _node, ...props }) => (
+                        <div className={styles.tableWrapper}>
+                            <table {...props} />
+                        </div>
+                    ),
+                }}
+            >
+                {normalized}
+            </ReactMarkdown>
+        </div>
     );
-    const mathAnswer = useMemo(() => normalizeMath(answer), [answer]);
-
+}
+function AssistantMessage({ message }: Pick<Props, "message">) {
+    const streaming = message.status === "streaming";
+    const activeName = message.characters?.find(
+        (character) => character.id === message.activeAgents?.at(-1)
+    )?.displayName;
+    const visibleParts = message.parts?.filter(
+        (part) => part && !part.internal && part.type === "text" && part.text
+    );
+    const latestPublicPart = message.parts
+        ?.filter((part) => part && !part.internal && part.type !== "reasoning")
+        .at(-1);
+    const tool = streaming && latestPublicPart?.type === "tool_call";
+    const retrieval =
+        tool && /search|retriev|rag/i.test(latestPublicPart?.name ?? "");
+    const answer =
+        message.parts === undefined
+            ? parseAssistantContent(message.content).answer
+            : "";
     return (
         <div className={styles.botWrap}>
-            {thought || isThinking ? (
-                <ThinkingBlock thought={thought} isThinking={isThinking} />
-            ) : null}
-
-            {answer ? (
-                <div className={styles.rich}>
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeKatex]}
-                        components={{
-                            table: ({ node: _node, ...props }) => (
-                                <div className={styles.tableWrapper}>
-                                    <table {...props} />
-                                </div>
-                            ),
-                        }}
+            {visibleParts?.map((part) => {
+                const character = message.characters?.find(
+                    (c) => c.id === part.agent
+                );
+                return (
+                    <section
+                        className={styles.agentCard}
+                        key={part.id}
+                        aria-label={character?.displayName || "學習助手"}
                     >
-                        {mathAnswer}
-                    </ReactMarkdown>
+                        <header className={styles.agentHeader}>
+                            <span className={styles.avatar} aria-hidden="true">
+                                {(character?.displayName || "助").slice(0, 1)}
+                            </span>
+                            <strong>
+                                {character?.displayName || "學習助手"}
+                            </strong>
+                            {character?.role && (
+                                <span className={styles.agentRole}>
+                                    {character.role}
+                                </span>
+                            )}
+                        </header>
+                        <RichText text={part.text!} />
+                    </section>
+                );
+            })}
+            {answer && (
+                <section className={styles.agentCard}>
+                    <header className={styles.agentHeader}>
+                        <strong>學習助手</strong>
+                    </header>
+                    <RichText text={answer} />
+                </section>
+            )}
+            {streaming && (
+                <div className={styles.activity} role="status">
+                    <span className={styles.dots} aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                    </span>
+                    {retrieval
+                        ? "正在查找教材…"
+                        : tool
+                          ? "正在整理資料…"
+                          : activeName
+                            ? `${activeName}正在回覆…`
+                            : "正在回覆…"}
                 </div>
-            ) : null}
-
-            {streaming && !isThinking ? (
-                <span className={styles.dots} aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                </span>
-            ) : null}
+            )}
+            {!streaming && !answer && !visibleParts?.length && (
+                <p className={styles.activity}>
+                    {message.status === "failed"
+                        ? "回覆尚未完成。"
+                        : "這次回覆沒有可顯示的內容。"}
+                </p>
+            )}
         </div>
     );
 }

@@ -198,6 +198,13 @@
 }
 
 .histTitle {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
     flex: 1;
     min-width: 0;
     white-space: nowrap;

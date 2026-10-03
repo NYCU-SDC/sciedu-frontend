@@ -4,6 +4,9 @@ export type MessageStatus = "streaming" | "completed" | "failed";
 export type Message = {
     id: string;
     content: string;
+    parts?: MessagePart[];
+    characters?: Character[];
+    agentRuns?: AgentRun[];
     role: MessageRole;
     previousID?: string;
     status: MessageStatus;
@@ -44,3 +47,27 @@ export type ListChatsResponse = {
     pageSize: number;
     hasNextPage: boolean;
 };
+
+export type Character = { id: string; displayName: string; role: string };
+export type AgentRun = {
+    id: string;
+    agent: string;
+    parentRunID?: string;
+    summonedBy?: string;
+};
+export type MessagePart = {
+    type: "text" | "reasoning" | "tool_call" | "tool_result";
+    id: string;
+    agent: string;
+    agentRunID?: string;
+    internal?: boolean;
+    text?: string;
+    tool_call_id?: string;
+    name?: string;
+    arguments?: unknown;
+    status?: string;
+    content?: unknown;
+};
+
+/** View-only metadata; never part of the REST request or persisted message. */
+export type MessageView = Message & { activeAgents?: string[] };

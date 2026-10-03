@@ -26,7 +26,17 @@ export async function startChat(
         title: message.content.slice(0, 40),
         createdAt: now,
         updatedAt: now,
-        messages: [message],
+        messages: [
+            message,
+            {
+                id: replyMessageID,
+                content: "",
+                previousID: message.id,
+                role: "assistant",
+                status: "streaming",
+                createdAt: now,
+            },
+        ],
     };
     queryClient.setQueryData(chatQueryKey(chatID), optimistic);
 

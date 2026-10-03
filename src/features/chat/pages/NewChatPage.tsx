@@ -7,7 +7,7 @@ import Home from "../components/Home";
 import { startChat } from "../services/startChat";
 import { CHAT_HISTORY_QUERY_KEY } from "../../../shared/network/chat";
 
-export default function NewChatPage() {
+export default function NewChatPage({ basePath = "" }: { basePath?: string }) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const posthog = usePostHog();
@@ -25,7 +25,7 @@ export default function NewChatPage() {
             void queryClient.invalidateQueries({
                 queryKey: CHAT_HISTORY_QUERY_KEY,
             });
-            navigate(`/chat/${chatID}`);
+            navigate(`${basePath}/chat/${chatID}`);
         } catch (error) {
             setCreating(false);
             toast.error(

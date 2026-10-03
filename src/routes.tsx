@@ -1,3 +1,8 @@
+import {
+    ChatPreview,
+    CourseChatPreview,
+} from "./features/chat/pages/lazyPreview";
+import { Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 import type { RouteObject } from "react-router";
 import { AuthProvider } from "./shared/auth";
@@ -76,6 +81,43 @@ const enableAdminDemo =
     import.meta.env.DEV && import.meta.env.VITE_ADMIN_DEMO_MODE === "true";
 
 export const router = createBrowserRouter([
+    ...(import.meta.env.DEV && import.meta.env.VITE_CHAT_MODE === "mock"
+        ? [
+              {
+                  path: "/chat-preview",
+                  element: (
+                      <Suspense fallback={<p>載入預覽…</p>}>
+                          <ChatPreview />
+                      </Suspense>
+                  ),
+                  children: [
+                      {
+                          path: "course",
+                          element: (
+                              <Suspense fallback={<p>載入預覽…</p>}>
+                                  <CourseChatPreview />
+                              </Suspense>
+                          ),
+                      },
+                      {
+                          element: <ChatLayout basePath="/chat-preview" />,
+                          children: [
+                              {
+                                  index: true,
+                                  element: (
+                                      <NewChatPage basePath="/chat-preview" />
+                                  ),
+                              },
+                              {
+                                  path: "chat/:chatID",
+                                  element: <ChatConversationPage />,
+                              },
+                          ],
+                      },
+                  ],
+              },
+          ]
+        : []),
     ...(enableCourseRoutes && enableAdminDemo
         ? [
               {

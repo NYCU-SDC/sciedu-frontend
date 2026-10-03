@@ -29,3 +29,17 @@
         padding: 0.375rem 0.875rem 0.75rem;
     }
 }
+
+.conversation {
+    border: 2px solid #8ebfb8;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: white;
+    margin: 0.5rem 1rem 1rem;
+    min-width: 0;
+}
+@media (max-width: 40rem) {
+    .conversation {
+        margin: 0.25rem;
+    }
+}

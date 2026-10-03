@@ -15,7 +15,7 @@ import styles from "./ChatLayout.module.css";
 
 const MOBILE_QUERY = "(max-width: 53.75rem)";
 
-export default function ChatLayout() {
+export default function ChatLayout({ basePath = "" }: { basePath?: string }) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { chatID } = useParams<{ chatID: string }>();
@@ -50,12 +50,12 @@ export default function ChatLayout() {
 
     const handleSelect = (selected: ChatSummary) => {
         closeOnMobile();
-        navigate(`/chat/${selected.id}`);
+        navigate(`${basePath}/chat/${selected.id}`);
     };
 
     const handleNewChat = () => {
         closeOnMobile();
-        navigate("/");
+        navigate(`${basePath}/`);
     };
 
     const handleDelete = async (target: ChatSummary) => {
@@ -67,7 +67,7 @@ export default function ChatLayout() {
                 queryKey: CHAT_HISTORY_QUERY_KEY,
             });
             toast.success("已刪除對話");
-            if (target.id === chatID) navigate("/");
+            if (target.id === chatID) navigate(`${basePath}/`);
         } catch (error) {
             toast.error(
                 `刪除對話失敗: ${

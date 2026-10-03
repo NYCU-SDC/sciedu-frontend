@@ -1,10 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type {
     BranchDirection,
     Chat,
-    Message,
+    MessageView,
     MessageBranchState,
 } from "../types/chat";
+import { useQueryClient } from "@tanstack/react-query";
+import { chatQueryKey } from "./useChatMessages";
+import type { GetChatResponse } from "../types/chat";
 import { createMessage } from "../../../shared/network/chat";
 import { useBranchSelection } from "./useBranchSelection";
 import { useChatMessages } from "./useChatMessages";
@@ -21,7 +24,7 @@ export type SendMessageInput = {
 export type UseChatResult = {
     // Server state (React Query cache).
     chat: Chat | undefined;
-    messages: Message[];
+    messages: MessageView[];
     status: ChatStatus;
     error: Error | null;
 
@@ -37,7 +40,8 @@ export type UseChatResult = {
 
     // Stream lifecycle.
     streamingMessageId: string | null;
-    streamingContent: string | null;
+    recoveryMessage: string | null;
+    reloadResult: () => void;
     abort: () => void;
 };
 
@@ -54,6 +58,11 @@ export type UseChatResult = {
  */
 export function useChat(chatID: string): UseChatResult {
     const query = useChatMessages(chatID);
+    const client = useQueryClient();
+    const sendingRef = useRef(false);
+    const [sending, setSending] = useState(false);
+    const [sendError, setSendError] = useState<Error | null>(null);
+    const [attempt, setAttempt] = useState(0);
     const allMessages = useMemo(() => query.data?.messages ?? [], [query.data]);
 
     const { visible, switchBranch, getBranchState, selectBranch } =
@@ -62,42 +71,137 @@ export function useChat(chatID: string): UseChatResult {
     // streamingMessageId has two origins, unified into one field:
     //   - the just-sent reply id (set by sendMessage), and
     //   - the resume case: a message already streaming on load.
-    const [sentReplyId, setSentReplyId] = useState<string | null>(null);
-    const resumeId =
-        allMessages.find((m) => m.status === "streaming")?.id ?? null;
-    const streamingMessageId = sentReplyId ?? resumeId;
-
-    // Once the stream settles, drop the local handle so the field falls back to
-    // pure server-derived state.
+    const [sentReply, setSentReply] = useState<{
+        chatID: string;
+        id: string;
+    } | null>(null);
+    const resumeId = visible.find((m) => m.status === "streaming")?.id ?? null;
+    const sentId =
+        sentReply?.chatID === chatID &&
+        visible.some((m) => m.id === sentReply.id)
+            ? sentReply.id
+            : null;
+    const streamingMessageId = sentId ?? resumeId;
     const { state: stream, abort: abortStream } = useMessageStream(
         streamingMessageId,
         chatID,
-        () => setSentReplyId(null)
+        attempt
     );
+    const currentStream =
+        stream?.chatID === chatID &&
+        visible.some((m) => m.id === stream.messageID)
+            ? stream
+            : null;
+    const messages = useMemo(
+        () =>
+            visible.map((message) => {
+                if (!currentStream || message.id !== currentStream.messageID)
+                    return message;
+                const snapshot = currentStream.snapshot;
+                // Keep the last readable snapshot until the new subscription starts receiving parts.
+                if (
+                    snapshot.phase === "streaming" &&
+                    snapshot.content.length < message.content.length
+                )
+                    return {
+                        ...message,
+                        status: currentStream.paused
+                            ? ("failed" as const)
+                            : ("streaming" as const),
+                    };
+                return {
+                    ...message,
+                    content: snapshot.content,
+                    activeAgents: snapshot.activeAgents,
+                    ...(snapshot.parts ? { parts: snapshot.parts } : {}),
+                    ...(snapshot.characters
+                        ? { characters: snapshot.characters }
+                        : {}),
+                    status:
+                        snapshot.phase === "done"
+                            ? ("completed" as const)
+                            : currentStream.paused ||
+                                snapshot.phase === "failed"
+                              ? ("failed" as const)
+                              : ("streaming" as const),
+                };
+            }),
+        [visible, currentStream]
+    );
+    const failedHistoryID =
+        visible.at(-1)?.status === "failed" ? visible.at(-1)!.id : null;
+    const recoveryMessage = currentStream?.paused
+        ? "已停止接收，後端可能仍在產生回覆。"
+        : (currentStream?.snapshot.error ??
+          (failedHistoryID
+              ? "上次回覆未完成，請重新載入結果或重新生成。"
+              : null));
+    const reloadResult = useCallback(() => {
+        const target = currentStream?.messageID ?? failedHistoryID;
+        if (target) setSentReply({ chatID, id: target });
+        setSendError(null);
+        setAttempt((value) => value + 1);
+        void query.refetch();
+    }, [query, currentStream, chatID, failedHistoryID]);
 
     const sendMessage = useCallback(
         async (input: SendMessageInput) => {
             const trimmed = input.content.trim();
-            if (!trimmed) return;
+            if (!trimmed || sendingRef.current) return;
+            sendingRef.current = true;
+            setSending(true);
+            setSendError(null);
+            try {
+                // A present `previousID` — even `undefined` — is an explicit branch
+                // anchor and must be honored as-is: editing the first message anchors
+                // to the root (`undefined`), which is not the same as "not specified".
+                // Only when the key is absent do we default to appending at the tail.
+                const parentID =
+                    "previousID" in input
+                        ? input.previousID
+                        : visible.at(-1)?.id;
+                const { message, replyMessageID } = await createMessage(
+                    chatID,
+                    trimmed,
+                    parentID
+                );
 
-            // A present `previousID` — even `undefined` — is an explicit branch
-            // anchor and must be honored as-is: editing the first message anchors
-            // to the root (`undefined`), which is not the same as "not specified".
-            // Only when the key is absent do we default to appending at the tail.
-            const parentID =
-                "previousID" in input ? input.previousID : visible.at(-1)?.id;
-            const { message, replyMessageID } = await createMessage(
-                chatID,
-                trimmed,
-                parentID
-            );
-
-            // Pin the freshly created sibling so it is the visible branch.
-            selectBranch(message.previousID, message.id);
-            setSentReplyId(replyMessageID);
-            await query.refetch();
+                // Pin the freshly created sibling so it is the visible branch.
+                selectBranch(message.previousID, message.id);
+                client.setQueryData<GetChatResponse>(
+                    chatQueryKey(chatID),
+                    (previous) =>
+                        previous
+                            ? {
+                                  ...previous,
+                                  messages: [
+                                      ...previous.messages,
+                                      message,
+                                      {
+                                          id: replyMessageID,
+                                          content: "",
+                                          role: "assistant",
+                                          previousID: message.id,
+                                          status: "streaming",
+                                          createdAt: new Date().toISOString(),
+                                      },
+                                  ],
+                              }
+                            : previous
+                );
+                setSentReply({ chatID, id: replyMessageID });
+                await query.refetch();
+            } catch (error) {
+                setSendError(
+                    error instanceof Error ? error : new Error("傳送失敗")
+                );
+                throw error;
+            } finally {
+                sendingRef.current = false;
+                setSending(false);
+            }
         },
-        [chatID, visible, selectBranch, query]
+        [chatID, visible, selectBranch, query, client]
     );
 
     const resend = useCallback(
@@ -123,12 +227,15 @@ export function useChat(chatID: string): UseChatResult {
 
     const abort = useCallback(() => {
         abortStream();
-        setSentReplyId(null);
     }, [abortStream]);
 
     const status: ChatStatus = query.isLoading
         ? "loading"
-        : streamingMessageId !== null || stream.phase === "streaming"
+        : sending ||
+            (streamingMessageId !== null &&
+                (!currentStream ||
+                    (!currentStream.paused &&
+                        currentStream.snapshot.phase === "streaming")))
           ? "streaming"
           : query.isError
             ? "error"
@@ -145,16 +252,17 @@ export function useChat(chatID: string): UseChatResult {
 
     return {
         chat,
-        messages: visible,
+        messages,
         status,
-        error: query.error,
+        error: sendError ?? query.error,
         sendMessage,
         resend,
         editAndSend,
         switchBranch,
         getBranchState,
         streamingMessageId,
-        streamingContent: stream.phase === "streaming" ? stream.buffer : null,
+        recoveryMessage,
+        reloadResult,
         abort,
     };
 }

@@ -1,4 +1,5 @@
 import { Sparkles, RefreshCcw } from "lucide-react";
+import ChatRecovery from "../../../chat/components/ChatRecovery";
 import Thread from "../../../chat/components/Thread";
 import Composer from "../../../chat/components/Composer";
 import type { CourseChatController } from "./useCourseChatController";
@@ -83,6 +84,7 @@ export default function CourseChat({ controller }: Props) {
                 </>
             )}
 
+            <ChatRecovery chat={chat} />
             <div className={styles.dock}>
                 <Composer
                     value={draft}
@@ -90,7 +92,11 @@ export default function CourseChat({ controller }: Props) {
                     onSubmit={handleSend}
                     busy={chat.status === "streaming"}
                     onStop={chat.abort}
-                    disabled={creating || chat.status === "loading"}
+                    disabled={
+                        creating ||
+                        chat.status === "loading" ||
+                        Boolean(chat.recoveryMessage)
+                    }
                 />
             </div>
         </div>

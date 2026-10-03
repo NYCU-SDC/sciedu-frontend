@@ -55,7 +55,11 @@ export default function Composer({
                 disabled={disabled}
                 onChange={(event) => onChange(event.target.value)}
                 onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
+                    if (
+                        event.key === "Enter" &&
+                        !event.shiftKey &&
+                        !event.nativeEvent.isComposing
+                    ) {
                         event.preventDefault();
                         send();
                     }
@@ -72,8 +76,8 @@ export default function Composer({
                         type="button"
                         className={`${styles.send} ${styles.stop}`}
                         onClick={onStop}
-                        title="停止"
-                        aria-label="停止"
+                        title="停止接收"
+                        aria-label="停止接收"
                     >
                         <span className={styles.stopGlyph} />
                     </button>

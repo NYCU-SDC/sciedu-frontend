@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Message } from "../../../chat/types/chat";
+
 import useChat from "../../../chat/services/useChat";
 import { startChat } from "../../../chat/services/startChat";
 import { CHAT_HISTORY_QUERY_KEY } from "../../../../shared/network/chat";
@@ -26,44 +26,10 @@ export function useCourseChatController() {
         []
     );
 
-    const {
-        messages: baseMessages,
-        streamingMessageId,
-        streamingContent,
-    } = chat;
-
+    const messages = chat.messages;
+    const baseMessages = messages;
     const busy =
         creating || chat.status === "streaming" || chat.status === "loading";
-
-    const messages = useMemo<Message[]>(() => {
-        if (streamingContent === null || !streamingMessageId) {
-            return baseMessages;
-        }
-
-        if (baseMessages.some((message) => message.id === streamingMessageId)) {
-            return baseMessages.map((message) =>
-                message.id === streamingMessageId
-                    ? {
-                          ...message,
-                          content: streamingContent,
-                          status: "streaming",
-                      }
-                    : message
-            );
-        }
-
-        return [
-            ...baseMessages,
-            {
-                id: streamingMessageId,
-                role: "assistant",
-                content: streamingContent,
-                previousID: baseMessages.at(-1)?.id,
-                status: "streaming",
-                createdAt: new Date().toISOString(),
-            },
-        ];
-    }, [baseMessages, streamingMessageId, streamingContent]);
 
     const handleSend = async (text: string) => {
         const trimmed = text.trim();

@@ -7,10 +7,10 @@ the second repeats the lesson text; the third supplies figure descriptions.
 The images in `assets/` are the original embedded picture bytes, not full-slide
 screenshots, so slide backgrounds and red question boxes are excluded.
 
-| Course | Pages | Questions | Images |
-| --- | ---: | ---: | ---: |
-| Brain–computer interface | 4 | 5 | 9 |
-| Dire-wolf revival | 4 | 4 | 6 |
+| Course                   | Pages | Questions | Images |
+| ------------------------ | ----: | --------: | -----: |
+| Brain–computer interface |     4 |         5 |      9 |
+| Dire-wolf revival        |     4 |         4 |      6 |
 
 `description` belongs in the large text box under the main image gallery.
 `questions` belong below it. `imageDescriptionForLLM` is the exact editable
@@ -38,6 +38,7 @@ python3 tools/course-materials/extract_decks.py \
   '/path/to/恐狼復育V12-20260821 ok.pptx' \
   '/path/to/腦機介面V12-20260819ok.pptx'
 python3 tools/course-materials/validate.py
+pnpm exec prettier 'tools/course-materials/*.json' --write
 ```
 
 The source decks themselves are not committed. The extractor deliberately

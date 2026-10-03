@@ -42,7 +42,8 @@ export function isCourseUuid(value: string): boolean {
 /**
  * Convert the PageBlock ordering contract into the material layout consumed by
  * CoursePlayer. 0 is the description, 10-99 are media, and each question is a
- * TEXT block at 100, 110, ... followed by its QUESTION block.
+ * TEXT block at 100, 110, ... (below 200) followed by its QUESTION block.
+ * TEXT at 200 is reserved for non-student-facing image descriptions.
  */
 export function mapPageBlocksToCoursePage(
     page: PageDetail,
@@ -67,6 +68,7 @@ export function mapPageBlocksToCoursePage(
             (block) =>
                 block.type === "TEXT" &&
                 block.displayOrder >= 100 &&
+                block.displayOrder < 200 &&
                 block.displayOrder % 10 === 0
         )
         .map((titleBlock) => {

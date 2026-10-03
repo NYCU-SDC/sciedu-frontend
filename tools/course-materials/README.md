@@ -31,6 +31,35 @@ The Course Player on the SCIEDU-134 branch expects these PageBlock positions:
 Do not treat the `200` block as connected to the LLM until the backend chat
 service explicitly retrieves it for the active course/page.
 
+## API upload (SCIEDU-136)
+
+Preview the exact PageBlock plan without network access:
+
+```bash
+python3 tools/course-materials/publish.py
+python3 -m unittest tools/course-materials/test_publish.py
+```
+
+When an authenticated SciEdu backend is available, upload through its API:
+
+```bash
+python3 tools/course-materials/publish.py --publish --api-base https://YOUR-DEV-BACKEND
+```
+
+The command prompts for an authenticated `Cookie` header, so it is not exposed
+in shell history or saved in the repo. Use an EXPERIMENTER or ADMIN session.
+It creates both courses as **DRAFT**; it does not assign them to an experiment
+or publish them to students. Returned UUIDs are checkpointed in ignored
+`.data/upload-state.json`, and rerunning the same command verifies and reuses
+the resources. Use `--state /private/path/state.json` for a different backend.
+Do not delete the checkpoint mid-upload: the APIs do not provide a transaction
+across all resources, so a rerun without it could duplicate content.
+
+This importer stores each third-slide description in a separate TEXT content
+resource and a `displayOrder: 200` PageBlock. The Course Player intentionally
+ignores that block; a backend course-aware chat change is still needed before
+the LLM actually consumes it.
+
 Regenerate from the original supplied PPTX files:
 
 ```bash

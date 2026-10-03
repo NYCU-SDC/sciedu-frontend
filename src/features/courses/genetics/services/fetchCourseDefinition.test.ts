@@ -37,6 +37,7 @@ describe("mapPageBlocksToCoursePage", () => {
                 block("MEDIA", "image-1", 10),
                 block("QUESTION", "question-1", 101),
                 block("TEXT", "title-2", 110),
+                block("TEXT", "image-description-for-llm", 200),
             ]),
             3
         );

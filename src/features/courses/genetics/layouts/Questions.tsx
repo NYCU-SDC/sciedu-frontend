@@ -8,6 +8,7 @@ import type {
     CoursePageRequest,
     QuestionPage,
     QuestionResponse,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
@@ -27,6 +28,7 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    onAnswersSubmitted?: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 export default function Questions({
@@ -36,6 +38,7 @@ export default function Questions({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted = () => {},
 }: Props) {
     const req = data.request as QuestionPage;
     const posthog = usePostHog();
@@ -132,11 +135,12 @@ export default function Questions({
         [questionById, uniqueQuestionIds]
     );
 
-    const handleAnswersSubmitted = () => {
+    const handleAnswersSubmitted = (submitted: SubmittedAnswerResponse[]) => {
         posthog.capture("course_questions_submitted", {
             page_index: data.pageIndex,
             question_count: uniqueQuestionIds.length,
         });
+        onAnswersSubmitted(submitted);
     };
 
     const {

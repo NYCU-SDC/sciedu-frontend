@@ -79,6 +79,14 @@ describe("fetchCourseDefinition", () => {
                             displayOrder: 101,
                             required: true,
                         },
+                        {
+                            id: "block-5",
+                            pageId,
+                            type: "TEXT",
+                            resourceId: "llm-image-description-id",
+                            displayOrder: 200,
+                            required: true,
+                        },
                     ],
                 })
             );

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 import { ApiError, api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
@@ -26,7 +26,12 @@ import type {
     CourseAnswer,
     CourseAnswers,
     CoursePageRequest,
+    SubmittedAnswerResponse,
 } from "./types/types";
+import {
+    saveCourseAttempt,
+    type CourseAttempt,
+} from "./services/courseAttempt";
 
 type PageContentProps = {
     data: CoursePageRequest;
@@ -35,6 +40,7 @@ type PageContentProps = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    onAnswersSubmitted: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 type CoursePageProps = PageContentProps & {
@@ -48,6 +54,7 @@ function CoursePage({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted,
 }: Omit<CoursePageProps, "chat">) {
     // Keep one controller mounted for each page so every page owns an
     // independent chat session and retains it while the student navigates.
@@ -66,6 +73,7 @@ function CoursePage({
                 isCompleted={isCompleted}
                 onNext={onNext}
                 onAnswerChange={onAnswerChange}
+                onAnswersSubmitted={onAnswersSubmitted}
             />
         </section>
     );
@@ -78,6 +86,7 @@ function PageContent({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted,
 }: PageContentProps) {
     switch (data.request.type) {
         case "material":
@@ -89,6 +98,7 @@ function PageContent({
                     isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
+                    onAnswersSubmitted={onAnswersSubmitted}
                 />
             );
         case "questions":
@@ -100,6 +110,7 @@ function PageContent({
                     isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
+                    onAnswersSubmitted={onAnswersSubmitted}
                 />
             );
         case "overview":
@@ -154,6 +165,9 @@ function CoursePlayer({ courseId }: { courseId: string }) {
         [courseQuery.data?.pages]
     );
     const currentPage = pageRequests[currentIndex];
+    const navigate = useNavigate();
+    const submissionsRef = useRef<SubmittedAnswerResponse[]>([]);
+    const startedAtRef = useRef(new Date().toISOString());
 
     useDocumentTitle(courseQuery.data?.title ?? "教材");
 
@@ -174,6 +188,22 @@ function CoursePlayer({ courseId }: { courseId: string }) {
 
     const handleNext = () => {
         if (!currentPage) return;
+        if (currentIndex === pageRequests.length - 1) {
+            const attempt: CourseAttempt = {
+                courseId,
+                courseTitle: courseQuery.data?.title ?? "教材",
+                startedAt: startedAtRef.current,
+                completedAt: new Date().toISOString(),
+                answersByPage,
+                submissions: submissionsRef.current,
+            };
+            saveCourseAttempt(attempt);
+            navigate(
+                `/courses/summary?courseId=${encodeURIComponent(courseId)}`,
+                { state: { attempt } }
+            );
+            return;
+        }
         const nextIndex = Math.min(
             currentIndex + 1,
             highestUnlockedIndex + 1,
@@ -231,6 +261,16 @@ function CoursePlayer({ courseId }: { courseId: string }) {
                 [questionId]: answer,
             },
         }));
+    };
+
+    const handleAnswersSubmitted = (submitted: SubmittedAnswerResponse[]) => {
+        const byQuestionId = new Map(
+            submissionsRef.current.map((answer) => [answer.questionId, answer])
+        );
+        submitted.forEach((answer) =>
+            byQuestionId.set(answer.questionId, answer)
+        );
+        submissionsRef.current = [...byQuestionId.values()];
     };
 
     if (!isValidCourseId) {
@@ -356,6 +396,7 @@ function CoursePlayer({ courseId }: { courseId: string }) {
                                     answer
                                 )
                             }
+                            onAnswersSubmitted={handleAnswersSubmitted}
                         />
                     ))}
                 {/* copyright footer */}

@@ -31,6 +31,8 @@ export type AnswerSubmissionRequest =
 export type SubmittedAnswerResponse = {
     id: string;
     questionId: string;
+    experimentId: string;
+    userId: string;
     selectedOptionId?: string;
     textAnswer?: string;
     createdAt: string;

@@ -6,6 +6,7 @@ import type {
     CoursePageRequest,
     MaterialPage,
     QuestionResponse,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import styles from "./Material.module.css";
@@ -25,6 +26,7 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    onAnswersSubmitted?: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 export default function Material({
@@ -34,6 +36,7 @@ export default function Material({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted = () => {},
 }: Props) {
     const req = data.request as MaterialPage;
 
@@ -93,6 +96,7 @@ export default function Material({
         questions: submittableQuestions,
         answers,
         isCompleted,
+        onSubmitted: onAnswersSubmitted,
         onContinue: onNext,
     });
 

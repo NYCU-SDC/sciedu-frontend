@@ -53,6 +53,8 @@ const questions: SubmittableQuestion[] = [
 const submittedAnswerResponse = {
     id: "answer-1",
     questionId: choiceQuestion.id,
+    experimentId: "experiment-1",
+    userId: "student-1",
     selectedOptionId: "option-a",
     createdAt: "2026-08-26T00:00:00Z",
 };
@@ -159,6 +161,15 @@ describe("useAnswerSubmission", () => {
             [textQuestion.id, "TEXT", "因為等位基因分離"],
         ]);
         expect(onSubmitted).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).toHaveBeenCalledWith([
+            submittedAnswerResponse,
+            {
+                ...submittedAnswerResponse,
+                questionId: textQuestion.id,
+                selectedOptionId: undefined,
+                textAnswer: "因為等位基因分離",
+            },
+        ]);
         expect(onContinue).toHaveBeenCalledTimes(1);
     });
 

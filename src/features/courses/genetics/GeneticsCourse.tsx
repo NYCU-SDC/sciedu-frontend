@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
 import {
     useLocation,
@@ -38,6 +38,8 @@ import type {
 } from "./types/types";
 
 const COURSE_TITLE = "生物遺傳機制推理學習";
+const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type PageContentProps = {
     data: CoursePageRequest;
@@ -221,6 +223,16 @@ function CoursePlayer({
     const posthog = usePostHog();
     const navigate = useNavigate();
     const currentPage = pageRequests[currentIndex];
+    const courseMetadataQuery = useQuery({
+        queryKey: ["courses", courseId, "summary-metadata"],
+        queryFn: () =>
+            api<{ title: string }>(
+                `/api/courses/${encodeURIComponent(courseId)}`
+            ),
+        enabled: UUID_PATTERN.test(courseId),
+        retry: false,
+    });
+    const courseTitle = courseMetadataQuery.data?.title ?? COURSE_TITLE;
 
     const resultQueries = useQueries({
         queries: (reviewMode ? submissions : []).map((submission) => ({
@@ -252,7 +264,7 @@ function CoursePlayer({
     }, [answersByPage, resultQueries, submissions]);
     const hasResultError = resultQueries.some((query) => query.isError);
 
-    useDocumentTitle(reviewMode ? `${COURSE_TITLE}－作答檢視` : COURSE_TITLE);
+    useDocumentTitle(reviewMode ? `${courseTitle}－作答檢視` : courseTitle);
 
     const currentYear = new Date().getFullYear();
 
@@ -300,7 +312,7 @@ function CoursePlayer({
 
             const attempt: CourseAttempt = {
                 courseId,
-                courseTitle: COURSE_TITLE,
+                courseTitle,
                 startedAt: startedAtRef.current,
                 completedAt: new Date().toISOString(),
                 answersByPage,

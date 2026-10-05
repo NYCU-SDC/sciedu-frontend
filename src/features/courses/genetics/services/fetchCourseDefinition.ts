@@ -67,6 +67,7 @@ export function mapPageBlocksToCoursePage(
             (block) =>
                 block.type === "TEXT" &&
                 block.displayOrder >= 100 &&
+                block.displayOrder < 200 &&
                 block.displayOrder % 10 === 0
         )
         .map((titleBlock) => {

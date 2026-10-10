@@ -77,6 +77,7 @@ export default function Material({
                 const query = quesContentQueries[index];
                 return {
                     questionId: section.questionId,
+                    required: section.required,
                     question: query.data,
                     isUnavailable:
                         query.isLoading || query.isError || !query.data,

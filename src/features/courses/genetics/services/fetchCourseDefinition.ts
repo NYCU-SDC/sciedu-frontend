@@ -1,9 +1,5 @@
 import { api } from "../../../../shared/utils/api";
-import type {
-    CourseDefinition,
-    CoursePageRequest,
-    MaterialPage,
-} from "../types/types";
+import type { CourseDefinition } from "../types/types";
 
 type CourseResponse = {
     id: string;
@@ -19,86 +15,18 @@ type PageResponse = {
     displayOrder: number;
 };
 
-type PageBlock = {
-    id: string;
-    pageId: string;
-    type: "TEXT" | "MEDIA" | "QUESTION";
-    resourceId: string;
-    displayOrder: number;
-    required: boolean;
-};
-
-type PageDetail = PageResponse & { blocks: PageBlock[] };
+import { mapPageBlocksToCoursePage, type PageDetail } from "./mapCoursePage";
+export {
+    mapPageBlocksToCoursePage,
+    type PageBlock,
+    type PageDetail,
+} from "./mapCoursePage";
 
 const UUID_PATTERN =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function isCourseUuid(value: string): boolean {
     return UUID_PATTERN.test(value);
-}
-
-function materialFromPage(page: PageDetail, index: number): CoursePageRequest {
-    const blocks = [...page.blocks].sort(
-        (left, right) => left.displayOrder - right.displayOrder
-    );
-    const description = blocks.find(
-        (block) => block.type === "TEXT" && block.displayOrder === 0
-    );
-    const imageIds = blocks
-        .filter(
-            (block) =>
-                block.type === "MEDIA" &&
-                block.displayOrder >= 10 &&
-                block.displayOrder < 100
-        )
-        .map((block) => block.resourceId);
-    const questionSections = blocks
-        .filter(
-            (block) =>
-                block.type === "TEXT" &&
-                block.displayOrder >= 100 &&
-                block.displayOrder < 200 &&
-                block.displayOrder % 10 === 0
-        )
-        .map((titleBlock) => {
-            const questionBlock = blocks.find(
-                (block) =>
-                    block.type === "QUESTION" &&
-                    block.displayOrder === titleBlock.displayOrder + 1
-            );
-            if (!questionBlock) {
-                throw new Error(
-                    `教材頁「${page.title}」的題目 ${titleBlock.displayOrder} 缺少 QUESTION block`
-                );
-            }
-            return {
-                titleId: titleBlock.resourceId,
-                questionId: questionBlock.resourceId,
-            };
-        });
-
-    if (!description) {
-        throw new Error(`教材頁「${page.title}」缺少教材文字`);
-    }
-    if (imageIds.length === 0) {
-        throw new Error(`教材頁「${page.title}」沒有圖片`);
-    }
-
-    const request: MaterialPage = {
-        type: "material",
-        content: {
-            imageIds,
-            descriptionId: description.resourceId,
-        },
-        questionSections,
-    };
-
-    return {
-        pageIndex: index,
-        request,
-        activeNavbarTitles: [],
-        secondaryTitle: page.title,
-    };
 }
 
 export async function fetchCourseDefinition(
@@ -119,6 +47,6 @@ export async function fetchCourseDefinition(
         id: course.id,
         code: course.code,
         title: course.title,
-        pages: pageDetails.map(materialFromPage),
+        pages: pageDetails.map(mapPageBlocksToCoursePage),
     };
 }

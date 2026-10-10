@@ -4,6 +4,7 @@ import { usePostHog } from "@posthog/react";
 import { useNavigate, useParams } from "react-router";
 
 import { ApiError, api } from "../../../shared/utils/api";
+import { useAuth } from "../../../shared/auth";
 import { useDocumentTitle } from "../../../shared/hooks";
 import { useCurrentExperimentCourses } from "../services/currentExperimentQueries";
 import { generateRQRequestFromPage } from "./services/fetchPageContent";
@@ -122,10 +123,12 @@ function PageContent({
 
 export default function GeneticsCourse() {
     const { id = "" } = useParams<{ id: string }>();
-    return <CoursePlayer key={id} courseId={id} />;
+    const { session } = useAuth();
+    return <CoursePlayer key={`${id}-${session?.email ?? ""}`} courseId={id} />;
 }
 
 function CoursePlayer({ courseId }: { courseId: string }) {
+    const { session, login } = useAuth();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
     const [completedQuestionPages, setCompletedQuestionPages] = useState(
@@ -191,6 +194,7 @@ function CoursePlayer({ courseId }: { courseId: string }) {
         if (currentIndex === pageRequests.length - 1) {
             const attempt: CourseAttempt = {
                 courseId,
+                userEmail: session?.email ?? "",
                 courseTitle: courseQuery.data?.title ?? "教材",
                 startedAt: startedAtRef.current,
                 completedAt: new Date().toISOString(),
@@ -300,6 +304,7 @@ function CoursePlayer({ courseId }: { courseId: string }) {
                         ? undefined
                         : currentExperiment.refetch
                 }
+                onLogin={status === 401 ? () => login("google") : undefined}
             />
         );
     }
@@ -340,6 +345,7 @@ function CoursePlayer({ courseId }: { courseId: string }) {
                         ? undefined
                         : courseQuery.refetch
                 }
+                onLogin={status === 401 ? () => login("google") : undefined}
             />
         );
     }
@@ -412,13 +418,20 @@ function CoursePlayer({ courseId }: { courseId: string }) {
 function CourseStatus({
     message,
     onRetry,
+    onLogin,
 }: {
     message: string;
     onRetry?: () => void;
+    onLogin?: () => void;
 }) {
     return (
         <div className={styles.courseStatus} role="status">
             <span>{message}</span>
+            {onLogin && (
+                <button type="button" onClick={onLogin}>
+                    重新登入
+                </button>
+            )}
             {onRetry && (
                 <button type="button" onClick={onRetry}>
                     重新載入

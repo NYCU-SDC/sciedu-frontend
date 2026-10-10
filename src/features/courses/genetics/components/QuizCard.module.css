@@ -1,13 +1,15 @@
 .quizCard {
+    position: relative;
     flex: 1;
-    background: white;
+    min-width: 0;
+    overflow-y: auto;
+    padding: 0.75rem;
     border: 0.0625rem solid var(--color-genetics-brand-teal);
     border-radius: 0.625rem;
-    padding: 0.75rem;
+    background: white;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0rem;
 }
 
 .titleRow {
@@ -18,22 +20,103 @@
 }
 
 .quizCard h3 {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--neutral-700);
     margin: 0;
+    padding-right: 2rem;
+    color: var(--neutral-700);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.quizCard p,
+.quizCard textarea,
+.radioGroup {
+    font-size: clamp(0.8rem, 0.8vw, 0.9rem);
+    line-height: 1.55;
+}
+
+.quizCard > p {
+    margin: 0.3125rem 0 0.75rem;
 }
 
 .errorText {
-    font-size: 0.75rem;
-    color: var(--red-9);
-}
-
-.quizCard > .errorText {
     margin-top: 0.375rem;
+    color: var(--red-9);
+    font-size: 0.75rem;
 }
 
-.quizCard p {
-    font-size: 0.9rem;
-    margin: 0.3125rem 0 0.75rem 0;
+.correct,
+.wrong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.correct {
+    color: #006b5b;
+}
+
+.wrong {
+    color: #b54708;
+}
+
+.reviewAnswers {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.reviewAnswers > div,
+.emptyReview {
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.65rem;
+    background: var(--color-neutral-50);
+}
+
+.reviewAnswers strong {
+    font-size: 0.75rem;
+    color: var(--color-neutral-700);
+}
+
+.reviewAnswers p {
+    margin-bottom: 0;
+}
+
+.reviewButton {
+    grid-column: 1 / -1;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--color-brand-teal-dark);
+    border-radius: 0.55rem;
+    color: var(--color-brand-teal-dark);
+    background: white;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.emptyReview {
+    width: 100%;
+    color: var(--color-neutral-700);
+}
+
+.modalQuestion {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.modalQuestion p,
+.modalAnswer {
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.modalAnswer {
+    min-height: 9rem;
 }

@@ -65,13 +65,11 @@ describe("admin demo isolation", () => {
     it("uses the configured API outside demo mode", async () => {
         vi.stubEnv("VITE_ADMIN_DEMO_MODE", "false");
         vi.resetModules();
-        const fetchMock = vi
-            .fn()
-            .mockResolvedValue({
-                ok: true,
-                status: 200,
-                json: async () => demoExperiment,
-            });
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: async () => demoExperiment,
+        });
         vi.stubGlobal("fetch", fetchMock);
         const repo = await import("./adminRepository");
         await repo.updateExperimentStatus(demoExperiment.id, "COMPLETED");

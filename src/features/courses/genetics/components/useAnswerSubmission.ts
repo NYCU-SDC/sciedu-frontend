@@ -8,6 +8,7 @@ export type SubmittableQuestion = {
     questionId: string;
     question?: QuestionResponse;
     isUnavailable: boolean;
+    required?: boolean;
 };
 
 type Options = {
@@ -94,6 +95,8 @@ export function useAnswerSubmission({
         let hasUnavailableQuestion = false;
 
         for (const item of questions) {
+            if (item.required === false && !answers[item.questionId]?.trim())
+                continue;
             if (item.isUnavailable || !item.question) {
                 hasUnavailableQuestion = true;
                 continue;

@@ -58,6 +58,7 @@ export type MaterialPage = {
     questionSections: {
         titleId: string;
         questionId: string;
+        required?: boolean;
     }[];
 };
 
@@ -92,10 +93,12 @@ export type QuestionsType = {
 export type QuestionPage = {
     type: "questions";
     columns: {
-        labelId: string;
+        labelId?: string;
+        labelIds?: string[];
         questions: {
-            titleId: string;
+            titleId?: string;
             questionId: string;
+            required?: boolean;
         }[];
     }[];
 };

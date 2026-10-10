@@ -52,8 +52,16 @@ describe("mapPageBlocksToCoursePage", () => {
                     imageIds: ["image-1", "image-2"],
                 },
                 questionSections: [
-                    { titleId: "title-1", questionId: "question-1" },
-                    { titleId: "title-2", questionId: "question-2" },
+                    {
+                        titleId: "title-1",
+                        questionId: "question-1",
+                        required: true,
+                    },
+                    {
+                        titleId: "title-2",
+                        questionId: "question-2",
+                        required: true,
+                    },
                 ],
             },
         });
@@ -88,6 +96,8 @@ describe("mapPageBlocksToCoursePage", () => {
         expect(
             result.request.type === "material" &&
                 result.request.questionSections
-        ).toEqual([{ titleId: "title", questionId: "question" }]);
+        ).toEqual([
+            { titleId: "title", questionId: "question", required: true },
+        ]);
     });
 });

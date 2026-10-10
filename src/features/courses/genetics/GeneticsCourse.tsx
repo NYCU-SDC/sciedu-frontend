@@ -35,8 +35,20 @@ export default function GeneticsCourse() {
         queryKey: ["course-definition", courseId],
         queryFn: () =>
             fetchCourseDefinition(courseId, REMOTE_COURSE_NAVIGATION),
-        enabled: isCourseUuid(courseId),
+        enabled: isCourseUuid(courseId) && !reviewMode,
     });
+
+    // A URL flag is not evidence of a completed attempt. The reusable player
+    // supports review, but this adapter must wait for the authenticated attempt
+    // integration in SCIEDU137 before enabling it.
+    if (reviewMode) {
+        return (
+            <CourseStatus
+                message="此入口尚未提供作答紀錄檢視，請返回書櫃"
+                isError
+            />
+        );
+    }
 
     if (isCourseUuid(courseId) && remoteCourse.isLoading) {
         return <CourseStatus message="教材載入中…" />;

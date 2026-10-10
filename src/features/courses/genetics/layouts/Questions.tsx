@@ -3,11 +3,13 @@ import { useQueries } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
 import { Button, RadioGroup, Skeleton, TextArea } from "@radix-ui/themes";
 import type {
+    AnswerReviewState,
     CourseAnswer,
     CourseAnswers,
     CoursePageRequest,
     QuestionPage,
     QuestionResponse,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
@@ -19,6 +21,7 @@ import {
     MAX_TEXT_ANSWER_LENGTH,
     useAnswerSubmission,
 } from "../components/useAnswerSubmission";
+import AnswerResultBadge from "../components/AnswerResultBadge";
 
 type Props = {
     data: CoursePageRequest;
@@ -27,6 +30,10 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    onAnswersSubmitted: (answers: SubmittedAnswerResponse[]) => void;
+    reviewMode?: boolean;
+    reviewStates?: Record<string, AnswerReviewState>;
+    isLastPage?: boolean;
 };
 
 export default function Questions({
@@ -36,6 +43,10 @@ export default function Questions({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted,
+    reviewMode = false,
+    reviewStates = {},
+    isLastPage = false,
 }: Props) {
     const req = data.request as QuestionPage;
     const posthog = usePostHog();
@@ -132,11 +143,12 @@ export default function Questions({
         [questionById, uniqueQuestionIds]
     );
 
-    const handleAnswersSubmitted = () => {
+    const handleAnswersSubmitted = (submitted: SubmittedAnswerResponse[]) => {
         posthog.capture("course_questions_submitted", {
             page_index: data.pageIndex,
             question_count: uniqueQuestionIds.length,
         });
+        onAnswersSubmitted(submitted);
     };
 
     const {
@@ -214,6 +226,34 @@ export default function Questions({
                                                     >
                                                         載入失敗
                                                     </span>
+                                                )}
+                                                {reviewMode && (
+                                                    <AnswerResultBadge
+                                                        result={
+                                                            reviewStates[
+                                                                question
+                                                                    .questionId
+                                                            ]?.result
+                                                        }
+                                                        isLoading={
+                                                            reviewStates[
+                                                                question
+                                                                    .questionId
+                                                            ]?.isLoading
+                                                        }
+                                                        isError={
+                                                            reviewStates[
+                                                                question
+                                                                    .questionId
+                                                            ]?.isError
+                                                        }
+                                                        isUnavailable={
+                                                            reviewStates[
+                                                                question
+                                                                    .questionId
+                                                            ]?.isUnavailable
+                                                        }
+                                                    />
                                                 )}
                                             </div>
                                             {isLoading ? (
@@ -358,17 +398,21 @@ export default function Questions({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={submit}
-                        disabled={isSubmitting}
+                        onClick={reviewMode ? onNext : submit}
+                        disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
-                        {isSubmitting
-                            ? "答案送出中…"
-                            : submissionError
-                              ? "重試送出"
-                              : isCompleted
-                                ? "前往下一頁"
-                                : "送出並前往下一頁"}
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : isSubmitting
+                              ? "答案送出中…"
+                              : submissionError
+                                ? "重試送出"
+                                : isCompleted
+                                  ? "前往下一頁"
+                                  : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </div>

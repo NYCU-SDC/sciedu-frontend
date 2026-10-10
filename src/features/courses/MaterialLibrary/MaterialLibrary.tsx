@@ -282,7 +282,9 @@ export default function MaterialLibrary() {
                                     completedPage={item.completedPage}
                                     status={item.status}
                                     onContinue={() =>
-                                        navigate("/courses/summary")
+                                        navigate(
+                                            `/course/${encodeURIComponent(item.id)}`
+                                        )
                                     }
                                 />
                             ))}

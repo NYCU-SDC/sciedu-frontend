@@ -65,8 +65,14 @@ type Props = {
     description: string;
     correctCount: number;
     wrongCount: number;
+    pendingCount?: number;
+    hiddenCount?: number;
+    failedCount?: number;
+    unavailableCount?: number;
+    isLoading?: boolean;
     duration: string;
     onDetailClick?: () => void;
+    onRetryResults?: () => void;
 };
 
 export default function ResultCard({
@@ -75,8 +81,14 @@ export default function ResultCard({
     description,
     correctCount,
     wrongCount,
+    pendingCount = 0,
+    hiddenCount = 0,
+    failedCount = 0,
+    unavailableCount = 0,
+    isLoading = false,
     duration,
     onDetailClick,
+    onRetryResults,
 }: Props) {
     return (
         <div
@@ -157,6 +169,16 @@ export default function ResultCard({
                     >
                         詳細作答情況
                     </Button>
+                    {onRetryResults && (
+                        <Button
+                            mt="sm"
+                            variant="subtle"
+                            color="red"
+                            onClick={onRetryResults}
+                        >
+                            重新載入評分
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -188,13 +210,34 @@ export default function ResultCard({
                     <ScoreRow
                         icon={<StatusDot color="#00856e" />}
                         label="答對"
-                        value={`${correctCount} 題`}
+                        value={isLoading ? "—" : `${correctCount} 題`}
                     />
                     <ScoreRow
                         icon={<StatusDot color="#925800" />}
                         label="答錯"
-                        value={`${wrongCount} 題`}
+                        value={isLoading ? "—" : `${wrongCount} 題`}
                     />
+                    {pendingCount > 0 && (
+                        <ScoreRow
+                            icon={<StatusDot color="#b38a00" />}
+                            label="待批改"
+                            value={`${pendingCount} 題`}
+                        />
+                    )}
+                    {hiddenCount > 0 && (
+                        <ScoreRow
+                            icon={<StatusDot color="#737373" />}
+                            label="成績未公開"
+                            value={`${hiddenCount} 題`}
+                        />
+                    )}
+                    {failedCount + unavailableCount > 0 && (
+                        <ScoreRow
+                            icon={<StatusDot color="#b42318" />}
+                            label="暫時無法取得評分"
+                            value={`${failedCount + unavailableCount} 題`}
+                        />
+                    )}
                     <ScoreRow
                         icon={<Clock3 size={16} color="#000000" />}
                         label="作答時間"

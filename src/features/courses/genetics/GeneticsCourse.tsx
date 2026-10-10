@@ -1,10 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
+import { useAuth } from "../../../shared/auth";
+import {
+    useLocation,
+    useNavigate,
+    useParams,
+    useSearchParams,
+} from "react-router";
 
 import { api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
 import { generateRQRequestFromPage } from "./services/fetchPageContent";
+import { answerResultQueryOptions } from "./services/answerResultQueryOptions";
+import {
+    loadCourseAttempt,
+    saveCourseAttempt,
+    type CourseAttempt,
+} from "./services/courseAttempt";
 
 import styles from "./GeneticsCourse.module.css";
 import Navbar from "./components/Navbar";
@@ -18,10 +31,16 @@ import {
 
 import { coursePageRequests } from "./assets/courseResource";
 import type {
+    AnswerReviewState,
     CourseAnswer,
     CourseAnswers,
     CoursePageRequest,
+    SubmittedAnswerResponse,
 } from "./types/types";
+
+const COURSE_TITLE = "生物遺傳機制推理學習";
+const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type PageContentProps = {
     data: CoursePageRequest;
@@ -30,6 +49,10 @@ type PageContentProps = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    onAnswersSubmitted: (answers: SubmittedAnswerResponse[]) => void;
+    reviewMode: boolean;
+    reviewStates: Record<string, AnswerReviewState>;
+    isLastPage: boolean;
 };
 
 type CoursePageProps = PageContentProps & {
@@ -43,6 +66,10 @@ function CoursePage({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted,
+    reviewMode,
+    reviewStates,
+    isLastPage,
 }: Omit<CoursePageProps, "chat">) {
     // Keep one controller mounted for each page so every page owns an
     // independent chat session and retains it while the student navigates.
@@ -61,6 +88,10 @@ function CoursePage({
                 isCompleted={isCompleted}
                 onNext={onNext}
                 onAnswerChange={onAnswerChange}
+                onAnswersSubmitted={onAnswersSubmitted}
+                reviewMode={reviewMode}
+                reviewStates={reviewStates}
+                isLastPage={isLastPage}
             />
         </section>
     );
@@ -73,6 +104,10 @@ function PageContent({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted,
+    reviewMode,
+    reviewStates,
+    isLastPage,
 }: PageContentProps) {
     switch (data.request.type) {
         case "material":
@@ -84,6 +119,10 @@ function PageContent({
                     isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
+                    onAnswersSubmitted={onAnswersSubmitted}
+                    reviewMode={reviewMode}
+                    reviewStates={reviewStates}
+                    isLastPage={isLastPage}
                 />
             );
         case "questions":
@@ -95,39 +134,149 @@ function PageContent({
                     isCompleted={isCompleted}
                     onNext={onNext}
                     onAnswerChange={onAnswerChange}
+                    onAnswersSubmitted={onAnswersSubmitted}
+                    reviewMode={reviewMode}
+                    reviewStates={reviewStates}
+                    isLastPage={isLastPage}
                 />
             );
         case "overview":
-            return <Overview data={data} chat={chat} onNext={onNext} />;
+            return (
+                <Overview
+                    data={data}
+                    chat={chat}
+                    onNext={onNext}
+                    reviewMode={reviewMode}
+                    isLastPage={isLastPage}
+                />
+            );
         default:
             return null;
     }
 }
 
 export default function GeneticsCourse() {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
-    const [completedQuestionPages, setCompletedQuestionPages] = useState(
-        new Set<number>()
-    );
-    const [answersByPage, setAnswersByPage] = useState<
-        Record<number, CourseAnswers>
-    >({});
-    const queryClient = useQueryClient();
-    const posthog = usePostHog();
+    const { session } = useAuth();
+    const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const reviewMode = searchParams.get("mode") === "review";
+    const navigationAttempt = (location.state as { attempt?: unknown } | null)
+        ?.attempt;
 
+    if (!id) return null;
+
+    return (
+        <CoursePlayer
+            key={`${id}-${session?.email ?? ""}-${reviewMode ? "review" : "answer"}`}
+            courseId={id}
+            reviewMode={reviewMode}
+            navigationAttempt={navigationAttempt}
+        />
+    );
+}
+
+function CoursePlayer({
+    courseId,
+    reviewMode,
+    navigationAttempt,
+}: {
+    courseId: string;
+    reviewMode: boolean;
+    navigationAttempt?: unknown;
+}) {
+    const { session } = useAuth();
     const pageRequests = useMemo(
         () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
         []
     );
+    const storedAttempt = useMemo(
+        () =>
+            reviewMode && session?.email
+                ? loadCourseAttempt(courseId, session.email, navigationAttempt)
+                : null,
+        [courseId, navigationAttempt, reviewMode, session]
+    );
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(
+        reviewMode ? pageRequests.length - 1 : 0
+    );
+    const [completedQuestionPages, setCompletedQuestionPages] = useState(
+        () =>
+            new Set<number>(
+                reviewMode
+                    ? pageRequests
+                          .filter((page) => page.request.type !== "overview")
+                          .map((page) => page.pageIndex)
+                    : []
+            )
+    );
+    const [answersByPage, setAnswersByPage] = useState<
+        Record<number, CourseAnswers>
+    >(() => storedAttempt?.answersByPage ?? {});
+    const [submissions, setSubmissions] = useState<SubmittedAnswerResponse[]>(
+        () => storedAttempt?.submissions ?? []
+    );
+    const submissionsRef = useRef(submissions);
+    const startedAtRef = useRef(new Date().toISOString());
+    const queryClient = useQueryClient();
+    const posthog = usePostHog();
+    const navigate = useNavigate();
     const currentPage = pageRequests[currentIndex];
+    const courseMetadataQuery = useQuery({
+        queryKey: ["courses", courseId, "summary-metadata"],
+        queryFn: () =>
+            api<{ title: string }>(
+                `/api/courses/${encodeURIComponent(courseId)}`
+            ),
+        enabled: UUID_PATTERN.test(courseId),
+        retry: false,
+    });
+    const courseTitle =
+        courseMetadataQuery.data?.title ??
+        storedAttempt?.courseTitle ??
+        (UUID_PATTERN.test(courseId) ? "課程教材" : COURSE_TITLE);
 
-    useDocumentTitle("基因");
+    const resultQueries = useQueries({
+        queries: (reviewMode && storedAttempt ? submissions : []).map(
+            (submission) =>
+                answerResultQueryOptions(
+                    session?.email ?? "",
+                    submission.questionId,
+                    submission.id
+                )
+        ),
+    });
+    const reviewStates = useMemo(() => {
+        const states: Record<string, AnswerReviewState> = {};
+        Object.values(answersByPage).forEach((answers) => {
+            Object.keys(answers).forEach((questionId) => {
+                states[questionId] = {
+                    isLoading: false,
+                    isError: false,
+                    isUnavailable: true,
+                };
+            });
+        });
+        submissions.forEach((submission, index) => {
+            states[submission.questionId] = {
+                result: resultQueries[index]?.data,
+                isLoading: resultQueries[index]?.isFetching ?? false,
+                isError: resultQueries[index]?.isError ?? false,
+                isUnavailable: false,
+            };
+        });
+        return states;
+    }, [answersByPage, resultQueries, submissions]);
+    const hasResultError = resultQueries.some((query) => query.isError);
+
+    useDocumentTitle(reviewMode ? `${courseTitle}－作答檢視` : courseTitle);
 
     const currentYear = new Date().getFullYear();
 
     // Prefetch next page content when currentIndex changes
     useEffect(() => {
+        if (reviewMode && !storedAttempt) return;
         const nextPage = pageRequests[currentIndex + 1];
         if (!nextPage) return;
         const nextPageRequests = generateRQRequestFromPage(nextPage);
@@ -137,12 +286,57 @@ export default function GeneticsCourse() {
                 queryFn: () => api<unknown>(req.queryPath),
             })
         );
-    }, [pageRequests, currentIndex, queryClient]);
+    }, [pageRequests, currentIndex, queryClient, reviewMode, storedAttempt]);
+
+    if (reviewMode && !storedAttempt) {
+        return (
+            <main
+                style={{
+                    minHeight: "100vh",
+                    display: "grid",
+                    placeItems: "center",
+                    padding: "2rem",
+                    textAlign: "center",
+                }}
+            >
+                <div>
+                    <h1>找不到可檢視的作答紀錄</h1>
+                    <p>請從完成教材後的摘要頁進入作答檢視。</p>
+                    <button type="button" onClick={() => navigate("/courses")}>
+                        返回教材首頁
+                    </button>
+                </div>
+            </main>
+        );
+    }
 
     const handleNext = () => {
+        if (currentIndex === pageRequests.length - 1) {
+            if (reviewMode) {
+                navigate("/courses");
+                return;
+            }
+
+            const attempt: CourseAttempt = {
+                courseId,
+                courseTitle,
+                userEmail: session?.email ?? "",
+                startedAt: startedAtRef.current,
+                completedAt: new Date().toISOString(),
+                answersByPage,
+                submissions: submissionsRef.current,
+            };
+            saveCourseAttempt(attempt);
+            navigate(
+                `/courses/summary?courseId=${encodeURIComponent(courseId)}`,
+                { state: { attempt } }
+            );
+            return;
+        }
+
         const nextIndex = Math.min(
             currentIndex + 1,
-            highestUnlockedIndex + 1,
+            reviewMode ? pageRequests.length - 1 : highestUnlockedIndex + 1,
             pageRequests.length - 1
         );
 
@@ -172,7 +366,7 @@ export default function GeneticsCourse() {
 
     const handleStepChange = (step: number) => {
         const isOutsideCourse = step < 0 || step >= pageRequests.length;
-        const isLocked = step > highestUnlockedIndex;
+        const isLocked = !reviewMode && step > highestUnlockedIndex;
 
         if (isOutsideCourse || isLocked) return;
 
@@ -196,6 +390,17 @@ export default function GeneticsCourse() {
                 [questionId]: answer,
             },
         }));
+    };
+
+    const handleAnswersSubmitted = (submitted: SubmittedAnswerResponse[]) => {
+        const byQuestionId = new Map(
+            submissionsRef.current.map((answer) => [answer.questionId, answer])
+        );
+        submitted.forEach((answer) =>
+            byQuestionId.set(answer.questionId, answer)
+        );
+        submissionsRef.current = [...byQuestionId.values()];
+        setSubmissions(submissionsRef.current);
     };
 
     return (
@@ -222,12 +427,36 @@ export default function GeneticsCourse() {
                 <Navbar
                     activeTitles={currentPage.activeNavbarTitles}
                     activeStep={currentIndex}
-                    highestUnlockedStep={highestUnlockedIndex}
+                    highestUnlockedStep={
+                        reviewMode
+                            ? pageRequests.length - 1
+                            : highestUnlockedIndex
+                    }
                     secondaryTitle={currentPage.secondaryTitle}
                     onStepChange={handleStepChange}
                 />
+                {reviewMode && hasResultError && (
+                    <div role="alert" style={{ padding: "0.75rem 1.5rem" }}>
+                        部分評分載入失敗。
+                        <button
+                            type="button"
+                            onClick={() => {
+                                resultQueries.forEach((query) => {
+                                    if (query.isError) void query.refetch();
+                                });
+                            }}
+                        >
+                            重新載入
+                        </button>
+                    </div>
+                )}
                 {pageRequests
-                    .slice(0, highestUnlockedIndex + 1)
+                    .slice(
+                        0,
+                        reviewMode
+                            ? pageRequests.length
+                            : highestUnlockedIndex + 1
+                    )
                     .map((page, index) => (
                         <CoursePage
                             key={page.pageIndex}
@@ -245,6 +474,10 @@ export default function GeneticsCourse() {
                                     answer
                                 )
                             }
+                            onAnswersSubmitted={handleAnswersSubmitted}
+                            reviewMode={reviewMode}
+                            reviewStates={reviewStates}
+                            isLastPage={index === pageRequests.length - 1}
                         />
                     ))}
                 {/* copyright footer */}

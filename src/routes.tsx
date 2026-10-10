@@ -45,7 +45,11 @@ const courseRoutes: RouteObject[] = [
     },
     {
         path: "/course/:id",
-        element: <GeneticsCourse />,
+        element: (
+            <RequireAuth>
+                <GeneticsCourse />
+            </RequireAuth>
+        ),
     },
     {
         path: "/courses/library",
@@ -53,7 +57,11 @@ const courseRoutes: RouteObject[] = [
     },
     {
         path: "/courses/summary",
-        element: <Summary />,
+        element: (
+            <RequireAuth>
+                <Summary />
+            </RequireAuth>
+        ),
     },
 ];
 

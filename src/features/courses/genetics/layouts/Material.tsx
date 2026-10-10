@@ -6,6 +6,8 @@ import type {
     CoursePageRequest,
     MaterialPage,
     QuestionResponse,
+    AnswerReviewState,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import styles from "./Material.module.css";
@@ -25,6 +27,10 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    onAnswersSubmitted: (answers: SubmittedAnswerResponse[]) => void;
+    reviewMode?: boolean;
+    reviewStates?: Record<string, AnswerReviewState>;
+    isLastPage?: boolean;
 };
 
 export default function Material({
@@ -34,6 +40,10 @@ export default function Material({
     isCompleted,
     onNext,
     onAnswerChange,
+    onAnswersSubmitted,
+    reviewMode = false,
+    reviewStates = {},
+    isLastPage = false,
 }: Props) {
     const req = data.request as MaterialPage;
 
@@ -94,6 +104,7 @@ export default function Material({
         questions: submittableQuestions,
         answers,
         isCompleted,
+        onSubmitted: onAnswersSubmitted,
         onContinue: onNext,
     });
 
@@ -165,6 +176,10 @@ export default function Material({
                                     validationError={
                                         validationErrors[section.questionId]
                                     }
+                                    showReview={reviewMode}
+                                    reviewState={
+                                        reviewStates[section.questionId]
+                                    }
                                     onAnswerChange={(answer) =>
                                         handleAnswerChange(
                                             section.questionId,
@@ -191,17 +206,21 @@ export default function Material({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={submit}
-                        disabled={isSubmitting}
+                        onClick={reviewMode ? onNext : submit}
+                        disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
-                        {isSubmitting
-                            ? "答案送出中…"
-                            : submissionError
-                              ? "重試送出"
-                              : isCompleted
-                                ? "前往下一頁"
-                                : "送出並前往下一頁"}
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : isSubmitting
+                              ? "答案送出中…"
+                              : submissionError
+                                ? "重試送出"
+                                : isCompleted
+                                  ? "前往下一頁"
+                                  : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </main>

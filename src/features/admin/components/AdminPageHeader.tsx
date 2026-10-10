@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ActionIcon, Title } from "@mantine/core";
+import { ActionIcon, Card, Title } from "@mantine/core";
 import { ArrowLeft } from "lucide-react";
 
 import styles from "./AdminPageHeader.module.css";
@@ -20,7 +20,12 @@ export default function AdminPageHeader({
     onBack,
 }: Props) {
     return (
-        <header className={styles.header}>
+        <Card
+            component="header"
+            className={styles.header}
+            radius="lg"
+            withBorder
+        >
             <div className={styles.titleGroup}>
                 {onBack && (
                     <ActionIcon
@@ -41,6 +46,6 @@ export default function AdminPageHeader({
                 )}
             </div>
             {actions && <div className={styles.actions}>{actions}</div>}
-        </header>
+        </Card>
     );
 }

@@ -8,6 +8,7 @@ type Props = {
     activeStep: number;
     highestUnlockedStep: number;
     secondaryTitle: string;
+    totalSteps?: number;
     onStepChange: (step: number) => void;
 };
 
@@ -16,6 +17,7 @@ export default function Navbar({
     activeStep,
     highestUnlockedStep,
     secondaryTitle,
+    totalSteps = 3,
     onStepChange,
 }: Props): JSX.Element {
     return (
@@ -47,7 +49,10 @@ export default function Navbar({
                         </div>
                         {/* number of pages */}
                         <div className={styles.pageProgress}>
-                            {[0, 1, 2].map((step) => {
+                            {Array.from(
+                                { length: totalSteps },
+                                (_, step) => step
+                            ).map((step) => {
                                 const isActive = activeStep === step;
                                 const isLocked = step > highestUnlockedStep;
                                 const pageNumber = String(step + 1).padStart(

@@ -58,7 +58,7 @@ export default function Header() {
                         教材首頁
                     </Title>
                     <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
-                        今日任務．學習概況．教材瀏覽
+                        目前實驗．教材瀏覽
                     </Text>
                 </div>
             </div>

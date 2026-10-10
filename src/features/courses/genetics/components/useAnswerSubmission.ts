@@ -2,19 +2,24 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { ApiError } from "../../../../shared/utils/api";
 import { submitAnswer } from "../services/submitAnswer";
-import type { CourseAnswers, QuestionResponse } from "../types/types";
+import type {
+    CourseAnswers,
+    QuestionResponse,
+    SubmittedAnswerResponse,
+} from "../types/types";
 
 export type SubmittableQuestion = {
     questionId: string;
     question?: QuestionResponse;
     isUnavailable: boolean;
+    required?: boolean;
 };
 
 type Options = {
     questions: SubmittableQuestion[];
     answers: CourseAnswers;
     isCompleted: boolean;
-    onSubmitted?: () => void;
+    onSubmitted?: (answers: SubmittedAnswerResponse[]) => void;
     onContinue: () => void;
 };
 
@@ -64,7 +69,7 @@ export function useAnswerSubmission({
     >(new Set());
     const isSubmittingRef = useRef(false);
     const submittedQuestionIdsRef = useRef(new Set<string>());
-    const hasCreatedAnswerRef = useRef(false);
+    const submittedAnswersRef = useRef<SubmittedAnswerResponse[]>([]);
 
     const clearAnswerError = (questionId: string) => {
         setValidationErrors((previousErrors) => {
@@ -94,6 +99,8 @@ export function useAnswerSubmission({
         let hasUnavailableQuestion = false;
 
         for (const item of questions) {
+            if (item.required === false && !answers[item.questionId]?.trim())
+                continue;
             if (item.isUnavailable || !item.question) {
                 hasUnavailableQuestion = true;
                 continue;
@@ -149,7 +156,7 @@ export function useAnswerSubmission({
                     const questionId = pendingQuestions[index].questionId;
                     submittedQuestionIdsRef.current.add(questionId);
                     acceptedQuestionIds.push(questionId);
-                    hasCreatedAnswerRef.current = true;
+                    submittedAnswersRef.current.push(result.value);
                 } else if (
                     result.reason instanceof ApiError &&
                     result.reason.status === 409
@@ -180,8 +187,8 @@ export function useAnswerSubmission({
             }
 
             toast.success("答案已成功送出");
-            if (hasCreatedAnswerRef.current) {
-                onSubmitted?.();
+            if (submittedAnswersRef.current.length > 0) {
+                onSubmitted?.([...submittedAnswersRef.current]);
             }
             onContinue();
         } finally {

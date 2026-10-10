@@ -31,6 +31,8 @@ export type AnswerSubmissionRequest =
 export type SubmittedAnswerResponse = {
     id: string;
     questionId: string;
+    experimentId: string;
+    userId: string;
     selectedOptionId?: string;
     textAnswer?: string;
     createdAt: string;
@@ -52,12 +54,13 @@ export type MaterialType = {
 export type MaterialPage = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
     };
     questionSections: {
         titleId: string;
         questionId: string;
+        required?: boolean;
     }[];
 };
 
@@ -92,10 +95,12 @@ export type QuestionsType = {
 export type QuestionPage = {
     type: "questions";
     columns: {
-        labelId: string;
+        labelId?: string;
+        labelIds?: string[];
         questions: {
-            titleId: string;
+            titleId?: string;
             questionId: string;
+            required?: boolean;
         }[];
     }[];
 };
@@ -115,4 +120,11 @@ export type CoursePageRequest = {
     request: MaterialPage | OverviewPage | QuestionPage;
     activeNavbarTitles: number[];
     secondaryTitle: string;
+};
+
+export type CourseDefinition = {
+    id: string;
+    code: string;
+    title: string;
+    pages: CoursePageRequest[];
 };

@@ -53,6 +53,8 @@ const questions: SubmittableQuestion[] = [
 const submittedAnswerResponse = {
     id: "answer-1",
     questionId: choiceQuestion.id,
+    experimentId: "experiment-1",
+    userId: "student-1",
     selectedOptionId: "option-a",
     createdAt: "2026-08-26T00:00:00Z",
 };
@@ -89,6 +91,40 @@ describe("validateAnswer", () => {
 });
 
 describe("useAnswerSubmission", () => {
+    it("skips empty optional answers without posting or blocking navigation", async () => {
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions: [{ ...questions[0], required: false }],
+                answers: { [choiceQuestion.id]: " " },
+                isCompleted: false,
+                onContinue,
+            })
+        );
+        await act(() => result.current.submit());
+        expect(submitAnswer).not.toHaveBeenCalled();
+        expect(onContinue).toHaveBeenCalledOnce();
+        expect(result.current.validationErrors).toEqual({});
+    });
+
+    it("validates nonempty optional answers", async () => {
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions: [{ ...questions[0], required: false }],
+                answers: { [choiceQuestion.id]: "invalid" },
+                isCompleted: false,
+                onContinue,
+            })
+        );
+        await act(() => result.current.submit());
+        expect(submitAnswer).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
+        expect(result.current.validationErrors[choiceQuestion.id]).toBe(
+            "請選擇有效的選項"
+        );
+    });
+
     it("does not submit until all required answers are valid", async () => {
         const onContinue = vi.fn();
         const { result } = renderHook(() =>
@@ -159,6 +195,15 @@ describe("useAnswerSubmission", () => {
             [textQuestion.id, "TEXT", "因為等位基因分離"],
         ]);
         expect(onSubmitted).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).toHaveBeenCalledWith([
+            submittedAnswerResponse,
+            {
+                ...submittedAnswerResponse,
+                questionId: textQuestion.id,
+                selectedOptionId: undefined,
+                textAnswer: "因為等位基因分離",
+            },
+        ]);
         expect(onContinue).toHaveBeenCalledTimes(1);
     });
 

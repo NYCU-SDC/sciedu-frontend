@@ -34,21 +34,13 @@ import {
     updateExperiment,
     updateExperimentStatus,
 } from "../services/adminRepository";
-import type { EditableExperimentPayload } from "../types";
+import {
+    buildExperimentPayload,
+    toTaipeiInputValue,
+    type ExperimentDraft as Draft,
+} from "../services/experimentDraft";
 import styles from "./ExperimentAdmin.module.css";
 
-type Draft = {
-    name: string;
-    description: string;
-    startsAt: string;
-    endsAt: string;
-    maxAttempts: string;
-    result: "hidden" | "score" | "explanations";
-    release: "page" | "course" | "never";
-    courseIds: string[];
-};
-
-const TAIPEI_TIME_ZONE = "Asia/Taipei";
 const defaultExperimentDate = toTaipeiInputValue(
     new Date(Date.now() + 86_400_000).toISOString()
 ).slice(0, 10);
@@ -70,25 +62,6 @@ const steps = [
     { label: "選擇教材", description: "至少一份已發布教材" },
     { label: "學生與確認", description: "學生可稍後加入" },
 ];
-
-function toTaipeiInputValue(value: string) {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-        timeZone: TAIPEI_TIME_ZONE,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-    }).formatToParts(new Date(value));
-    const part = (type: Intl.DateTimeFormatPartTypes) =>
-        parts.find((item) => item.type === type)?.value ?? "";
-    return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
-}
-
-function taipeiInputToISOString(value: string) {
-    return new Date(`${value}:00+08:00`).toISOString();
-}
 
 function errorMessage(error: unknown) {
     return error instanceof ApiError && error.message
@@ -238,28 +211,8 @@ export default function CreateExperimentPage() {
         }));
     };
 
-    const payloadFromDraft = (): EditableExperimentPayload => ({
-        name: draft.name.trim(),
-        ...(draft.description.trim()
-            ? { description: draft.description.trim() }
-            : {}),
-        scheduledStartAt: taipeiInputToISOString(draft.startsAt),
-        scheduledEndAt: taipeiInputToISOString(draft.endsAt),
-        configuration: {
-            maxAttempts: Number(draft.maxAttempts),
-            allowRetry: Number(draft.maxAttempts) > 1,
-            showScore: draft.result !== "hidden",
-            showExplanations: draft.result === "explanations",
-            gradingMode:
-                experimentQuery.data?.configuration.gradingMode ?? "AUTOMATIC",
-            correctAnswerReleaseMode:
-                draft.release === "page"
-                    ? "AFTER_PAGE_SUBMISSION"
-                    : draft.release === "never"
-                      ? "NEVER"
-                      : "AFTER_COURSE_COMPLETION",
-        },
-    });
+    const payloadFromDraft = () =>
+        buildExperimentPayload(draft, experimentQuery.data);
 
     const persistExperiment = async () => {
         if (persistedExperimentId) {

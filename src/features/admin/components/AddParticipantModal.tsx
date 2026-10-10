@@ -17,12 +17,14 @@ import {
     addExperimentParticipants,
     listParticipantCandidates,
 } from "../services/adminRepository";
-import styles from "../pages/AdminDashboardPage.module.css";
+import styles from "./AddParticipantModal.module.css";
 
 type Props = {
     experimentId: string;
     onClose: () => void;
 };
+
+const MAX_PARTICIPANTS_PER_REQUEST = 100;
 
 export default function AddParticipantModal({ experimentId, onClose }: Props) {
     const queryClient = useQueryClient();
@@ -59,7 +61,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
         setSelectedIds((previous) => {
             const next = new Set(previous);
             if (next.has(userId)) next.delete(userId);
-            else next.add(userId);
+            else if (next.size < MAX_PARTICIPANTS_PER_REQUEST) next.add(userId);
             return next;
         });
     };
@@ -74,9 +76,9 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
             radius="lg"
             overlayProps={{ backgroundOpacity: 0.72, blur: 1 }}
             classNames={{
-                content: styles.mantineModal,
-                header: styles.mantineModalHeader,
-                body: styles.mantineModalBody,
+                content: styles.modal,
+                header: styles.header,
+                body: styles.body,
             }}
         >
             <Stack gap="sm">
@@ -84,12 +86,13 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                     autoFocus
                     type="search"
                     placeholder="搜尋姓名或郵件"
+                    maxLength={200}
                     aria-label="搜尋可加入的學生"
                     value={query}
                     onChange={(event) => setQuery(event.currentTarget.value)}
                     leftSection={<Search size={16} aria-hidden="true" />}
                     radius="md"
-                    classNames={{ input: styles.mantineTextInput }}
+                    classNames={{ input: styles.searchInput }}
                 />
 
                 <Stack gap="sm" className={styles.candidateList}>
@@ -104,7 +107,12 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                         </Text>
                     )}
                     {candidatesQuery.data?.map((candidate) => {
-                        const isAvailable = !candidate.isAssigned;
+                        const isSelected = selectedIds.has(candidate.user.id);
+                        const hasReachedLimit =
+                            selectedIds.size >= MAX_PARTICIPANTS_PER_REQUEST &&
+                            !isSelected;
+                        const isAvailable =
+                            !candidate.isAssigned && !hasReachedLimit;
                         return (
                             <label
                                 key={candidate.user.id}
@@ -113,7 +121,7 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                                 }`}
                             >
                                 <Checkbox
-                                    checked={selectedIds.has(candidate.user.id)}
+                                    checked={isSelected}
                                     disabled={!isAvailable}
                                     onChange={() =>
                                         toggleCandidate(candidate.user.id)
@@ -141,7 +149,11 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                                             : styles.conflict
                                     }
                                 >
-                                    {isAvailable ? "可加入" : "已加入本實驗"}
+                                    {candidate.isAssigned
+                                        ? "已加入本實驗"
+                                        : hasReachedLimit
+                                          ? "已達單次上限"
+                                          : "可加入"}
                                 </Text>
                             </label>
                         );
@@ -157,10 +169,10 @@ export default function AddParticipantModal({ experimentId, onClose }: Props) {
                     justify="space-between"
                     align="center"
                     pt="md"
-                    className={styles.mantineModalFooter}
+                    className={styles.footer}
                 >
                     <Text size="sm" c="dimmed">
-                        已選擇 {selectedIds.size} 位學生
+                        已選擇 {selectedIds.size} 位學生（單次最多 100 位）
                     </Text>
                     <Group gap="sm">
                         <Button variant="default" onClick={onClose}>

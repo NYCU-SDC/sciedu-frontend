@@ -1,0 +1,159 @@
+.sidebar {
+    --admin-sidebar-ink: #004038;
+    --admin-sidebar-background: #004d43;
+    --admin-sidebar-active: #0e6258;
+    --admin-sidebar-hover: #07584f;
+    display: flex;
+    width: 20rem;
+    height: 100vh;
+    flex: 0 0 20rem;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1rem;
+    overflow: hidden;
+    background: var(--admin-sidebar-background);
+    color: white;
+}
+
+.sidebarBrand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5625rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 2rem;
+    white-space: nowrap;
+}
+
+.sidebarBrand svg {
+    width: 2rem;
+    height: 2rem;
+    color: #77d5c6;
+}
+
+.sidebarNav {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+}
+
+.sidebarNav button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 1rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1.33;
+    text-align: left;
+}
+
+.sidebarNav .navActive {
+    background: var(--admin-sidebar-active);
+}
+
+.sidebarNav button:hover:not(:disabled):not(.navActive) {
+    background: var(--admin-sidebar-hover);
+}
+
+.sidebarNav button:focus-visible {
+    outline: 2px solid #77d5c6;
+    outline-offset: 2px;
+}
+
+.sidebarNav button:disabled {
+    cursor: not-allowed;
+    opacity: 0.72;
+}
+
+.sidebarNav svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 auto;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 1rem;
+    border-top: 1px solid rgb(255 255 255 / 20%);
+}
+
+.avatar {
+    display: grid;
+    width: 3.25rem;
+    height: 3.25rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 999px;
+    background: #d6f0eb;
+    color: var(--admin-sidebar-ink);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.profile > span:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile strong {
+    font-size: 1.25rem;
+    line-height: 1.33;
+}
+
+.profile small {
+    color: #d4d4d4;
+    font-size: 0.875rem;
+    line-height: 1.33;
+}
+
+@media (max-width: 75rem) {
+    .sidebar {
+        width: 15rem;
+        flex-basis: 15rem;
+    }
+
+    .sidebarBrand {
+        padding-inline: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .sidebarNav button {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 48rem) {
+    .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        padding: 0.75rem;
+    }
+
+    .sidebarNav {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .sidebarNav button {
+        width: auto;
+        flex: 0 0 auto;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .profile {
+        display: none;
+    }
+}

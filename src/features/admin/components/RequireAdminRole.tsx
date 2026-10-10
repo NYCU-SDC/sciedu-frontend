@@ -2,7 +2,7 @@ import type { JSX } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchCurrentUser } from "../services/adminRepository";
-import styles from "../pages/AdminDashboardPage.module.css";
+import AdminPageState from "./AdminPageState";
 
 export default function RequireAdminRole({
     children,
@@ -16,22 +16,18 @@ export default function RequireAdminRole({
     });
 
     if (userQuery.isPending) {
-        return <div className={styles.pageStatus}>正在確認後台權限⋯</div>;
+        return <AdminPageState>正在確認後台權限⋯</AdminPageState>;
     }
 
     if (userQuery.isError) {
-        return <div className={styles.pageStatus}>無法確認後台權限</div>;
+        return <AdminPageState>無法確認後台權限</AdminPageState>;
     }
 
     const canManageExperiments = userQuery.data.roles.some(
         (role) => role === "EXPERIMENTER" || role === "ADMIN"
     );
     if (!canManageExperiments) {
-        return (
-            <div className={styles.pageStatus}>
-                你沒有研究管理後台的使用權限
-            </div>
-        );
+        return <AdminPageState>你沒有研究管理後台的使用權限</AdminPageState>;
     }
 
     return children;

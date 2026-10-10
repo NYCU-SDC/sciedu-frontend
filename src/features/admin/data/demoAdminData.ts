@@ -13,8 +13,8 @@ const updatedAt = "2026-07-01T09:00:00+08:00";
 
 export const demoCurrentUser: User = {
     id: "00000000-0000-4000-8000-000000000013",
-    name: "佘曉青",
-    email: "hsiao-ching.she@nycu.edu.tw",
+    name: "王小明",
+    email: "xiaoming.wang@nycu.edu.tw",
     roles: ["EXPERIMENTER"],
     createdAt,
     updatedAt,
@@ -81,8 +81,8 @@ export const demoCourses: ExperimentCourseAssignment[] = [
         course: {
             id: "10000000-0000-4000-8000-000000000001",
             code: "GEN-01",
-            title: "豌豆－種皮形狀單因子遺傳與表型觀察",
-            description: "單因子遺傳與表型觀察",
+            title: "遺傳機制推理學習",
+            description: "生物學・3 頁",
             status: "PUBLISHED",
             createdAt,
             updatedAt,
@@ -93,8 +93,8 @@ export const demoCourses: ExperimentCourseAssignment[] = [
         course: {
             id: "10000000-0000-4000-8000-000000000002",
             code: "GEN-02",
-            title: "豌豆－莖高",
-            description: "顯性與隱性性狀分析",
+            title: "孟德爾遺傳與機率",
+            description: "生物學・4 頁",
             status: "PUBLISHED",
             createdAt,
             updatedAt,
@@ -105,8 +105,8 @@ export const demoCourses: ExperimentCourseAssignment[] = [
         course: {
             id: "10000000-0000-4000-8000-000000000003",
             code: "GEN-03",
-            title: "果蠅－眼色",
-            description: "伴性遺傳推理活動",
+            title: "基因表現與環境",
+            description: "生物學・3 頁",
             status: "PUBLISHED",
             createdAt,
             updatedAt,
@@ -117,8 +117,8 @@ export const demoCourses: ExperimentCourseAssignment[] = [
         course: {
             id: "10000000-0000-4000-8000-000000000004",
             code: "GEN-04",
-            title: "金魚草－花色",
-            description: "不完全顯性遺傳",
+            title: "DNA 萃取實驗",
+            description: "生物學・2 頁",
             status: "DRAFT",
             createdAt,
             updatedAt,

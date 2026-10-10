@@ -8,7 +8,6 @@ import {
     Select,
     Text,
     TextInput,
-    Title,
 } from "@mantine/core";
 import {
     ArrowDownToLine,
@@ -18,16 +17,19 @@ import {
     Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate, useSearchParams } from "react-router";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import AddParticipantModal from "../components/AddParticipantModal";
-import AdminSidebar, { type AdminSection } from "../components/AdminSidebar";
+import AdminLayout from "../components/AdminLayout";
+import AdminPage from "../components/AdminPage";
+import AdminPageHeader from "../components/AdminPageHeader";
+import AdminPageState from "../components/AdminPageState";
 import CourseTable from "../components/CourseTable";
 import ExperimentStats from "../components/ExperimentStats";
 import ExperimentSummary from "../components/ExperimentSummary";
 import ParticipantTable from "../components/ParticipantTable";
 import {
-    fetchCurrentUser,
     fetchExperiment,
     listAllExperiments,
     listExperimentCourses,
@@ -44,9 +46,11 @@ const PAGE_SIZE = 10;
 export default function AdminDashboardPage() {
     useDocumentTitle("研究管理後台");
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
-    const [activeSection, setActiveSection] =
-        useState<AdminSection>("overview");
+    const activeSection =
+        searchParams.get("section") === "people" ? "people" : "overview";
     const [selectedExperimentId, setSelectedExperimentId] = useState("");
     const [tableView, setTableView] = useState<TableView>("participants");
     const [query, setQuery] = useState("");
@@ -56,11 +60,6 @@ export default function AdminDashboardPage() {
     const [isParticipantModalOpen, setParticipantModalOpen] = useState(false);
     const [loadedAt] = useState(() => Date.now());
 
-    const currentUserQuery = useQuery({
-        queryKey: ["users", "me"],
-        queryFn: fetchCurrentUser,
-        staleTime: 5 * 60 * 1000,
-    });
     const experimentsQuery = useQuery({
         queryKey: ["admin", "experiments", "list"],
         queryFn: listAllExperiments,
@@ -163,25 +162,52 @@ export default function AdminDashboardPage() {
         resetTable();
     };
 
-    const switchSection = (section: AdminSection) => {
-        setActiveSection(section);
-        resetTable();
-    };
-
-    if (currentUserQuery.isPending || experimentsQuery.isPending) {
-        return <div className={styles.pageStatus}>載入實驗總覽中⋯</div>;
+    if (experimentsQuery.isPending) {
+        return <AdminPageState>載入實驗總覽中⋯</AdminPageState>;
     }
-    if (currentUserQuery.isError || experimentsQuery.isError) {
-        return <div className={styles.pageStatus}>實驗總覽載入失敗</div>;
+    if (experimentsQuery.isError) {
+        return <AdminPageState>實驗總覽載入失敗</AdminPageState>;
     }
     if (experiments.length === 0) {
-        return <div className={styles.pageStatus}>目前沒有可管理的實驗</div>;
+        const isPeopleSection = activeSection === "people";
+
+        return (
+            <AdminLayout>
+                <AdminPage>
+                    <AdminPageHeader
+                        title={isPeopleSection ? "人員管理" : "實驗總覽"}
+                    />
+                    <Card
+                        component="section"
+                        radius="lg"
+                        withBorder
+                        className={styles.dashboardEmpty}
+                    >
+                        <Text fw={700} size="lg">
+                            {isPeopleSection
+                                ? "目前沒有可管理的人員"
+                                : "目前沒有實驗資料"}
+                        </Text>
+                        <Text c="dimmed" size="sm">
+                            建立第一場實驗後，即可在此查看總覽並管理參與人員。
+                        </Text>
+                        <Button
+                            color="brandTeal"
+                            leftSection={<Plus size={16} aria-hidden="true" />}
+                            onClick={() => navigate("/admin/experiments/new")}
+                        >
+                            新增實驗
+                        </Button>
+                    </Card>
+                </AdminPage>
+            </AdminLayout>
+        );
     }
     if (experimentQuery.isError) {
-        return <div className={styles.pageStatus}>實驗資料載入失敗</div>;
+        return <AdminPageState>實驗資料載入失敗</AdminPageState>;
     }
     if (experimentQuery.isPending || !experimentQuery.data) {
-        return <div className={styles.pageStatus}>載入實驗資料中⋯</div>;
+        return <AdminPageState>載入實驗資料中⋯</AdminPageState>;
     }
 
     const experiment = experimentQuery.data;
@@ -196,33 +222,29 @@ export default function AdminDashboardPage() {
         displayView === "participants" ? participantsQuery : coursesQuery;
 
     return (
-        <div className={styles.page}>
-            <AdminSidebar
-                currentUser={currentUserQuery.data}
-                activeSection={activeSection}
-                onNavigate={switchSection}
-            />
-
-            <main className={styles.main}>
-                <header className={styles.pageHeader}>
-                    <Title order={1}>
-                        {activeSection === "overview" ? "實驗總覽" : "人員管理"}
-                    </Title>
-                    <Button
-                        className={styles.exportButton}
-                        classNames={{
-                            label: styles.exportButtonLabel,
-                            section: styles.exportButtonSection,
-                        }}
-                        disabled
-                        title="匯出資料功能尚未開放"
-                        variant="default"
-                        radius="md"
-                        leftSection={<ArrowDownToLine aria-hidden="true" />}
-                    >
-                        匯出資料
-                    </Button>
-                </header>
+        <AdminLayout onNavigate={resetTable}>
+            <AdminPage>
+                <AdminPageHeader
+                    title={
+                        activeSection === "overview" ? "實驗總覽" : "人員管理"
+                    }
+                    actions={
+                        <Button
+                            className={styles.exportButton}
+                            classNames={{
+                                label: styles.exportButtonLabel,
+                                section: styles.exportButtonSection,
+                            }}
+                            disabled
+                            title="匯出資料功能尚未開放"
+                            variant="default"
+                            radius="md"
+                            leftSection={<ArrowDownToLine aria-hidden="true" />}
+                        >
+                            匯出資料
+                        </Button>
+                    }
+                />
 
                 <ExperimentSummary
                     experiment={experiment}
@@ -453,14 +475,13 @@ export default function AdminDashboardPage() {
                         </div>
                     </footer>
                 </Card>
-            </main>
-
+            </AdminPage>
             {isParticipantModalOpen && (
                 <AddParticipantModal
                     experimentId={activeExperimentId}
                     onClose={() => setParticipantModalOpen(false)}
                 />
             )}
-        </div>
+        </AdminLayout>
     );
 }

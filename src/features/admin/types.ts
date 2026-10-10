@@ -51,6 +51,14 @@ export type ExperimentDetail = Experiment & {
     courseCount: number;
 };
 
+export type EditableExperimentPayload = {
+    name: string;
+    description?: string;
+    scheduledStartAt: string;
+    scheduledEndAt: string;
+    configuration: ExperimentConfiguration;
+};
+
 export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export type Course = {

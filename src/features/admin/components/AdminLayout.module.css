@@ -1,0 +1,53 @@
+.shell,
+.pageState {
+    --admin-ink: #004038;
+    --admin-deep: #004d43;
+    --admin-sidebar: #004d43;
+    --admin-sidebar-active: #0e6258;
+    --admin-sidebar-hover: #07584f;
+    --admin-accent: #63cabe;
+    --admin-canvas: #f0f6f4;
+    --admin-border: #d4d4d4;
+    min-height: 100vh;
+    color: var(--admin-ink);
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
+}
+
+.shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--admin-canvas);
+}
+
+@media (max-width: 48rem) {
+    .shell {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+
+    .main {
+        padding: 1rem;
+    }
+}
+
+.main {
+    min-width: 0;
+    flex: 1;
+    padding: 1rem 2rem 2rem;
+    overflow-y: auto;
+}
+
+.content {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.pageState {
+    display: grid;
+    place-items: center;
+    background: var(--admin-canvas);
+}

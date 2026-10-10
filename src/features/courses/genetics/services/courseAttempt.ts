@@ -5,6 +5,7 @@ const STORAGE_PREFIX = "sciedu-course-attempt:";
 export type CourseAttempt = {
     courseId: string;
     courseTitle: string;
+    userEmail: string;
     startedAt: string;
     completedAt: string;
     answersByPage: Record<number, CourseAnswers>;
@@ -45,14 +46,35 @@ function isAnswersByPage(
     );
 }
 
-function storageKey(courseId: string) {
-    return `${STORAGE_PREFIX}${courseId}`;
+function storageKey(courseId: string, userEmail: string) {
+    return `${STORAGE_PREFIX}${encodeURIComponent(userEmail)}:${courseId}`;
+}
+
+function isCourseAttempt(
+    value: unknown,
+    courseId: string,
+    userEmail: string
+): value is CourseAttempt {
+    return (
+        isRecord(value) &&
+        value.courseId === courseId &&
+        value.userEmail === userEmail &&
+        typeof value.courseTitle === "string" &&
+        typeof value.startedAt === "string" &&
+        typeof value.completedAt === "string" &&
+        Number.isFinite(Date.parse(value.startedAt)) &&
+        Number.isFinite(Date.parse(value.completedAt)) &&
+        isAnswersByPage(value.answersByPage) &&
+        Array.isArray(value.submissions) &&
+        value.submissions.every(isSubmittedAnswer)
+    );
 }
 
 export function saveCourseAttempt(attempt: CourseAttempt) {
+    if (!attempt.userEmail) return;
     try {
         sessionStorage.setItem(
-            storageKey(attempt.courseId),
+            storageKey(attempt.courseId, attempt.userEmail),
             JSON.stringify(attempt)
         );
     } catch {
@@ -60,24 +82,19 @@ export function saveCourseAttempt(attempt: CourseAttempt) {
     }
 }
 
-export function loadCourseAttempt(courseId: string): CourseAttempt | null {
+export function loadCourseAttempt(
+    courseId: string,
+    userEmail: string,
+    navigationAttempt?: unknown
+): CourseAttempt | null {
+    if (!userEmail) return null;
+    if (isCourseAttempt(navigationAttempt, courseId, userEmail))
+        return navigationAttempt;
     try {
-        const raw = sessionStorage.getItem(storageKey(courseId));
+        const raw = sessionStorage.getItem(storageKey(courseId, userEmail));
         if (!raw) return null;
         const parsed: unknown = JSON.parse(raw);
-        if (
-            !isRecord(parsed) ||
-            parsed.courseId !== courseId ||
-            typeof parsed.courseTitle !== "string" ||
-            typeof parsed.startedAt !== "string" ||
-            typeof parsed.completedAt !== "string" ||
-            !isAnswersByPage(parsed.answersByPage) ||
-            !Array.isArray(parsed.submissions) ||
-            !parsed.submissions.every(isSubmittedAnswer)
-        ) {
-            return null;
-        }
-        return parsed as CourseAttempt;
+        return isCourseAttempt(parsed, courseId, userEmail) ? parsed : null;
     } catch {
         return null;
     }

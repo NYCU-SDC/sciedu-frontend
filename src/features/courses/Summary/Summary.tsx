@@ -2,40 +2,37 @@ import { Box, Button, Text, Title } from "@mantine/core";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
+import { useAuth } from "../../../shared/auth";
 import Header from "./components/Header";
 import StatusBar from "./components/main/StatusBar";
 import ResultCard from "./components/main/ResultCard";
-import {
-    loadCourseAttempt,
-    type CourseAttempt,
-} from "../genetics/services/courseAttempt";
-import { fetchAnswerResult } from "../genetics/services/fetchAnswerResult";
+import { loadCourseAttempt } from "../genetics/services/courseAttempt";
+import { answerResultQueryOptions } from "../genetics/services/answerResultQueryOptions";
 import { formatDuration, summarizeAnswerResults } from "./summaryResult";
 
 export default function Summary() {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
-    const navigationAttempt = (
-        location.state as { attempt?: CourseAttempt } | null
-    )?.attempt;
-    const courseId =
-        searchParams.get("courseId") ?? navigationAttempt?.courseId ?? null;
+    const { session } = useAuth();
+    const navigationAttempt = (location.state as { attempt?: unknown } | null)
+        ?.attempt;
+    const courseId = searchParams.get("courseId") ?? null;
     const attempt = useMemo(
         () =>
-            courseId && navigationAttempt?.courseId === courseId
-                ? navigationAttempt
-                : courseId
-                  ? loadCourseAttempt(courseId)
-                  : null,
-        [courseId, navigationAttempt]
+            courseId && session?.email
+                ? loadCourseAttempt(courseId, session.email, navigationAttempt)
+                : null,
+        [courseId, navigationAttempt, session]
     );
     const resultQueries = useQueries({
-        queries: (attempt?.submissions ?? []).map((submission) => ({
-            queryKey: ["answer-result", submission.questionId, submission.id],
-            queryFn: () =>
-                fetchAnswerResult(submission.questionId, submission.id),
-        })),
+        queries: (attempt?.submissions ?? []).map((submission) =>
+            answerResultQueryOptions(
+                session?.email ?? "",
+                submission.questionId,
+                submission.id
+            )
+        ),
     });
     const results = resultQueries.flatMap((query) =>
         query.data ? [query.data] : []

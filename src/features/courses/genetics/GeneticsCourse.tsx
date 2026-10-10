@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
+import { useAuth } from "../../../shared/auth";
 import {
     useLocation,
     useNavigate,
@@ -11,7 +12,7 @@ import {
 import { api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
 import { generateRQRequestFromPage } from "./services/fetchPageContent";
-import { fetchAnswerResult } from "./services/fetchAnswerResult";
+import { answerResultQueryOptions } from "./services/answerResultQueryOptions";
 import {
     loadCourseAttempt,
     saveCourseAttempt,
@@ -155,19 +156,19 @@ function PageContent({
 }
 
 export default function GeneticsCourse() {
+    const { session } = useAuth();
     const { id } = useParams<{ id: string }>();
     const [searchParams] = useSearchParams();
     const location = useLocation();
     const reviewMode = searchParams.get("mode") === "review";
-    const navigationAttempt = (
-        location.state as { attempt?: CourseAttempt } | null
-    )?.attempt;
+    const navigationAttempt = (location.state as { attempt?: unknown } | null)
+        ?.attempt;
 
     if (!id) return null;
 
     return (
         <CoursePlayer
-            key={`${id}-${reviewMode ? "review" : "answer"}`}
+            key={`${id}-${session?.email ?? ""}-${reviewMode ? "review" : "answer"}`}
             courseId={id}
             reviewMode={reviewMode}
             navigationAttempt={navigationAttempt}
@@ -182,20 +183,19 @@ function CoursePlayer({
 }: {
     courseId: string;
     reviewMode: boolean;
-    navigationAttempt?: CourseAttempt;
+    navigationAttempt?: unknown;
 }) {
+    const { session } = useAuth();
     const pageRequests = useMemo(
         () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
         []
     );
     const storedAttempt = useMemo(
         () =>
-            reviewMode
-                ? navigationAttempt?.courseId === courseId
-                    ? navigationAttempt
-                    : loadCourseAttempt(courseId)
+            reviewMode && session?.email
+                ? loadCourseAttempt(courseId, session.email, navigationAttempt)
                 : null,
-        [courseId, navigationAttempt, reviewMode]
+        [courseId, navigationAttempt, reviewMode, session]
     );
     const [currentIndex, setCurrentIndex] = useState(0);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(
@@ -232,14 +232,20 @@ function CoursePlayer({
         enabled: UUID_PATTERN.test(courseId),
         retry: false,
     });
-    const courseTitle = courseMetadataQuery.data?.title ?? COURSE_TITLE;
+    const courseTitle =
+        courseMetadataQuery.data?.title ??
+        storedAttempt?.courseTitle ??
+        (UUID_PATTERN.test(courseId) ? "課程教材" : COURSE_TITLE);
 
     const resultQueries = useQueries({
-        queries: (reviewMode ? submissions : []).map((submission) => ({
-            queryKey: ["answer-result", submission.questionId, submission.id],
-            queryFn: () =>
-                fetchAnswerResult(submission.questionId, submission.id),
-        })),
+        queries: (reviewMode && storedAttempt ? submissions : []).map(
+            (submission) =>
+                answerResultQueryOptions(
+                    session?.email ?? "",
+                    submission.questionId,
+                    submission.id
+                )
+        ),
     });
     const reviewStates = useMemo(() => {
         const states: Record<string, AnswerReviewState> = {};
@@ -270,6 +276,7 @@ function CoursePlayer({
 
     // Prefetch next page content when currentIndex changes
     useEffect(() => {
+        if (reviewMode && !storedAttempt) return;
         const nextPage = pageRequests[currentIndex + 1];
         if (!nextPage) return;
         const nextPageRequests = generateRQRequestFromPage(nextPage);
@@ -279,7 +286,7 @@ function CoursePlayer({
                 queryFn: () => api<unknown>(req.queryPath),
             })
         );
-    }, [pageRequests, currentIndex, queryClient]);
+    }, [pageRequests, currentIndex, queryClient, reviewMode, storedAttempt]);
 
     if (reviewMode && !storedAttempt) {
         return (
@@ -313,6 +320,7 @@ function CoursePlayer({
             const attempt: CourseAttempt = {
                 courseId,
                 courseTitle,
+                userEmail: session?.email ?? "",
                 startedAt: startedAtRef.current,
                 completedAt: new Date().toISOString(),
                 answersByPage,

@@ -31,7 +31,12 @@ describe("answer result polling", () => {
             });
             const observer = new QueryObserver(
                 client,
-                answerResultQueryOptions("student@example.test", "q1", "a1")
+                answerResultQueryOptions(
+                    "student@example.test",
+                    "q1",
+                    "a1",
+                    "e1"
+                )
             );
             const unsubscribe = observer.subscribe(() => {});
             try {
@@ -52,7 +57,8 @@ describe("answer result polling", () => {
     it("isolates result caches between students", () => {
         const client = new QueryClient();
         client.setQueryData(
-            answerResultQueryOptions("first@example.test", "q1", "a1").queryKey,
+            answerResultQueryOptions("first@example.test", "q1", "a1", "e1")
+                .queryKey,
             {
                 answerId: "a1",
                 questionId: "q1",
@@ -62,11 +68,23 @@ describe("answer result polling", () => {
         );
         expect(
             client.getQueryData(
-                answerResultQueryOptions("second@example.test", "q1", "a1")
+                answerResultQueryOptions(
+                    "second@example.test",
+                    "q1",
+                    "a1",
+                    "e1"
+                ).queryKey
+            )
+        ).toBeUndefined();
+        expect(answerResultQueryOptions("", "q1", "a1", "e1").enabled).toBe(
+            false
+        );
+        expect(
+            client.getQueryData(
+                answerResultQueryOptions("first@example.test", "q1", "a1", "e2")
                     .queryKey
             )
         ).toBeUndefined();
-        expect(answerResultQueryOptions("", "q1", "a1").enabled).toBe(false);
         client.clear();
     });
 });

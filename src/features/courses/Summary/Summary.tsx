@@ -3,6 +3,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../../../shared/auth";
+import { useAttemptExperiment } from "../genetics/services/useAttemptExperiment";
 import Header from "./components/Header";
 import StatusBar from "./components/main/StatusBar";
 import ResultCard from "./components/main/ResultCard";
@@ -15,22 +16,30 @@ export default function Summary() {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const { session } = useAuth();
+    const current = useAttemptExperiment();
+    const experimentId = current.isSuccess ? current.data.experiment.id : "";
     const navigationAttempt = (location.state as { attempt?: unknown } | null)
         ?.attempt;
     const courseId = searchParams.get("courseId") ?? null;
     const attempt = useMemo(
         () =>
             courseId && session?.email
-                ? loadCourseAttempt(courseId, session.email, navigationAttempt)
+                ? loadCourseAttempt(
+                      courseId,
+                      session.email,
+                      experimentId,
+                      navigationAttempt
+                  )
                 : null,
-        [courseId, navigationAttempt, session]
+        [courseId, navigationAttempt, session, experimentId]
     );
     const resultQueries = useQueries({
         queries: (attempt?.submissions ?? []).map((submission) =>
             answerResultQueryOptions(
                 session?.email ?? "",
                 submission.questionId,
-                submission.id
+                submission.id,
+                experimentId
             )
         ),
     });
@@ -49,6 +58,19 @@ export default function Summary() {
         resultQueries.filter((query) => query.isError).length +
         Math.max(0, answeredQuestionCount - (attempt?.submissions.length ?? 0));
 
+    if (current.isPending)
+        return (
+            <Box p="xl" role="status">
+                正在確認目前實驗…
+            </Box>
+        );
+    if (current.isError)
+        return (
+            <Box p="xl">
+                <Text role="alert">無法確認實驗，暫不顯示作答紀錄。</Text>
+                <Button onClick={() => void current.refetch()}>重新載入</Button>
+            </Box>
+        );
     if (!attempt) {
         return (
             <Box

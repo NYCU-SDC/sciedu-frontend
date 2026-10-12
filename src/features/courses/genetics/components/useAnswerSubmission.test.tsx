@@ -91,6 +91,40 @@ describe("validateAnswer", () => {
 });
 
 describe("useAnswerSubmission", () => {
+    it("skips empty optional answers without posting or blocking navigation", async () => {
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions: [{ ...questions[0], required: false }],
+                answers: { [choiceQuestion.id]: " " },
+                isCompleted: false,
+                onContinue,
+            })
+        );
+        await act(() => result.current.submit());
+        expect(submitAnswer).not.toHaveBeenCalled();
+        expect(onContinue).toHaveBeenCalledOnce();
+        expect(result.current.validationErrors).toEqual({});
+    });
+
+    it("validates nonempty optional answers", async () => {
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions: [{ ...questions[0], required: false }],
+                answers: { [choiceQuestion.id]: "invalid" },
+                isCompleted: false,
+                onContinue,
+            })
+        );
+        await act(() => result.current.submit());
+        expect(submitAnswer).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
+        expect(result.current.validationErrors[choiceQuestion.id]).toBe(
+            "請選擇有效的選項"
+        );
+    });
+
     it("does not submit until all required answers are valid", async () => {
         const onContinue = vi.fn();
         const { result } = renderHook(() =>

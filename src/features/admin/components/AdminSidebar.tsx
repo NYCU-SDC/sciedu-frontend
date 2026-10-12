@@ -7,24 +7,63 @@ import {
     Search,
     Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 
 import { roleLabels } from "../formatters";
 import type { User } from "../types";
-import styles from "../pages/AdminDashboardPage.module.css";
+import styles from "./AdminSidebar.module.css";
 
-export type AdminSection = "overview" | "people";
+export type AdminSection = "overview" | "experiments" | "people";
 
 type Props = {
     currentUser: User;
-    activeSection: AdminSection;
-    onNavigate: (section: AdminSection) => void;
+    onNavigate?: () => void;
 };
 
-export default function AdminSidebar({
-    currentUser,
-    activeSection,
-    onNavigate,
-}: Props) {
+type NavigationItem = {
+    label: string;
+    icon: LucideIcon;
+    section?: AdminSection;
+    path?: string;
+};
+
+const navigationItems: NavigationItem[] = [
+    { label: "總覽", icon: Search, section: "overview", path: "/admin" },
+    {
+        label: "實驗管理",
+        icon: FlaskConical,
+        section: "experiments",
+        path: "/admin/experiments",
+    },
+    { label: "教材管理（未開放）", icon: BookOpen },
+    {
+        label: "人員管理",
+        icon: Users,
+        section: "people",
+        path: "/admin?section=people",
+    },
+    { label: "作答紀錄（未開放）", icon: CheckCircle2 },
+];
+
+function getActiveSection(pathname: string, search: string): AdminSection {
+    if (pathname.startsWith("/admin/experiments")) return "experiments";
+    if (new URLSearchParams(search).get("section") === "people") {
+        return "people";
+    }
+    return "overview";
+}
+
+export default function AdminSidebar({ currentUser, onNavigate }: Props) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const activeSection = getActiveSection(location.pathname, location.search);
+
+    const navigateTo = (path: string) => {
+        onNavigate?.();
+        navigate(path);
+    };
+
     return (
         <aside className={styles.sidebar}>
             <div className={styles.sidebarBrand}>
@@ -32,36 +71,23 @@ export default function AdminSidebar({
                 <span>研究管理後台</span>
             </div>
             <nav className={styles.sidebarNav} aria-label="後台主選單">
-                <UnstyledButton
-                    className={
-                        activeSection === "overview" ? styles.navActive : ""
-                    }
-                    onClick={() => onNavigate("overview")}
-                >
-                    <Search aria-hidden="true" />
-                    總覽
-                </UnstyledButton>
-                <UnstyledButton disabled>
-                    <FlaskConical aria-hidden="true" />
-                    實驗場次（未開放）
-                </UnstyledButton>
-                <UnstyledButton disabled>
-                    <BookOpen aria-hidden="true" />
-                    教材管理（未開放）
-                </UnstyledButton>
-                <UnstyledButton
-                    className={
-                        activeSection === "people" ? styles.navActive : ""
-                    }
-                    onClick={() => onNavigate("people")}
-                >
-                    <Users aria-hidden="true" />
-                    人員管理
-                </UnstyledButton>
-                <UnstyledButton disabled>
-                    <CheckCircle2 aria-hidden="true" />
-                    作答紀錄（未開放）
-                </UnstyledButton>
+                {navigationItems.map((item) => {
+                    const isActive = item.section === activeSection;
+                    const Icon = item.icon;
+                    const path = item.path;
+                    return (
+                        <UnstyledButton
+                            key={item.label}
+                            className={isActive ? styles.navActive : ""}
+                            aria-current={isActive ? "page" : undefined}
+                            disabled={!path}
+                            onClick={path ? () => navigateTo(path) : undefined}
+                        >
+                            <Icon aria-hidden="true" />
+                            {item.label}
+                        </UnstyledButton>
+                    );
+                })}
             </nav>
             <div className={styles.profile}>
                 <Avatar className={styles.avatar} color="brandTeal">

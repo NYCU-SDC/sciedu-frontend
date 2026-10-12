@@ -1,491 +1,182 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePostHog } from "@posthog/react";
-import { useAuth } from "../../../shared/auth";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
     useLocation,
     useNavigate,
     useParams,
     useSearchParams,
 } from "react-router";
-
-import { api } from "../../../shared/utils/api";
-import { useDocumentTitle } from "../../../shared/hooks";
-import { generateRQRequestFromPage } from "./services/fetchPageContent";
-import { answerResultQueryOptions } from "./services/answerResultQueryOptions";
+import { SectionTitles } from "../../../assets/NavbarContent";
+import { useAuth } from "../../../shared/auth";
+import { getAttemptSessionId } from "../../../shared/auth/courseAttemptStorage";
+import CoursePlayer, {
+    CourseStatus,
+    type CourseCompletion,
+} from "../player/CoursePlayer";
+import { coursePageRequests } from "./assets/courseResource";
+import {
+    fetchCourseDefinition,
+    isCourseUuid,
+} from "./services/fetchCourseDefinition";
 import {
     loadCourseAttempt,
     saveCourseAttempt,
     type CourseAttempt,
 } from "./services/courseAttempt";
+import { answerResultQueryOptions } from "./services/answerResultQueryOptions";
+import { useAttemptExperiment } from "./services/useAttemptExperiment";
+import type { CourseDefinition, CourseReviews } from "./types/types";
 
-import styles from "./GeneticsCourse.module.css";
-import Navbar from "./components/Navbar";
-import Material from "./layouts/Material";
-import Overview from "./layouts/Overview";
-import Questions from "./layouts/Questions";
-import {
-    useCourseChatController,
-    type CourseChatController,
-} from "./components/useCourseChatController";
-
-import { coursePageRequests } from "./assets/courseResource";
-import type {
-    AnswerReviewState,
-    CourseAnswer,
-    CourseAnswers,
-    CoursePageRequest,
-    SubmittedAnswerResponse,
-} from "./types/types";
-
-const COURSE_TITLE = "生物遺傳機制推理學習";
-const UUID_PATTERN =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-type PageContentProps = {
-    data: CoursePageRequest;
-    chat: CourseChatController;
-    answers: CourseAnswers;
-    isCompleted: boolean;
-    onNext: () => void;
-    onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
-    onAnswersSubmitted: (answers: SubmittedAnswerResponse[]) => void;
-    reviewMode: boolean;
-    reviewStates: Record<string, AnswerReviewState>;
-    isLastPage: boolean;
+const navigation = {
+    variant: "stepper",
+    mainTitle: "生物科學推理學習",
+} as const;
+const legacy: CourseDefinition = {
+    id: "genetics",
+    code: "genetics",
+    title: "豌豆－種皮形狀",
+    pages: coursePageRequests,
+    navigation: {
+        variant: "classic",
+        mainTitle: SectionTitles.MainTitle,
+        sectionTitles: SectionTitles.SubTitle,
+    },
 };
-
-type CoursePageProps = PageContentProps & {
-    isActive: boolean;
-};
-
-function CoursePage({
-    isActive,
-    data,
-    answers,
-    isCompleted,
-    onNext,
-    onAnswerChange,
-    onAnswersSubmitted,
-    reviewMode,
-    reviewStates,
-    isLastPage,
-}: Omit<CoursePageProps, "chat">) {
-    // Keep one controller mounted for each page so every page owns an
-    // independent chat session and retains it while the student navigates.
-    const chat = useCourseChatController();
-
-    return (
-        <section
-            className={styles.pageSlot}
-            hidden={!isActive}
-            aria-hidden={!isActive}
-        >
-            <PageContent
-                data={data}
-                chat={chat}
-                answers={answers}
-                isCompleted={isCompleted}
-                onNext={onNext}
-                onAnswerChange={onAnswerChange}
-                onAnswersSubmitted={onAnswersSubmitted}
-                reviewMode={reviewMode}
-                reviewStates={reviewStates}
-                isLastPage={isLastPage}
-            />
-        </section>
-    );
-}
-
-function PageContent({
-    data,
-    chat,
-    answers,
-    isCompleted,
-    onNext,
-    onAnswerChange,
-    onAnswersSubmitted,
-    reviewMode,
-    reviewStates,
-    isLastPage,
-}: PageContentProps) {
-    switch (data.request.type) {
-        case "material":
-            return (
-                <Material
-                    data={data}
-                    chat={chat}
-                    answers={answers}
-                    isCompleted={isCompleted}
-                    onNext={onNext}
-                    onAnswerChange={onAnswerChange}
-                    onAnswersSubmitted={onAnswersSubmitted}
-                    reviewMode={reviewMode}
-                    reviewStates={reviewStates}
-                    isLastPage={isLastPage}
-                />
-            );
-        case "questions":
-            return (
-                <Questions
-                    data={data}
-                    chat={chat}
-                    answers={answers}
-                    isCompleted={isCompleted}
-                    onNext={onNext}
-                    onAnswerChange={onAnswerChange}
-                    onAnswersSubmitted={onAnswersSubmitted}
-                    reviewMode={reviewMode}
-                    reviewStates={reviewStates}
-                    isLastPage={isLastPage}
-                />
-            );
-        case "overview":
-            return (
-                <Overview
-                    data={data}
-                    chat={chat}
-                    onNext={onNext}
-                    reviewMode={reviewMode}
-                    isLastPage={isLastPage}
-                />
-            );
-        default:
-            return null;
-    }
-}
 
 export default function GeneticsCourse() {
-    const { session } = useAuth();
-    const { id } = useParams<{ id: string }>();
-    const [searchParams] = useSearchParams();
+    const { courseId = "" } = useParams<{ courseId: string }>();
+    const { session, login } = useAuth();
+    const [params] = useSearchParams();
     const location = useLocation();
-    const reviewMode = searchParams.get("mode") === "review";
-    const navigationAttempt = (location.state as { attempt?: unknown } | null)
-        ?.attempt;
-
-    if (!id) return null;
-
-    return (
-        <CoursePlayer
-            key={`${id}-${session?.email ?? ""}-${reviewMode ? "review" : "answer"}`}
-            courseId={id}
-            reviewMode={reviewMode}
-            navigationAttempt={navigationAttempt}
-        />
-    );
-}
-
-function CoursePlayer({
-    courseId,
-    reviewMode,
-    navigationAttempt,
-}: {
-    courseId: string;
-    reviewMode: boolean;
-    navigationAttempt?: unknown;
-}) {
-    const { session } = useAuth();
-    const pageRequests = useMemo(
-        () => [...coursePageRequests].sort((a, b) => a.pageIndex - b.pageIndex),
-        []
-    );
-    const storedAttempt = useMemo(
-        () =>
-            reviewMode && session?.email
-                ? loadCourseAttempt(courseId, session.email, navigationAttempt)
-                : null,
-        [courseId, navigationAttempt, reviewMode, session]
-    );
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(
-        reviewMode ? pageRequests.length - 1 : 0
-    );
-    const [completedQuestionPages, setCompletedQuestionPages] = useState(
-        () =>
-            new Set<number>(
-                reviewMode
-                    ? pageRequests
-                          .filter((page) => page.request.type !== "overview")
-                          .map((page) => page.pageIndex)
-                    : []
-            )
-    );
-    const [answersByPage, setAnswersByPage] = useState<
-        Record<number, CourseAnswers>
-    >(() => storedAttempt?.answersByPage ?? {});
-    const [submissions, setSubmissions] = useState<SubmittedAnswerResponse[]>(
-        () => storedAttempt?.submissions ?? []
-    );
-    const submissionsRef = useRef(submissions);
-    const startedAtRef = useRef(new Date().toISOString());
-    const queryClient = useQueryClient();
-    const posthog = usePostHog();
     const navigate = useNavigate();
-    const currentPage = pageRequests[currentIndex];
-    const courseMetadataQuery = useQuery({
-        queryKey: ["courses", courseId, "summary-metadata"],
-        queryFn: () =>
-            api<{ title: string }>(
-                `/api/courses/${encodeURIComponent(courseId)}`
-            ),
-        enabled: UUID_PATTERN.test(courseId),
-        retry: false,
+    const reviewMode = params.get("mode") === "review";
+    const current = useAttemptExperiment();
+    const experimentId = current.data?.experiment.id ?? "";
+    const eligible =
+        current.data?.experiment.status === "ACTIVE" &&
+        (!isCourseUuid(courseId) ||
+            current.data.courses.some(
+                (course) =>
+                    course.id === courseId && course.status === "PUBLISHED"
+            ));
+    const remote = useQuery({
+        queryKey: ["course-definition", session?.email, experimentId, courseId],
+        queryFn: () => fetchCourseDefinition(courseId, navigation),
+        enabled: Boolean(isCourseUuid(courseId) && eligible),
     });
-    const courseTitle =
-        courseMetadataQuery.data?.title ??
-        storedAttempt?.courseTitle ??
-        (UUID_PATTERN.test(courseId) ? "課程教材" : COURSE_TITLE);
-
+    const attempt = reviewMode
+        ? loadCourseAttempt(
+              courseId,
+              session?.email ?? "",
+              experimentId,
+              (location.state as { attempt?: unknown } | null)?.attempt
+          )
+        : null;
     const resultQueries = useQueries({
-        queries: (reviewMode && storedAttempt ? submissions : []).map(
+        queries: (eligible ? (attempt?.submissions ?? []) : []).map(
             (submission) =>
                 answerResultQueryOptions(
                     session?.email ?? "",
                     submission.questionId,
-                    submission.id
+                    submission.id,
+                    experimentId
                 )
         ),
     });
-    const reviewStates = useMemo(() => {
-        const states: Record<string, AnswerReviewState> = {};
-        Object.values(answersByPage).forEach((answers) => {
-            Object.keys(answers).forEach((questionId) => {
-                states[questionId] = {
+    const reviews: CourseReviews = {};
+    if (attempt) {
+        Object.values(attempt.answersByPage).forEach((answers) =>
+            Object.keys(answers).forEach((id) => {
+                reviews[id] = {
                     isLoading: false,
                     isError: false,
                     isUnavailable: true,
                 };
-            });
-        });
-        submissions.forEach((submission, index) => {
-            states[submission.questionId] = {
-                result: resultQueries[index]?.data,
-                isLoading: resultQueries[index]?.isFetching ?? false,
-                isError: resultQueries[index]?.isError ?? false,
-                isUnavailable: false,
-            };
-        });
-        return states;
-    }, [answersByPage, resultQueries, submissions]);
-    const hasResultError = resultQueries.some((query) => query.isError);
-
-    useDocumentTitle(reviewMode ? `${courseTitle}－作答檢視` : courseTitle);
-
-    const currentYear = new Date().getFullYear();
-
-    // Prefetch next page content when currentIndex changes
-    useEffect(() => {
-        if (reviewMode && !storedAttempt) return;
-        const nextPage = pageRequests[currentIndex + 1];
-        if (!nextPage) return;
-        const nextPageRequests = generateRQRequestFromPage(nextPage);
-        nextPageRequests.forEach((req) =>
-            queryClient.prefetchQuery({
-                queryKey: req.queryKey,
-                queryFn: () => api<unknown>(req.queryPath),
             })
         );
-    }, [pageRequests, currentIndex, queryClient, reviewMode, storedAttempt]);
-
-    if (reviewMode && !storedAttempt) {
+        attempt.submissions.forEach((answer, index) => {
+            const query = resultQueries[index];
+            reviews[answer.questionId] = {
+                result: query?.data,
+                isLoading: query?.isLoading ?? false,
+                isError: query?.isError ?? false,
+            };
+        });
+    }
+    if (current.isPending) return <CourseStatus message="正在確認目前實驗…" />;
+    if (current.isError)
         return (
-            <main
-                style={{
-                    minHeight: "100vh",
-                    display: "grid",
-                    placeItems: "center",
-                    padding: "2rem",
-                    textAlign: "center",
-                }}
-            >
-                <div>
-                    <h1>找不到可檢視的作答紀錄</h1>
-                    <p>請從完成教材後的摘要頁進入作答檢視。</p>
-                    <button type="button" onClick={() => navigate("/courses")}>
-                        返回教材首頁
-                    </button>
-                </div>
+            <main>
+                <CourseStatus
+                    message="無法確認實驗，請重新登入或重試"
+                    isError
+                />
+                <button onClick={() => login("google")}>重新登入</button>
+                <button onClick={() => void current.refetch()}>重試</button>
             </main>
         );
-    }
-
-    const handleNext = () => {
-        if (currentIndex === pageRequests.length - 1) {
-            if (reviewMode) {
-                navigate("/courses");
-                return;
-            }
-
-            const attempt: CourseAttempt = {
-                courseId,
-                courseTitle,
-                userEmail: session?.email ?? "",
-                startedAt: startedAtRef.current,
-                completedAt: new Date().toISOString(),
-                answersByPage,
-                submissions: submissionsRef.current,
-            };
-            saveCourseAttempt(attempt);
-            navigate(
-                `/courses/summary?courseId=${encodeURIComponent(courseId)}`,
-                { state: { attempt } }
-            );
-            return;
-        }
-
-        const nextIndex = Math.min(
-            currentIndex + 1,
-            reviewMode ? pageRequests.length - 1 : highestUnlockedIndex + 1,
-            pageRequests.length - 1
+    if (!eligible)
+        return (
+            <CourseStatus message="這份教材不在目前進行中的實驗中" isError />
         );
-
-        posthog.capture("course_page_advanced", {
-            from_page_index: currentIndex,
-            to_page_index: nextIndex,
-            page_type: currentPage.request.type,
-            total_pages: pageRequests.length,
-        });
-
-        setHighestUnlockedIndex((previousIndex) =>
-            Math.max(previousIndex, nextIndex)
+    if (reviewMode && !attempt)
+        return (
+            <CourseStatus
+                message="找不到目前帳號與實驗的作答紀錄，請從完成後的摘要頁進入"
+                isError
+            />
         );
-        setCurrentIndex(nextIndex);
-    };
-
-    const handlePageComplete = () => {
-        if (currentPage.request.type !== "overview") {
-            setCompletedQuestionPages((previousPages) => {
-                const nextPages = new Set(previousPages);
-                nextPages.add(currentPage.pageIndex);
-                return nextPages;
-            });
-        }
-        handleNext();
-    };
-
-    const handleStepChange = (step: number) => {
-        const isOutsideCourse = step < 0 || step >= pageRequests.length;
-        const isLocked = !reviewMode && step > highestUnlockedIndex;
-
-        if (isOutsideCourse || isLocked) return;
-
-        posthog.capture("course_page_navigated", {
-            from_page_index: currentIndex,
-            to_page_index: step,
-            total_pages: pageRequests.length,
-        });
-        setCurrentIndex(step);
-    };
-
-    const handleAnswerChange = (
-        pageIndex: number,
-        questionId: string,
-        answer: CourseAnswer
-    ) => {
-        setAnswersByPage((previousAnswersByPage) => ({
-            ...previousAnswersByPage,
-            [pageIndex]: {
-                ...previousAnswersByPage[pageIndex],
-                [questionId]: answer,
-            },
-        }));
-    };
-
-    const handleAnswersSubmitted = (submitted: SubmittedAnswerResponse[]) => {
-        const byQuestionId = new Map(
-            submissionsRef.current.map((answer) => [answer.questionId, answer])
+    if (isCourseUuid(courseId) && remote.isPending)
+        return <CourseStatus message="教材載入中…" />;
+    if (isCourseUuid(courseId) && remote.isError)
+        return (
+            <main>
+                <CourseStatus message="目前無法載入這份教材" isError />
+                <button onClick={() => login("google")}>重新登入</button>
+                <button onClick={() => void remote.refetch()}>重試</button>
+            </main>
         );
-        submitted.forEach((answer) =>
-            byQuestionId.set(answer.questionId, answer)
+    const definition = isCourseUuid(courseId)
+        ? remote.data
+        : ["genetics", "1"].includes(courseId)
+          ? { ...legacy, id: courseId }
+          : undefined;
+    if (!definition) return <CourseStatus message="找不到教材內容" isError />;
+    const complete = (completion: CourseCompletion) => {
+        const record: CourseAttempt = {
+            ...completion,
+            courseId: definition.id,
+            courseTitle: definition.title,
+            userEmail: session?.email ?? "",
+            experimentId,
+            sessionId: getAttemptSessionId(),
+        };
+        saveCourseAttempt(record);
+        navigate(
+            `/courses/summary?courseId=${encodeURIComponent(definition.id)}`,
+            { state: { attempt: record } }
         );
-        submissionsRef.current = [...byQuestionId.values()];
-        setSubmissions(submissionsRef.current);
     };
-
     return (
-        <div
-            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
-        >
-            {/*mobile blocker*/}
-            <div className={styles.mobileBlocker}>
-                <div className={styles.blockerIcon}>
-                    <div className={styles.phoneShape}>
-                        <div className={styles.phoneLine}></div>
-                    </div>
-                </div>
-                <h2>本教材尚未支援用手機觀看</h2>
-                <p>
-                    教材皆為特定螢幕比例排版
-                    <br />
-                    請於平板/電腦螢幕上檢視此教材
-                </p>
-            </div>
-
-            {/* Main content*/}
-            <div className={styles.courseWrapper}>
-                <Navbar
-                    activeTitles={currentPage.activeNavbarTitles}
-                    activeStep={currentIndex}
-                    highestUnlockedStep={
-                        reviewMode
-                            ? pageRequests.length - 1
-                            : highestUnlockedIndex
+        <>
+            {reviewMode && resultQueries.some((query) => query.isError) && (
+                <button
+                    onClick={() =>
+                        resultQueries.forEach((query) => {
+                            void query.refetch();
+                        })
                     }
-                    secondaryTitle={currentPage.secondaryTitle}
-                    onStepChange={handleStepChange}
-                />
-                {reviewMode && hasResultError && (
-                    <div role="alert" style={{ padding: "0.75rem 1.5rem" }}>
-                        部分評分載入失敗。
-                        <button
-                            type="button"
-                            onClick={() => {
-                                resultQueries.forEach((query) => {
-                                    if (query.isError) void query.refetch();
-                                });
-                            }}
-                        >
-                            重新載入
-                        </button>
-                    </div>
-                )}
-                {pageRequests
-                    .slice(
-                        0,
-                        reviewMode
-                            ? pageRequests.length
-                            : highestUnlockedIndex + 1
-                    )
-                    .map((page, index) => (
-                        <CoursePage
-                            key={page.pageIndex}
-                            isActive={index === currentIndex}
-                            data={page}
-                            answers={answersByPage[page.pageIndex] ?? {}}
-                            isCompleted={completedQuestionPages.has(
-                                page.pageIndex
-                            )}
-                            onNext={handlePageComplete}
-                            onAnswerChange={(questionId, answer) =>
-                                handleAnswerChange(
-                                    page.pageIndex,
-                                    questionId,
-                                    answer
-                                )
-                            }
-                            onAnswersSubmitted={handleAnswersSubmitted}
-                            reviewMode={reviewMode}
-                            reviewStates={reviewStates}
-                            isLastPage={index === pageRequests.length - 1}
-                        />
-                    ))}
-                {/* copyright footer */}
-                <footer className={styles.copyrightFooter}>
-                    ©{currentYear} Institute of Education, Science Education
-                    division, NYCU. All Rights Reserved
-                </footer>
-            </div>
-        </div>
+                >
+                    重新取得評分結果
+                </button>
+            )}
+            <CoursePlayer
+                key={`${session?.email}-${experimentId}-${courseId}-${reviewMode}`}
+                definition={definition}
+                onComplete={complete}
+                reviewMode={reviewMode}
+                initialAnswers={attempt?.answersByPage}
+                reviews={reviews}
+            />
+        </>
     );
 }

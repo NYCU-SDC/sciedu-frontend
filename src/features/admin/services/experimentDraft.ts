@@ -6,10 +6,56 @@ export type ExperimentDraft = {
     startsAt: string;
     endsAt: string;
     maxAttempts: string;
-    result: "hidden" | "score" | "explanations";
+    allowRetry: boolean;
+    showScore: boolean;
+    showExplanations: boolean;
     release: "page" | "course" | "never";
     courseIds: string[];
 };
+
+export const releaseLabels = {
+    never: "不公開正確答案",
+    page: "正確答案於各頁必要作答提交成功後公開",
+    course: "正確答案於整份教材必要作答全部完成後公開",
+} as const;
+
+export function retryLabel(
+    draft: Pick<ExperimentDraft, "allowRetry" | "maxAttempts">
+) {
+    return draft.allowRetry
+        ? `可重新作答 ${Math.max(0, Number(draft.maxAttempts) - 1)} 次（共 ${draft.maxAttempts} 次）`
+        : Number(draft.maxAttempts) === 1
+          ? "不允許重新作答（共 1 次）"
+          : `不允許重新作答（保留次數上限 ${draft.maxAttempts} 次）`;
+}
+
+export function feedbackSummary(draft: ExperimentDraft) {
+    return `${draft.showScore ? "學生可查看分數與答對答錯" : "學生不可查看分數與答對答錯"}，${draft.showExplanations ? "顯示評分說明" : "不顯示評分說明"}；${releaseLabels[draft.release]}。${retryLabel(draft)}。${draft.allowRetry && draft.release !== "never" ? "正確答案公開後仍可在次數上限內重新作答。" : ""}`;
+}
+
+export function experimentToDraft(
+    original: ExperimentDetail,
+    courseIds: string[] = []
+): ExperimentDraft {
+    return {
+        name: original.name,
+        description: original.description ?? "",
+        startsAt: toTaipeiInputValue(original.scheduledStartAt),
+        endsAt: toTaipeiInputValue(original.scheduledEndAt),
+        maxAttempts: String(original.configuration.maxAttempts),
+        allowRetry: original.configuration.allowRetry,
+        showScore: original.configuration.showScore,
+        showExplanations: original.configuration.showExplanations,
+        release:
+            original.configuration.correctAnswerReleaseMode === "NEVER"
+                ? "never"
+                : original.configuration.correctAnswerReleaseMode ===
+                    "AFTER_PAGE_SUBMISSION"
+                  ? "page"
+                  : "course",
+        courseIds,
+    };
+}
 
 export function toTaipeiInputValue(value: string) {
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -37,15 +83,6 @@ export function buildExperimentPayload(
     original?: ExperimentDetail
 ): EditableExperimentPayload {
     const configuration = original?.configuration;
-    const originalResult = configuration?.showExplanations
-        ? "explanations"
-        : configuration?.showScore
-          ? "score"
-          : "hidden";
-    const sameResult = configuration && draft.result === originalResult;
-    const sameAttempts =
-        configuration &&
-        draft.maxAttempts === String(Math.max(1, configuration.maxAttempts));
     // ACTIVE experiments only permit extending the end time. Preserve every
     // locked field exactly, including timestamps rounded by datetime-local.
     if (original?.status === "ACTIVE") {
@@ -67,18 +104,10 @@ export function buildExperimentPayload(
         scheduledEndAt: timestamp(draft.endsAt, original?.scheduledEndAt),
         configuration: {
             ...configuration,
-            maxAttempts: sameAttempts
-                ? configuration.maxAttempts
-                : Number(draft.maxAttempts),
-            allowRetry: sameAttempts
-                ? configuration.allowRetry
-                : Number(draft.maxAttempts) > 1,
-            showScore: sameResult
-                ? configuration.showScore
-                : draft.result !== "hidden",
-            showExplanations: sameResult
-                ? configuration.showExplanations
-                : draft.result === "explanations",
+            maxAttempts: Number(draft.maxAttempts),
+            allowRetry: draft.allowRetry,
+            showScore: draft.showScore,
+            showExplanations: draft.showExplanations,
             gradingMode: configuration?.gradingMode ?? "AUTOMATIC",
             correctAnswerReleaseMode:
                 draft.release === "page"

@@ -173,7 +173,8 @@ export default function ResultCard({
                         <Button
                             mt="sm"
                             variant="subtle"
-                            color="red"
+                            color="brandTeal"
+                            disabled={isLoading}
                             onClick={onRetryResults}
                         >
                             重新載入評分
@@ -210,12 +211,24 @@ export default function ResultCard({
                     <ScoreRow
                         icon={<StatusDot color="#00856e" />}
                         label="答對"
-                        value={isLoading ? "—" : `${correctCount} 題`}
+                        value={
+                            hiddenCount > 0
+                                ? "未公開"
+                                : isLoading
+                                  ? "—"
+                                  : `${correctCount} 題`
+                        }
                     />
                     <ScoreRow
                         icon={<StatusDot color="#925800" />}
                         label="答錯"
-                        value={isLoading ? "—" : `${wrongCount} 題`}
+                        value={
+                            hiddenCount > 0
+                                ? "未公開"
+                                : isLoading
+                                  ? "—"
+                                  : `${wrongCount} 題`
+                        }
                     />
                     {pendingCount > 0 && (
                         <ScoreRow

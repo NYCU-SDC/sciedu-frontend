@@ -20,7 +20,15 @@ all images for the page in their manifest order. Retain it as a separate TEXT
 resource/PageBlock when uploading so a later course-aware chat integration can
 retrieve it. The current chat API does not yet load page context automatically.
 
-The Course Player on the SCIEDU-134 branch expects these PageBlock positions:
+Each question has a positive integer `sourceNumber` copied from the deck's
+printed label. The BCI sequence is `1, 2, 3, 3, 4`; the dire-wolf sequence is
+`1, 2, 3, 4`. Repeated numbers are intentional source data. Keep identity based
+on course code, page code, and question index rather than `sourceNumber`.
+SCIEDU-136 must use `str(question["sourceNumber"])` for the question-title TEXT
+block instead of restarting numbering at `question_index + 1` on every page.
+This manifest field does not change the public question API.
+
+The shared Course Player on `main` expects these PageBlock positions:
 
 - `0`: TEXT lesson description
 - `10`, `20`, …: MEDIA in `images` order
@@ -38,9 +46,13 @@ python3 tools/course-materials/extract_decks.py \
   '/path/to/恐狼復育V12-20260821 ok.pptx' \
   '/path/to/腦機介面V12-20260819ok.pptx'
 python3 tools/course-materials/validate.py
+python3 -m unittest discover -s tools/course-materials -p 'test_*.py' -v
 pnpm exec prettier 'tools/course-materials/*.json' --write
 ```
 
 The source decks themselves are not committed. The extractor deliberately
 normalizes accidental `。。` to `。`, but otherwise preserves the slide text,
 including the source's repeated question number `3` in BCI page `1-3`.
+Extraction and validation work with Python 3.9 or later and use only the
+standard library. The regression tests use miniature XML decks, so they do
+not require the original PPTX inputs to run in CI.

@@ -1,0 +1,30 @@
+name: Validate Course Materials
+
+on:
+    pull_request:
+        paths:
+            - "tools/course-materials/**"
+            - ".github/workflows/course-materials.yaml"
+    push:
+        branches:
+            - main
+        paths:
+            - "tools/course-materials/**"
+            - ".github/workflows/course-materials.yaml"
+
+permissions:
+    contents: read
+
+jobs:
+    Materials:
+        name: Validate course materials and extraction
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Validate manifests and assets
+              run: python3 tools/course-materials/validate.py
+
+            - name: Run extraction regression tests
+              run: python3 -m unittest discover -s tools/course-materials -p 'test_*.py' -v

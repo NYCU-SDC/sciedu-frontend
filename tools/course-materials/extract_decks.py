@@ -77,14 +77,23 @@ def extract(path: Path, config: dict) -> dict:
             texts = slide_texts(archive, content_slide)
             body = max((t for t in texts if not re.match(r"^\d+\.\s*", t)), key=len)
             question_text = "".join(t for t in texts if re.match(r"^\d+\.\s*", t))
-            prompts = [
-                match.group(1).strip()
+            questions = [
+                {
+                    "type": "TEXT",
+                    "sourceNumber": int(match.group(1)),
+                    "prompt": normalize(match.group(2).strip()),
+                }
                 for match in re.finditer(
-                    r"\d+\.\s*(.*?)(?=\d+\.\s*|$)", question_text, re.DOTALL
+                    r"(\d+)\.\s*(.*?)(?=\d+\.\s*|$)", question_text, re.DOTALL
                 )
             ]
-            if not prompts:
-                raise ValueError(f"Missing questions on slide {content_slide} of {path}")
+            if not questions:
+                raise ValueError(f"Missing numbered questions on slide {content_slide} of {path}")
+            for question in questions:
+                if question["sourceNumber"] <= 0:
+                    raise ValueError(f"Invalid sourceNumber on slide {content_slide} of {path}")
+                if not question["prompt"]:
+                    raise ValueError(f"Empty question on slide {content_slide} of {path}")
             visual_description = normalize(
                 "".join(slide_texts(archive, description_slide))
             )
@@ -107,7 +116,7 @@ def extract(path: Path, config: dict) -> dict:
                     "sourceSlides": [content_slide, content_slide + 1, description_slide],
                     "description": normalize(body),
                     "images": images,
-                    "questions": [{"type": "TEXT", "prompt": normalize(p)} for p in prompts],
+                    "questions": questions,
                     "imageDescriptionForLLM": visual_description,
                 }
             )
@@ -123,7 +132,7 @@ def extract(path: Path, config: dict) -> dict:
 def main() -> None:
     if len(sys.argv) != 3:
         raise SystemExit(__doc__)
-    for input_path, config in zip(map(Path, sys.argv[1:]), DECKS, strict=True):
+    for input_path, config in zip(map(Path, sys.argv[1:]), DECKS):
         course = extract(input_path, config)
         output = ROOT / f"{config['code']}.json"
         output.write_text(json.dumps(course, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

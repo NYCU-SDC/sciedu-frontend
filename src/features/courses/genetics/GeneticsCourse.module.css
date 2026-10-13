@@ -36,6 +36,29 @@
     display: none;
 }
 
+.courseStatus {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    gap: 1rem;
+    align-content: center;
+    background: linear-gradient(to bottom, #fdfefe, #d2e1e4);
+    color: #31534d;
+    font-family: "GenYoGothicTW", "Noto Sans TC", system-ui, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.courseStatus button {
+    padding: 0.65rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    color: white;
+    background: #005f55;
+    cursor: pointer;
+}
+
 .copyrightFooter {
     flex-shrink: 0;
     margin-top: 0;

@@ -5,6 +5,7 @@ import {
     useParams,
     useSearchParams,
 } from "react-router";
+import CurrentExperimentState from "../components/CurrentExperimentState";
 import { SectionTitles } from "../../../assets/NavbarContent";
 import { useAuth } from "../../../shared/auth";
 import { getAttemptSessionId } from "../../../shared/auth/courseAttemptStorage";
@@ -44,7 +45,7 @@ const legacy: CourseDefinition = {
 
 export default function GeneticsCourse() {
     const { courseId = "" } = useParams<{ courseId: string }>();
-    const { session, login } = useAuth();
+    const { session } = useAuth();
     const [params] = useSearchParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -105,18 +106,27 @@ export default function GeneticsCourse() {
     if (current.isPending) return <CourseStatus message="正在確認目前實驗…" />;
     if (current.isError)
         return (
-            <main>
-                <CourseStatus
-                    message="無法確認實驗，請重新登入或重試"
-                    isError
-                />
-                <button onClick={() => login("google")}>重新登入</button>
-                <button onClick={() => void current.refetch()}>重試</button>
-            </main>
+            <CurrentExperimentState
+                error={current.error}
+                onRetry={() => void current.refetch()}
+            />
         );
+    if (
+        !current.data?.experiment ||
+        current.data.experiment.status !== "ACTIVE"
+    )
+        return <CurrentExperimentState kind="no-experiment" />;
     if (!eligible)
         return (
-            <CourseStatus message="這份教材不在目前進行中的實驗中" isError />
+            <main>
+                <CourseStatus
+                    message="這份教材不在目前進行中的實驗中"
+                    isError
+                />
+                <button onClick={() => navigate("/courses")}>
+                    返回教材首頁
+                </button>
+            </main>
         );
     if (reviewMode && !attempt)
         return (
@@ -129,11 +139,10 @@ export default function GeneticsCourse() {
         return <CourseStatus message="教材載入中…" />;
     if (isCourseUuid(courseId) && remote.isError)
         return (
-            <main>
-                <CourseStatus message="目前無法載入這份教材" isError />
-                <button onClick={() => login("google")}>重新登入</button>
-                <button onClick={() => void remote.refetch()}>重試</button>
-            </main>
+            <CurrentExperimentState
+                error={remote.error}
+                onRetry={() => void remote.refetch()}
+            />
         );
     const definition = isCourseUuid(courseId)
         ? remote.data

@@ -17,7 +17,7 @@ export default function Summary() {
     const [searchParams] = useSearchParams();
     const { session } = useAuth();
     const current = useAttemptExperiment();
-    const experimentId = current.isSuccess ? current.data.experiment.id : "";
+    const experimentId = current.data?.experiment.id ?? "";
     const navigationAttempt = (location.state as { attempt?: unknown } | null)
         ?.attempt;
     const courseId = searchParams.get("courseId") ?? null;

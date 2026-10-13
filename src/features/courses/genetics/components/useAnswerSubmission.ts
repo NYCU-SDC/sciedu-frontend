@@ -171,7 +171,7 @@ export function useAnswerSubmission({
                     )
                 ) {
                     setSubmissionError(
-                        "無法確認既有作答的提交結果，尚未完成本頁。已確認成功的答案會保留；目前 API 無法恢復遺失的答案 ID，請聯絡管理者協助。"
+                        "無法確認既有作答的提交結果，尚未完成本頁。已確認成功的答案會保留；請聯絡管理者協助。"
                     );
                     return;
                 }

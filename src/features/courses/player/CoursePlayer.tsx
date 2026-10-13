@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
 import { useNavigate } from "react-router";
@@ -21,6 +21,7 @@ import type {
     CourseDefinition,
     CoursePageRequest,
     CourseReviews,
+    SubmittedAnswerResponse,
 } from "../genetics/types/types";
 
 type PageContentProps = {
@@ -33,6 +34,7 @@ type PageContentProps = {
     reviewMode: boolean;
     reviews: CourseReviews;
     isLastPage: boolean;
+    onAnswersSubmitted: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 function CoursePage({
@@ -77,6 +79,15 @@ export type CoursePlayerProps = {
     definition: CourseDefinition;
     reviewMode?: boolean;
     reviews?: CourseReviews;
+    initialAnswers?: Record<number, CourseAnswers>;
+    onComplete?: (completion: CourseCompletion) => void;
+};
+
+export type CourseCompletion = {
+    answersByPage: Record<number, CourseAnswers>;
+    submissions: SubmittedAnswerResponse[];
+    startedAt: string;
+    completedAt: string;
 };
 
 /** A reusable player for either API-backed or locally defined courses. */
@@ -84,15 +95,18 @@ export default function CoursePlayer({
     definition,
     reviewMode = false,
     reviews = {},
+    initialAnswers = {},
+    onComplete,
 }: CoursePlayerProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
     const [completedQuestionPages, setCompletedQuestionPages] = useState(
         new Set<number>()
     );
-    const [answersByPage, setAnswersByPage] = useState<
-        Record<number, CourseAnswers>
-    >({});
+    const [answersByPage, setAnswersByPage] =
+        useState<Record<number, CourseAnswers>>(initialAnswers);
+    const submissionsRef = useRef<SubmittedAnswerResponse[]>([]);
+    const startedAtRef = useRef(new Date().toISOString());
     const queryClient = useQueryClient();
     const posthog = usePostHog();
     const navigate = useNavigate();
@@ -124,6 +138,15 @@ export default function CoursePlayer({
 
     const handleNext = () => {
         if (currentIndex === pageRequests.length - 1) {
+            if (!reviewMode && onComplete) {
+                onComplete({
+                    answersByPage,
+                    submissions: submissionsRef.current,
+                    startedAt: startedAtRef.current,
+                    completedAt: new Date().toISOString(),
+                });
+                return;
+            }
             navigate(
                 reviewMode
                     ? "/courses"
@@ -226,6 +249,18 @@ export default function CoursePlayer({
                         }
                         reviewMode={reviewMode}
                         reviews={reviews}
+                        onAnswersSubmitted={(submitted) => {
+                            const byQuestion = new Map(
+                                submissionsRef.current.map((answer) => [
+                                    answer.questionId,
+                                    answer,
+                                ])
+                            );
+                            submitted.forEach((answer) =>
+                                byQuestion.set(answer.questionId, answer)
+                            );
+                            submissionsRef.current = [...byQuestion.values()];
+                        }}
                         isLastPage={index === pageRequests.length - 1}
                     />
                 ))}

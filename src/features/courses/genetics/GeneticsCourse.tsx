@@ -1,21 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useSearchParams } from "react-router";
-
+import { useQueries, useQuery } from "@tanstack/react-query";
+import {
+    useLocation,
+    useNavigate,
+    useParams,
+    useSearchParams,
+} from "react-router";
 import { SectionTitles } from "../../../assets/NavbarContent";
-import CoursePlayer, { CourseStatus } from "../player/CoursePlayer";
+import { useAuth } from "../../../shared/auth";
+import { getAttemptSessionId } from "../../../shared/auth/courseAttemptStorage";
+import CoursePlayer, {
+    CourseStatus,
+    type CourseCompletion,
+} from "../player/CoursePlayer";
 import { coursePageRequests } from "./assets/courseResource";
 import {
     fetchCourseDefinition,
     isCourseUuid,
 } from "./services/fetchCourseDefinition";
-import type { CourseDefinition } from "./types/types";
+import {
+    loadCourseAttempt,
+    saveCourseAttempt,
+    type CourseAttempt,
+} from "./services/courseAttempt";
+import { answerResultQueryOptions } from "./services/answerResultQueryOptions";
+import { useAttemptExperiment } from "./services/useAttemptExperiment";
+import type { CourseDefinition, CourseReviews } from "./types/types";
 
-const REMOTE_COURSE_NAVIGATION = {
+const navigation = {
     variant: "stepper",
     mainTitle: "生物科學推理學習",
 } as const;
-
-const LEGACY_GENETICS_COURSE: CourseDefinition = {
+const legacy: CourseDefinition = {
     id: "genetics",
     code: "genetics",
     title: "豌豆－種皮形狀",
@@ -28,47 +43,140 @@ const LEGACY_GENETICS_COURSE: CourseDefinition = {
 };
 
 export default function GeneticsCourse() {
-    const { courseId = "genetics" } = useParams<{ courseId: string }>();
-    const [searchParams] = useSearchParams();
-    const reviewMode = searchParams.get("mode") === "review";
-    const remoteCourse = useQuery({
-        queryKey: ["course-definition", courseId],
-        queryFn: () =>
-            fetchCourseDefinition(courseId, REMOTE_COURSE_NAVIGATION),
-        enabled: isCourseUuid(courseId) && !reviewMode,
+    const { courseId = "" } = useParams<{ courseId: string }>();
+    const { session, login } = useAuth();
+    const [params] = useSearchParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const reviewMode = params.get("mode") === "review";
+    const current = useAttemptExperiment();
+    const experimentId = current.data?.experiment.id ?? "";
+    const eligible =
+        current.data?.experiment.status === "ACTIVE" &&
+        (!isCourseUuid(courseId) ||
+            current.data.courses.some(
+                (course) =>
+                    course.id === courseId && course.status === "PUBLISHED"
+            ));
+    const remote = useQuery({
+        queryKey: ["course-definition", session?.email, experimentId, courseId],
+        queryFn: () => fetchCourseDefinition(courseId, navigation),
+        enabled: Boolean(isCourseUuid(courseId) && eligible),
     });
-
-    // A URL flag is not evidence of a completed attempt. The reusable player
-    // supports review, but this adapter must wait for the authenticated attempt
-    // integration in SCIEDU137 before enabling it.
-    if (reviewMode) {
+    const attempt = reviewMode
+        ? loadCourseAttempt(
+              courseId,
+              session?.email ?? "",
+              experimentId,
+              (location.state as { attempt?: unknown } | null)?.attempt
+          )
+        : null;
+    const resultQueries = useQueries({
+        queries: (eligible ? (attempt?.submissions ?? []) : []).map(
+            (submission) =>
+                answerResultQueryOptions(
+                    session?.email ?? "",
+                    submission.questionId,
+                    submission.id,
+                    experimentId
+                )
+        ),
+    });
+    const reviews: CourseReviews = {};
+    if (attempt) {
+        Object.values(attempt.answersByPage).forEach((answers) =>
+            Object.keys(answers).forEach((id) => {
+                reviews[id] = {
+                    isLoading: false,
+                    isError: false,
+                    isUnavailable: true,
+                };
+            })
+        );
+        attempt.submissions.forEach((answer, index) => {
+            const query = resultQueries[index];
+            reviews[answer.questionId] = {
+                result: query?.data,
+                isLoading: query?.isLoading ?? false,
+                isError: query?.isError ?? false,
+            };
+        });
+    }
+    if (current.isPending) return <CourseStatus message="正在確認目前實驗…" />;
+    if (current.isError)
+        return (
+            <main>
+                <CourseStatus
+                    message="無法確認實驗，請重新登入或重試"
+                    isError
+                />
+                <button onClick={() => login("google")}>重新登入</button>
+                <button onClick={() => void current.refetch()}>重試</button>
+            </main>
+        );
+    if (!eligible)
+        return (
+            <CourseStatus message="這份教材不在目前進行中的實驗中" isError />
+        );
+    if (reviewMode && !attempt)
         return (
             <CourseStatus
-                message="此入口尚未提供作答紀錄檢視，請返回書櫃"
+                message="找不到目前帳號與實驗的作答紀錄，請從完成後的摘要頁進入"
                 isError
             />
         );
-    }
-
-    if (isCourseUuid(courseId) && remoteCourse.isLoading) {
+    if (isCourseUuid(courseId) && remote.isPending)
         return <CourseStatus message="教材載入中…" />;
-    }
-    if (isCourseUuid(courseId) && remoteCourse.isError) {
-        return <CourseStatus message="目前無法載入這份教材" isError />;
-    }
-
+    if (isCourseUuid(courseId) && remote.isError)
+        return (
+            <main>
+                <CourseStatus message="目前無法載入這份教材" isError />
+                <button onClick={() => login("google")}>重新登入</button>
+                <button onClick={() => void remote.refetch()}>重試</button>
+            </main>
+        );
     const definition = isCourseUuid(courseId)
-        ? remoteCourse.data
-        : LEGACY_GENETICS_COURSE;
-    if (!definition) {
-        return <CourseStatus message="找不到教材內容" isError />;
-    }
-
+        ? remote.data
+        : ["genetics", "1"].includes(courseId)
+          ? { ...legacy, id: courseId }
+          : undefined;
+    if (!definition) return <CourseStatus message="找不到教材內容" isError />;
+    const complete = (completion: CourseCompletion) => {
+        const record: CourseAttempt = {
+            ...completion,
+            courseId: definition.id,
+            courseTitle: definition.title,
+            userEmail: session?.email ?? "",
+            experimentId,
+            sessionId: getAttemptSessionId(),
+        };
+        saveCourseAttempt(record);
+        navigate(
+            `/courses/summary?courseId=${encodeURIComponent(definition.id)}`,
+            { state: { attempt: record } }
+        );
+    };
     return (
-        <CoursePlayer
-            key={`${courseId}-${reviewMode ? "review" : "answer"}`}
-            definition={definition}
-            reviewMode={reviewMode}
-        />
+        <>
+            {reviewMode && resultQueries.length > 0 && (
+                <button
+                    onClick={() =>
+                        resultQueries.forEach((query) => {
+                            void query.refetch();
+                        })
+                    }
+                >
+                    重新取得評分結果
+                </button>
+            )}
+            <CoursePlayer
+                key={`${session?.email}-${experimentId}-${courseId}-${reviewMode}`}
+                definition={definition}
+                onComplete={complete}
+                reviewMode={reviewMode}
+                initialAnswers={attempt?.answersByPage}
+                reviews={reviews}
+            />
+        </>
     );
 }

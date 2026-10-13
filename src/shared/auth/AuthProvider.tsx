@@ -7,6 +7,7 @@ import { usePostHog } from "@posthog/react";
 
 import { ApiError } from "../utils/api";
 import { AuthContext } from "./AuthContext";
+import { clearCourseAttemptStorage } from "./courseAttemptStorage";
 import { getSession, refreshAuthToken, requestLogout } from "./requests";
 import type {
     AuthContextValue,
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     const logout = useCallback(async () => {
+        clearCourseAttemptStorage();
         clearRefreshTimer();
         posthog.capture("user_logged_out");
         posthog.reset();
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             toast.error("自動登出失敗，請重整頁面來確認登出已完成");
         }
         // Remove cache on all existing queries to prevent auth state from leaking
+        clearCourseAttemptStorage();
         queryClient.removeQueries();
         navigate("/login");
     }, [clearRefreshTimer, navigate, posthog, queryClient]);

@@ -6,6 +6,8 @@ import { submitAnswer } from "./submitAnswer";
 const submittedAnswer = {
     id: "answer-1",
     questionId: "question-1",
+    experimentId: "experiment-1",
+    userId: "user-1",
     createdAt: "2026-07-19T00:00:00Z",
 };
 

@@ -1,6 +1,9 @@
-import { Divider, Text, Title } from "@mantine/core";
+import { Button, Divider, Text, Title } from "@mantine/core";
+
+import { useAuth } from "../../../../shared/auth";
 
 export default function Header() {
+    const { logout } = useAuth();
     return (
         <div
             style={{
@@ -83,7 +86,15 @@ export default function Header() {
                     flexShrink: 0,
                 }}
             >
-                學生模式
+                <span>學生模式</span>
+                <Button
+                    variant="subtle"
+                    color="brandTeal"
+                    ml="sm"
+                    onClick={() => void logout()}
+                >
+                    登出
+                </Button>
             </div>
         </div>
     );

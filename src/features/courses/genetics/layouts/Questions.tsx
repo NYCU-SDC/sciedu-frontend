@@ -9,6 +9,7 @@ import type {
     CourseReviews,
     QuestionPage,
     QuestionResponse,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
@@ -29,6 +30,7 @@ type Props = {
     reviewMode?: boolean;
     reviews?: CourseReviews;
     isLastPage?: boolean;
+    onAnswersSubmitted?: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 export default function Questions({
@@ -41,6 +43,7 @@ export default function Questions({
     reviewMode = false,
     reviews = {},
     isLastPage = false,
+    onAnswersSubmitted,
 }: Props) {
     const req = data.request as QuestionPage;
     const posthog = usePostHog();
@@ -141,11 +144,13 @@ export default function Questions({
         questions: submittableQuestions,
         answers,
         isCompleted,
-        onSubmitted: () =>
+        onSubmitted: (submitted) => {
+            onAnswersSubmitted?.(submitted);
             posthog.capture("course_questions_submitted", {
                 page_index: data.pageIndex,
                 question_count: questionIds.length,
-            }),
+            });
+        },
         onContinue: onNext,
     });
 

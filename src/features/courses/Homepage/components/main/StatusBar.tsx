@@ -26,10 +26,10 @@ export default function StatusBar() {
                 }}
             >
                 <Title order={2} fz="32px" lh="43px" fw={700} c="brandTeal.8">
-                    今日任務
+                    目前實驗
                 </Title>
                 <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
-                    請優先完成教師今日安排的教材
+                    查看目前進行中實驗的已發布教材
                 </Text>
             </div>
             <Button

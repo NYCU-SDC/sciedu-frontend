@@ -98,7 +98,13 @@ export default function ExperimentDetailPage() {
             await queryClient.invalidateQueries({
                 queryKey: ["admin", "experiments"],
             });
-            toast.success(status === "SCHEDULED" ? "實驗已排程" : "實驗已封存");
+            toast.success(
+                status === "SCHEDULED"
+                    ? "實驗已排程"
+                    : status === "ACTIVE"
+                      ? "實驗已啟用"
+                      : "實驗已封存"
+            );
         },
         onError: (error) => toast.error(mutationErrorMessage(error)),
     });
@@ -171,7 +177,7 @@ export default function ExperimentDetailPage() {
                                         )
                                     }
                                 >
-                                    延長結束時間
+                                    延長時間或新增教材
                                 </Button>
                             )}
                             {experiment.status === "DRAFT" && (
@@ -212,6 +218,22 @@ export default function ExperimentDetailPage() {
                                     }
                                 >
                                     排程實驗
+                                </Button>
+                            )}
+                            {experiment.status === "SCHEDULED" && (
+                                <Button
+                                    loading={statusMutation.isPending}
+                                    disabled={!hasPublishedCourse}
+                                    onClick={() => {
+                                        if (
+                                            window.confirm(
+                                                "確定要啟用這場實驗嗎？啟用後將鎖定基本資料與教學設定；學生可在排定時段內進入教材。"
+                                            )
+                                        )
+                                            statusMutation.mutate("ACTIVE");
+                                    }}
+                                >
+                                    啟用實驗
                                 </Button>
                             )}
                             {experiment.status === "COMPLETED" && (
@@ -439,10 +461,21 @@ export default function ExperimentDetailPage() {
                                 依狀態保護學生作答資料與實驗條件。
                             </p>
                             <ul className={styles.noticeList}>
-                                <li>可修改名稱與說明</li>
-                                <li>可新增或移除學生</li>
-                                <li>排程後不可更換教材</li>
-                                <li>開始後不可修改評分與答案公開設定</li>
+                                {(experiment.status === "ACTIVE"
+                                    ? [
+                                          "僅可延長結束時間",
+                                          "可新增學生與教材，不可移除既有指派",
+                                          "名稱、說明、開始時間與教學設定已鎖定",
+                                      ]
+                                    : isLocked
+                                      ? ["實驗已結束或封存，設定與指派均為唯讀"]
+                                      : [
+                                            "可修改名稱、說明、時段與教學設定",
+                                            "可新增或移除學生與教材",
+                                        ]
+                                ).map((notice) => (
+                                    <li key={notice}>{notice}</li>
+                                ))}
                             </ul>
                             <div className={styles.warning}>
                                 系統會依照目前狀態限制可修改的欄位與人員、教材操作。
@@ -469,9 +502,13 @@ export default function ExperimentDetailPage() {
                                 </p>
                             </div>
                             <div className={styles.gapNote}>
-                                {experiment.status === "DRAFT"
-                                    ? "可從編輯實驗調整教材"
-                                    : "目前狀態不可更換教材"}
+                                {["DRAFT", "SCHEDULED"].includes(
+                                    experiment.status
+                                )
+                                    ? "可從編輯實驗新增或移除教材"
+                                    : experiment.status === "ACTIVE"
+                                      ? "可從編輯實驗新增教材，不可移除既有教材"
+                                      : "目前狀態不可調整教材"}
                             </div>
                         </div>
                         {coursesQuery.isPending ? (

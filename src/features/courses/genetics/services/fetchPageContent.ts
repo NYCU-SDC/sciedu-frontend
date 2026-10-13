@@ -42,12 +42,16 @@ export function generateRQRequestFromPage({ request }: CoursePageRequest): {
         case "questions":
             request_raw = {
                 content: [
-                    ...request.columns.map(
-                        (col) => ({ type: "text", id: col.labelId }) as const
+                    ...request.columns.flatMap((col) =>
+                        (
+                            col.labelIds ?? (col.labelId ? [col.labelId] : [])
+                        ).map((id) => ({ type: "text", id }) as const)
                     ),
                     ...request.columns.flatMap((col) =>
-                        col.questions.map(
-                            (q) => ({ type: "text", id: q.titleId }) as const
+                        col.questions.flatMap((q) =>
+                            q.titleId
+                                ? [{ type: "text", id: q.titleId } as const]
+                                : []
                         )
                     ),
                 ],

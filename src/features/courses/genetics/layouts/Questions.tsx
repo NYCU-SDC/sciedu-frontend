@@ -9,6 +9,7 @@ import type {
     CourseReviews,
     QuestionPage,
     QuestionResponse,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
@@ -29,6 +30,7 @@ type Props = {
     reviewMode?: boolean;
     reviews?: CourseReviews;
     isLastPage?: boolean;
+    onAnswersSubmitted?: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 export default function Questions({
@@ -41,6 +43,7 @@ export default function Questions({
     reviewMode = false,
     reviews = {},
     isLastPage = false,
+    onAnswersSubmitted,
 }: Props) {
     const req = data.request as QuestionPage;
     const posthog = usePostHog();
@@ -49,11 +52,25 @@ export default function Questions({
         [req.columns]
     );
     const labelIds = useMemo(
-        () => [...new Set(req.columns.map((column) => column.labelId))],
+        () => [
+            ...new Set(
+                req.columns.flatMap(
+                    (column) =>
+                        column.labelIds ??
+                        (column.labelId ? [column.labelId] : [])
+                )
+            ),
+        ],
         [req.columns]
     );
     const titleIds = useMemo(
-        () => [...new Set(questions.map((question) => question.titleId))],
+        () => [
+            ...new Set(
+                questions.flatMap((question) =>
+                    question.titleId ? [question.titleId] : []
+                )
+            ),
+        ],
         [questions]
     );
     const questionIds = useMemo(
@@ -96,6 +113,13 @@ export default function Questions({
                 const query = questionById.get(questionId);
                 return {
                     questionId,
+                    required: req.columns
+                        .flatMap((column) => column.questions)
+                        .some(
+                            (question) =>
+                                question.questionId === questionId &&
+                                question.required !== false
+                        ),
                     question: query?.data,
                     isUnavailable:
                         !query ||
@@ -106,7 +130,7 @@ export default function Questions({
             }),
         // The query result objects change when their state changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [questionIds, questionQueries]
+        [questionIds, questionQueries, req.columns]
     );
 
     const {
@@ -120,11 +144,13 @@ export default function Questions({
         questions: submittableQuestions,
         answers,
         isCompleted,
-        onSubmitted: () =>
+        onSubmitted: (submitted) => {
+            onAnswersSubmitted?.(submitted);
             posthog.capture("course_questions_submitted", {
                 page_index: data.pageIndex,
                 question_count: questionIds.length,
-            }),
+            });
+        },
         onContinue: onNext,
     });
 
@@ -139,7 +165,18 @@ export default function Questions({
             <div className={styles.pageBody}>
                 <main className={styles.contentWrapper}>
                     {req.columns.map((column, columnIndex) => {
-                        const labelQuery = labelById.get(column.labelId);
+                        const columnLabels = (
+                            column.labelIds ??
+                            (column.labelId ? [column.labelId] : [])
+                        ).map((id) => labelById.get(id));
+                        const labelError = columnLabels.some(
+                            (query) => query?.isError
+                        );
+                        const label =
+                            columnLabels
+                                .map((query) => query?.data?.content)
+                                .filter(Boolean)
+                                .join(" · ") || data.secondaryTitle;
                         return (
                             <section
                                 key={`${column.labelId}-${columnIndex}`}
@@ -147,9 +184,7 @@ export default function Questions({
                             >
                                 <div className={styles.columnHeader}>
                                     <h2>
-                                        {labelQuery?.isError
-                                            ? "載入失敗"
-                                            : `${labelQuery?.data?.content ?? ""}：`}
+                                        {labelError ? "載入失敗" : `${label}：`}
                                     </h2>
                                 </div>
                                 {column.questions.map((question) => {
@@ -158,7 +193,7 @@ export default function Questions({
                                         question.questionId
                                     );
                                     const titleQuery = titleById.get(
-                                        question.titleId
+                                        question.titleId ?? ""
                                     );
                                     return (
                                         <QuizCard

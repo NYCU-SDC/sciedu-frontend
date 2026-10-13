@@ -51,7 +51,7 @@ const courseRoutes: RouteObject[] = [
         ),
     },
     {
-        path: "/course/:id",
+        path: "/course/:courseId",
         element: (
             <RequireAuth>
                 <GeneticsCourse />

@@ -196,7 +196,7 @@ describe("useAnswerSubmission", () => {
         expect(onContinue).toHaveBeenCalledTimes(1);
     });
 
-    it("continues without recording a submission when every answer already exists", async () => {
+    it("keeps unknown duplicate submissions incomplete", async () => {
         vi.mocked(submitAnswer).mockRejectedValue(
             new ApiError("answer already exists", 409)
         );
@@ -217,15 +217,13 @@ describe("useAnswerSubmission", () => {
 
         await act(() => result.current.submit());
 
-        expect(result.current.submissionError).toBeNull();
-        expect(result.current.submittedQuestionIds).toEqual(
-            new Set([choiceQuestion.id, textQuestion.id])
-        );
+        expect(result.current.submissionError).toContain("無法確認");
+        expect(result.current.submittedQuestionIds).toEqual(new Set());
         expect(onSubmitted).not.toHaveBeenCalled();
-        expect(onContinue).toHaveBeenCalledTimes(1);
+        expect(onContinue).not.toHaveBeenCalled();
     });
 
-    it("completes a mixed new and duplicate submission", async () => {
+    it("retains known successes but does not complete a mixed duplicate submission", async () => {
         vi.mocked(submitAnswer)
             .mockResolvedValueOnce(submittedAnswerResponse)
             .mockRejectedValueOnce(new ApiError("answer already exists", 409));
@@ -246,12 +244,12 @@ describe("useAnswerSubmission", () => {
 
         await act(() => result.current.submit());
 
-        expect(result.current.submissionError).toBeNull();
+        expect(result.current.submissionError).toContain("無法確認");
         expect(result.current.submittedQuestionIds).toEqual(
-            new Set([choiceQuestion.id, textQuestion.id])
+            new Set([choiceQuestion.id])
         );
-        expect(onSubmitted).toHaveBeenCalledTimes(1);
-        expect(onContinue).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
     });
 
     it("prevents duplicate requests while a submission is in progress", async () => {

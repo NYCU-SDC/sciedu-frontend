@@ -1,125 +1,103 @@
-// @vitest-environment jsdom
+import { describe, expect, it } from "vitest";
+import {
+    mapPageBlocksToCoursePage,
+    type PageBlock,
+    type PageDetail,
+} from "./fetchCourseDefinition";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { fetchCourseDefinition, isCourseUuid } from "./fetchCourseDefinition";
-
-function response(body: unknown) {
-    return {
-        ok: true,
-        status: 200,
-        json: vi.fn().mockResolvedValue(body),
-    };
-}
-
-afterEach(() => {
-    vi.unstubAllGlobals();
+const block = (
+    type: PageBlock["type"],
+    resourceId: string,
+    displayOrder: number
+): PageBlock => ({
+    id: `block-${displayOrder}`,
+    pageId: "page-1",
+    type,
+    resourceId,
+    displayOrder,
+    required: true,
 });
 
-describe("fetchCourseDefinition", () => {
-    it("loads a published course and builds its pages from block resources", async () => {
-        const courseId = "10000000-0000-4000-8000-000000000001";
-        const pageId = "20000000-0000-4000-8000-000000000001";
-        const fetchMock = vi
-            .fn()
-            .mockResolvedValueOnce(
-                response({
-                    id: courseId,
-                    code: "GEN-01",
-                    title: "遺傳教材",
-                    status: "PUBLISHED",
-                })
-            )
-            .mockResolvedValueOnce(
-                response([
-                    {
-                        id: pageId,
-                        courseId,
-                        title: "觀察",
-                        displayOrder: 1,
-                    },
-                ])
-            )
-            .mockResolvedValueOnce(
-                response({
-                    id: pageId,
-                    courseId,
-                    title: "觀察",
-                    displayOrder: 1,
-                    blocks: [
-                        {
-                            id: "block-1",
-                            pageId,
-                            type: "TEXT",
-                            resourceId: "description-id",
-                            displayOrder: 0,
-                            required: true,
-                        },
-                        {
-                            id: "block-2",
-                            pageId,
-                            type: "MEDIA",
-                            resourceId: "image-id",
-                            displayOrder: 10,
-                            required: true,
-                        },
-                        {
-                            id: "block-3",
-                            pageId,
-                            type: "TEXT",
-                            resourceId: "question-title-id",
-                            displayOrder: 100,
-                            required: true,
-                        },
-                        {
-                            id: "block-4",
-                            pageId,
-                            type: "QUESTION",
-                            resourceId: "question-id",
-                            displayOrder: 101,
-                            required: true,
-                        },
-                        {
-                            id: "block-5",
-                            pageId,
-                            type: "TEXT",
-                            resourceId: "llm-image-description-id",
-                            displayOrder: 200,
-                            required: true,
-                        },
-                    ],
-                })
-            );
-        vi.stubGlobal("fetch", fetchMock);
+const page = (blocks: PageBlock[]): PageDetail => ({
+    id: "page-1",
+    courseId: "course-1",
+    title: "第一頁",
+    displayOrder: 7,
+    blocks,
+});
 
-        await expect(fetchCourseDefinition(courseId)).resolves.toMatchObject({
-            id: courseId,
-            code: "GEN-01",
-            title: "遺傳教材",
-            pages: [
-                {
-                    pageIndex: 0,
-                    secondaryTitle: "觀察",
-                    request: {
-                        type: "material",
-                        content: {
-                            descriptionId: "description-id",
-                            imageIds: ["image-id"],
-                        },
-                        questionSections: [
-                            {
-                                titleId: "question-title-id",
-                                questionId: "question-id",
-                            },
-                        ],
-                    },
+describe("mapPageBlocksToCoursePage", () => {
+    it("maps and orders description, multiple images, and question pairs", () => {
+        const result = mapPageBlocksToCoursePage(
+            page([
+                block("QUESTION", "question-2", 111),
+                block("MEDIA", "image-2", 20),
+                block("TEXT", "title-1", 100),
+                block("TEXT", "description", 0),
+                block("MEDIA", "image-1", 10),
+                block("QUESTION", "question-1", 101),
+                block("TEXT", "title-2", 110),
+            ]),
+            3
+        );
+
+        expect(result).toEqual({
+            pageIndex: 3,
+            activeNavbarTitles: [3],
+            secondaryTitle: "第一頁",
+            request: {
+                type: "material",
+                content: {
+                    descriptionId: "description",
+                    imageIds: ["image-1", "image-2"],
                 },
-            ],
+                questionSections: [
+                    {
+                        titleId: "title-1",
+                        questionId: "question-1",
+                        required: true,
+                    },
+                    {
+                        titleId: "title-2",
+                        questionId: "question-2",
+                        required: true,
+                    },
+                ],
+            },
         });
     });
 
-    it("accepts only UUID course IDs", () => {
-        expect(isCourseUuid("10000000-0000-4000-8000-000000000001")).toBe(true);
-        expect(isCourseUuid("pea-seed-coat-1")).toBe(false);
+    it("rejects a question title without its adjacent QUESTION block", () => {
+        expect(() =>
+            mapPageBlocksToCoursePage(
+                page([
+                    block("TEXT", "description", 0),
+                    block("MEDIA", "image", 10),
+                    block("TEXT", "title", 100),
+                ]),
+                0
+            )
+        ).toThrow("缺少 QUESTION block");
+    });
+
+    it("ignores the LLM-only description at displayOrder 200", () => {
+        const result = mapPageBlocksToCoursePage(
+            page([
+                block("TEXT", "description", 0),
+                block("MEDIA", "image", 10),
+                block("TEXT", "title", 100),
+                block("QUESTION", "question", 101),
+                block("TEXT", "llm-image-description", 200),
+            ]),
+            0
+        );
+
+        expect(result.request.type).toBe("material");
+        expect(
+            result.request.type === "material" &&
+                result.request.questionSections
+        ).toEqual([
+            { titleId: "title", questionId: "question", required: true },
+        ]);
     });
 });

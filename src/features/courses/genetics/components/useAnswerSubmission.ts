@@ -157,13 +157,6 @@ export function useAnswerSubmission({
                     submittedQuestionIdsRef.current.add(questionId);
                     acceptedQuestionIds.push(questionId);
                     submittedAnswersRef.current.push(result.value);
-                } else if (
-                    result.reason instanceof ApiError &&
-                    result.reason.status === 409
-                ) {
-                    const questionId = pendingQuestions[index].questionId;
-                    submittedQuestionIdsRef.current.add(questionId);
-                    acceptedQuestionIds.push(questionId);
                 } else {
                     failedResults.push(result);
                 }
@@ -175,6 +168,17 @@ export function useAnswerSubmission({
             }
 
             if (failedResults.length > 0) {
+                if (
+                    failedResults.some(
+                        ({ reason }) =>
+                            reason instanceof ApiError && reason.status === 409
+                    )
+                ) {
+                    setSubmissionError(
+                        "無法確認既有作答的提交結果，尚未完成本頁。已確認成功的答案會保留；目前 API 無法恢復遺失的答案 ID，請聯絡管理者協助。"
+                    );
+                    return;
+                }
                 const firstReason = failedResults[0].reason;
                 const reason =
                     firstReason instanceof Error && firstReason.message

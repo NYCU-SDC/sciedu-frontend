@@ -1,14 +1,15 @@
 import { api } from "../../../../shared/utils/api";
-import type { CourseDefinition } from "../types/types";
+import type { CourseDefinition, CourseNavigation } from "../types/types";
 
-type CourseResponse = {
+export type CourseResponse = {
     id: string;
     code: string;
     title: string;
+    description?: string;
     status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
 };
 
-type PageResponse = {
+export type PageResponse = {
     id: string;
     courseId: string;
     title: string;
@@ -30,7 +31,8 @@ export function isCourseUuid(value: string): boolean {
 }
 
 export async function fetchCourseDefinition(
-    courseId: string
+    courseId: string,
+    navigation: CourseNavigation
 ): Promise<CourseDefinition> {
     const [course, pages] = await Promise.all([
         api<CourseResponse>(`/api/courses/${courseId}`),
@@ -48,5 +50,6 @@ export async function fetchCourseDefinition(
         code: course.code,
         title: course.title,
         pages: pageDetails.map(mapPageBlocksToCoursePage),
+        navigation,
     };
 }

@@ -1,11 +1,16 @@
 import type { CourseAnswers, SubmittedAnswerResponse } from "../types/types";
 
-const STORAGE_PREFIX = "sciedu-course-attempt:";
+import {
+    COURSE_ATTEMPT_PREFIX,
+    getAttemptSessionId,
+} from "../../../../shared/auth/courseAttemptStorage";
 
 export type CourseAttempt = {
     courseId: string;
     courseTitle: string;
     userEmail: string;
+    experimentId: string;
+    sessionId: string;
     startedAt: string;
     completedAt: string;
     answersByPage: Record<number, CourseAnswers>;
@@ -46,19 +51,22 @@ function isAnswersByPage(
     );
 }
 
-function storageKey(courseId: string, userEmail: string) {
-    return `${STORAGE_PREFIX}${encodeURIComponent(userEmail)}:${courseId}`;
+function storageKey(courseId: string, userEmail: string, experimentId: string) {
+    return `${COURSE_ATTEMPT_PREFIX}${encodeURIComponent(userEmail)}:${encodeURIComponent(experimentId)}:${courseId}`;
 }
 
 function isCourseAttempt(
     value: unknown,
     courseId: string,
-    userEmail: string
+    userEmail: string,
+    experimentId: string
 ): value is CourseAttempt {
     return (
         isRecord(value) &&
         value.courseId === courseId &&
         value.userEmail === userEmail &&
+        value.experimentId === experimentId &&
+        value.sessionId === getAttemptSessionId() &&
         typeof value.courseTitle === "string" &&
         typeof value.startedAt === "string" &&
         typeof value.completedAt === "string" &&
@@ -66,15 +74,28 @@ function isCourseAttempt(
         Number.isFinite(Date.parse(value.completedAt)) &&
         isAnswersByPage(value.answersByPage) &&
         Array.isArray(value.submissions) &&
-        value.submissions.every(isSubmittedAnswer)
+        value.submissions.every(
+            (submission) =>
+                isSubmittedAnswer(submission) &&
+                submission.experimentId === experimentId
+        )
     );
 }
 
 export function saveCourseAttempt(attempt: CourseAttempt) {
-    if (!attempt.userEmail) return;
+    if (
+        !attempt.userEmail ||
+        !attempt.experimentId ||
+        attempt.sessionId !== getAttemptSessionId()
+    )
+        return;
     try {
         sessionStorage.setItem(
-            storageKey(attempt.courseId, attempt.userEmail),
+            storageKey(
+                attempt.courseId,
+                attempt.userEmail,
+                attempt.experimentId
+            ),
             JSON.stringify(attempt)
         );
     } catch {
@@ -85,16 +106,21 @@ export function saveCourseAttempt(attempt: CourseAttempt) {
 export function loadCourseAttempt(
     courseId: string,
     userEmail: string,
+    experimentId: string,
     navigationAttempt?: unknown
 ): CourseAttempt | null {
-    if (!userEmail) return null;
-    if (isCourseAttempt(navigationAttempt, courseId, userEmail))
+    if (!userEmail || !experimentId) return null;
+    if (isCourseAttempt(navigationAttempt, courseId, userEmail, experimentId))
         return navigationAttempt;
     try {
-        const raw = sessionStorage.getItem(storageKey(courseId, userEmail));
+        const raw = sessionStorage.getItem(
+            storageKey(courseId, userEmail, experimentId)
+        );
         if (!raw) return null;
         const parsed: unknown = JSON.parse(raw);
-        return isCourseAttempt(parsed, courseId, userEmail) ? parsed : null;
+        return isCourseAttempt(parsed, courseId, userEmail, experimentId)
+            ? parsed
+            : null;
     } catch {
         return null;
     }

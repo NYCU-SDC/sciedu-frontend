@@ -179,7 +179,11 @@ export default function CreateExperimentPage() {
     const isReadOnly =
         currentStatus === "COMPLETED" || currentStatus === "ARCHIVED";
     const isActive = currentStatus === "ACTIVE";
-    const canEditCourses = !currentStatus || currentStatus === "DRAFT";
+    const canAddCourses =
+        !currentStatus ||
+        ["DRAFT", "SCHEDULED", "ACTIVE"].includes(currentStatus);
+    const canRemoveCourses =
+        !currentStatus || ["DRAFT", "SCHEDULED"].includes(currentStatus);
     const participantCount =
         participantsQuery.data?.length ??
         experimentQuery.data?.participantCount ??
@@ -188,7 +192,12 @@ export default function CreateExperimentPage() {
         setDraft((current) => ({ ...current, [field]: value }));
 
     const toggleCourse = (courseId: string) => {
-        if (!canEditCourses) return;
+        if (
+            draft.courseIds.includes(courseId)
+                ? !canRemoveCourses
+                : !canAddCourses
+        )
+            return;
         setCoursesTouched(true);
         setDraft((current) => ({
             ...current,
@@ -211,7 +220,11 @@ export default function CreateExperimentPage() {
     };
 
     const syncCourses = async (id: string) => {
-        if (!canEditCourses || (!coursesTouched && step < 2)) return;
+        if (
+            (!canAddCourses && !canRemoveCourses) ||
+            (!coursesTouched && step < 2)
+        )
+            return;
         const selected = new Set(draft.courseIds);
         const persisted = new Set(persistedCourseIds);
         const additions = draft.courseIds.filter((id) => !persisted.has(id));
@@ -752,7 +765,11 @@ export default function CreateExperimentPage() {
                                                 )}
                                                 disabled={
                                                     !available ||
-                                                    !canEditCourses ||
+                                                    (draft.courseIds.includes(
+                                                        course.id
+                                                    )
+                                                        ? !canRemoveCourses
+                                                        : !canAddCourses) ||
                                                     isSaving
                                                 }
                                                 onChange={() =>
@@ -809,7 +826,7 @@ export default function CreateExperimentPage() {
                                             variant="subtle"
                                             size="xs"
                                             disabled={
-                                                !canEditCourses || isSaving
+                                                !canRemoveCourses || isSaving
                                             }
                                             onClick={() =>
                                                 toggleCourse(course.id)
@@ -821,7 +838,11 @@ export default function CreateExperimentPage() {
                                 ))}
                             </Stack>
                             <div className={styles.warning}>
-                                排程後不可更換教材
+                                {isActive
+                                    ? "進行中可新增教材，但不可移除既有教材"
+                                    : isReadOnly
+                                      ? "目前狀態不可調整教材"
+                                      : "草稿與已排程實驗可新增或移除教材"}
                             </div>
                         </Card>
                     </div>

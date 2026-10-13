@@ -98,7 +98,13 @@ export default function ExperimentDetailPage() {
             await queryClient.invalidateQueries({
                 queryKey: ["admin", "experiments"],
             });
-            toast.success(status === "SCHEDULED" ? "實驗已排程" : "實驗已封存");
+            toast.success(
+                status === "SCHEDULED"
+                    ? "實驗已排程"
+                    : status === "ACTIVE"
+                      ? "實驗已啟用"
+                      : "實驗已封存"
+            );
         },
         onError: (error) => toast.error(mutationErrorMessage(error)),
     });
@@ -212,6 +218,22 @@ export default function ExperimentDetailPage() {
                                     }
                                 >
                                     排程實驗
+                                </Button>
+                            )}
+                            {experiment.status === "SCHEDULED" && (
+                                <Button
+                                    loading={statusMutation.isPending}
+                                    disabled={!hasPublishedCourse}
+                                    onClick={() => {
+                                        if (
+                                            window.confirm(
+                                                "確定要啟用這場實驗嗎？啟用後將鎖定基本資料與教學設定；學生可在排定時段內進入教材。"
+                                            )
+                                        )
+                                            statusMutation.mutate("ACTIVE");
+                                    }}
+                                >
+                                    啟用實驗
                                 </Button>
                             )}
                             {experiment.status === "COMPLETED" && (

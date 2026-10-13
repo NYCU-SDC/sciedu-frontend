@@ -8,6 +8,7 @@ export type SubmittableQuestion = {
     questionId: string;
     question?: QuestionResponse;
     isUnavailable: boolean;
+    required?: boolean;
 };
 
 type Options = {
@@ -94,6 +95,8 @@ export function useAnswerSubmission({
         let hasUnavailableQuestion = false;
 
         for (const item of questions) {
+            if (item.required === false && !answers[item.questionId]?.trim())
+                continue;
             if (item.isUnavailable || !item.question) {
                 hasUnavailableQuestion = true;
                 continue;
@@ -150,13 +153,6 @@ export function useAnswerSubmission({
                     submittedQuestionIdsRef.current.add(questionId);
                     acceptedQuestionIds.push(questionId);
                     hasCreatedAnswerRef.current = true;
-                } else if (
-                    result.reason instanceof ApiError &&
-                    result.reason.status === 409
-                ) {
-                    const questionId = pendingQuestions[index].questionId;
-                    submittedQuestionIdsRef.current.add(questionId);
-                    acceptedQuestionIds.push(questionId);
                 } else {
                     failedResults.push(result);
                 }
@@ -168,6 +164,17 @@ export function useAnswerSubmission({
             }
 
             if (failedResults.length > 0) {
+                if (
+                    failedResults.some(
+                        ({ reason }) =>
+                            reason instanceof ApiError && reason.status === 409
+                    )
+                ) {
+                    setSubmissionError(
+                        "無法確認既有作答的提交結果，尚未完成本頁。已確認成功的答案會保留；請聯絡管理者協助。"
+                    );
+                    return;
+                }
                 const firstReason = failedResults[0].reason;
                 const reason =
                     firstReason instanceof Error && firstReason.message

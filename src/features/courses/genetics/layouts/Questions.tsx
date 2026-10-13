@@ -1,24 +1,23 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
-import { Button, RadioGroup, Skeleton, TextArea } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import type {
     CourseAnswer,
     CourseAnswers,
     CoursePageRequest,
+    CourseReviews,
     QuestionPage,
     QuestionResponse,
 } from "../types/types";
 import type { CourseChatController } from "../components/useCourseChatController";
 import { api } from "../../../../shared/utils/api";
 import CourseChat from "../components/CourseChat";
+import QuizCard from "../components/QuizCard";
 import styles from "./Questions.module.css";
-import TextAreaStyle from "../components/UnstyledTextArea.module.css";
 import FooterStyles from "../components/Footer.module.css";
-import {
-    MAX_TEXT_ANSWER_LENGTH,
-    useAnswerSubmission,
-} from "../components/useAnswerSubmission";
+import { useAnswerSubmission } from "../components/useAnswerSubmission";
+import { formatQuestionTitle } from "../services/formatQuestionTitle";
 
 type Props = {
     data: CoursePageRequest;
@@ -27,6 +26,9 @@ type Props = {
     isCompleted: boolean;
     onNext: () => void;
     onAnswerChange: (questionId: string, answer: CourseAnswer) => void;
+    reviewMode?: boolean;
+    reviews?: CourseReviews;
+    isLastPage?: boolean;
 };
 
 export default function Questions({
@@ -36,91 +38,85 @@ export default function Questions({
     isCompleted,
     onNext,
     onAnswerChange,
+    reviewMode = false,
+    reviews = {},
+    isLastPage = false,
 }: Props) {
     const req = data.request as QuestionPage;
     const posthog = usePostHog();
-
-    const uniqueLabelIds = useMemo(
-        () => [...new Set(req.columns.map((column) => column.labelId))],
+    const questions = useMemo(
+        () => req.columns.flatMap((column) => column.questions),
         [req.columns]
+    );
+    const labelIds = useMemo(
+        () => [
+            ...new Set(
+                req.columns.flatMap(
+                    (column) =>
+                        column.labelIds ??
+                        (column.labelId ? [column.labelId] : [])
+                )
+            ),
+        ],
+        [req.columns]
+    );
+    const titleIds = useMemo(
+        () => [
+            ...new Set(
+                questions.flatMap((question) =>
+                    question.titleId ? [question.titleId] : []
+                )
+            ),
+        ],
+        [questions]
+    );
+    const questionIds = useMemo(
+        () => [...new Set(questions.map((question) => question.questionId))],
+        [questions]
     );
 
     const labelQueries = useQueries({
-        queries: uniqueLabelIds.map((id) => ({
+        queries: labelIds.map((id) => ({
             queryKey: ["content", "text", id],
             queryFn: () => api<{ content: string }>(`/api/content/text/${id}`),
         })),
     });
-
-    const labelById = useMemo(
-        () =>
-            new Map(
-                uniqueLabelIds.map((id, index) => [id, labelQueries[index]])
-            ),
-        [labelQueries, uniqueLabelIds]
-    );
-
-    const uniqueTitleIds = useMemo(
-        () => [
-            ...new Set(
-                req.columns.flatMap((column) =>
-                    column.questions.map((question) => question.titleId)
-                )
-            ),
-        ],
-        [req.columns]
-    );
-
     const titleQueries = useQueries({
-        queries: uniqueTitleIds.map((id) => ({
+        queries: titleIds.map((id) => ({
             queryKey: ["content", "text", id],
             queryFn: () => api<{ content: string }>(`/api/content/text/${id}`),
         })),
     });
-
-    const titleById = useMemo(
-        () =>
-            new Map(
-                uniqueTitleIds.map((id, index) => [id, titleQueries[index]])
-            ),
-        [titleQueries, uniqueTitleIds]
-    );
-
-    const uniqueQuestionIds = useMemo(
-        () => [
-            ...new Set(
-                req.columns.flatMap((column) =>
-                    column.questions.map((question) => question.questionId)
-                )
-            ),
-        ],
-        [req.columns]
-    );
-
     const questionQueries = useQueries({
-        queries: uniqueQuestionIds.map((id) => ({
+        queries: questionIds.map((id) => ({
             queryKey: ["question", id],
             queryFn: () => api<QuestionResponse>(`/api/questions/${id}`),
         })),
     });
 
-    const questionById = useMemo(
-        () =>
-            new Map(
-                uniqueQuestionIds.map((id, index) => [
-                    id,
-                    questionQueries[index],
-                ])
-            ),
-        [questionQueries, uniqueQuestionIds]
+    const labelById = new Map(
+        labelIds.map((id, index) => [id, labelQueries[index]])
+    );
+    const titleById = new Map(
+        titleIds.map((id, index) => [id, titleQueries[index]])
+    );
+    const questionById = new Map(
+        questionIds.map((id, index) => [id, questionQueries[index]])
     );
 
     const submittableQuestions = useMemo(
         () =>
-            uniqueQuestionIds.map((questionId) => {
+            questionIds.map((questionId) => {
                 const query = questionById.get(questionId);
                 return {
                     questionId,
+                    required: req.columns
+                        .flatMap((column) => column.questions)
+                        .some(
+                            (question) =>
+                                question.questionId === questionId &&
+                                question.required !== false
+                        ),
                     question: query?.data,
                     isUnavailable:
                         !query ||
@@ -129,15 +125,10 @@ export default function Questions({
                         !query.data,
                 };
             }),
-        [questionById, uniqueQuestionIds]
+        // The query result objects change when their state changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [questionIds, questionQueries, req.columns]
     );
-
-    const handleAnswersSubmitted = () => {
-        posthog.capture("course_questions_submitted", {
-            page_index: data.pageIndex,
-            question_count: uniqueQuestionIds.length,
-        });
-    };
 
     const {
         clearAnswerError,
@@ -150,7 +141,11 @@ export default function Questions({
         questions: submittableQuestions,
         answers,
         isCompleted,
-        onSubmitted: handleAnswersSubmitted,
+        onSubmitted: () =>
+            posthog.capture("course_questions_submitted", {
+                page_index: data.pageIndex,
+                question_count: questionIds.length,
+            }),
         onContinue: onNext,
     });
 
@@ -159,185 +154,91 @@ export default function Questions({
         onAnswerChange(questionId, answer);
     };
 
+    let questionNumber = 0;
     return (
         <div className={styles.pageContainer}>
             <div className={styles.pageBody}>
                 <main className={styles.contentWrapper}>
-                    {req.columns.map((column, colIndex) => {
-                        const labelQuery = labelById.get(column.labelId);
-
+                    {req.columns.map((column, columnIndex) => {
+                        const columnLabels = (
+                            column.labelIds ??
+                            (column.labelId ? [column.labelId] : [])
+                        ).map((id) => labelById.get(id));
+                        const labelError = columnLabels.some(
+                            (query) => query?.isError
+                        );
+                        const label =
+                            columnLabels
+                                .map((query) => query?.data?.content)
+                                .filter(Boolean)
+                                .join(" · ") || data.secondaryTitle;
                         return (
                             <section
-                                key={`${column.labelId}-${colIndex}`}
+                                key={`${column.labelId}-${columnIndex}`}
                                 className={styles.column}
                             >
                                 <div className={styles.columnHeader}>
-                                    {labelQuery?.isError ? (
-                                        <h2 className={styles.errorText}>
-                                            載入失敗
-                                        </h2>
-                                    ) : (
-                                        <h2>{`${labelQuery?.data?.content ?? ""}：`}</h2>
-                                    )}
+                                    <h2>
+                                        {labelError ? "載入失敗" : `${label}：`}
+                                    </h2>
                                 </div>
                                 {column.questions.map((question) => {
+                                    const index = questionNumber++;
                                     const result = questionById.get(
                                         question.questionId
                                     );
                                     const titleQuery = titleById.get(
-                                        question.titleId
+                                        question.titleId ?? ""
                                     );
-                                    const isLoading = result?.isLoading ?? true;
-                                    const isError = result?.isError ?? false;
-                                    const titleError =
-                                        titleQuery?.isError ?? false;
-
                                     return (
-                                        <div
+                                        <QuizCard
                                             key={question.questionId}
-                                            className={styles.questionCard}
-                                        >
-                                            <div className={styles.titleRow}>
-                                                <h3
-                                                    className={
-                                                        styles.questionTitle
-                                                    }
-                                                >
-                                                    {titleQuery?.data
-                                                        ?.content ?? ""}
-                                                </h3>
-                                                {(isError || titleError) && (
-                                                    <span
-                                                        className={
-                                                            styles.errorText
-                                                        }
-                                                    >
-                                                        載入失敗
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {isLoading ? (
-                                                <Skeleton minHeight="0.875rem" />
-                                            ) : isError ? null : (
-                                                <>
-                                                    <p
-                                                        className={
-                                                            styles.questionText
-                                                        }
-                                                    >
-                                                        {result?.data?.content}
-                                                    </p>
-                                                    {result?.data?.type ===
-                                                    "CHOICE" ? (
-                                                        <RadioGroup.Root
-                                                            className={
-                                                                styles.radioGroup
-                                                            }
-                                                            value={
-                                                                answers[
-                                                                    question
-                                                                        .questionId
-                                                                ] ?? ""
-                                                            }
-                                                            disabled={
-                                                                isCompleted ||
-                                                                isSubmitting ||
-                                                                submittedQuestionIds.has(
-                                                                    question.questionId
-                                                                )
-                                                            }
-                                                            aria-invalid={Boolean(
-                                                                validationErrors[
-                                                                    question
-                                                                        .questionId
-                                                                ]
-                                                            )}
-                                                            onValueChange={(
-                                                                answer
-                                                            ) =>
-                                                                handleAnswerChange(
-                                                                    question.questionId,
-                                                                    answer
-                                                                )
-                                                            }
-                                                        >
-                                                            {result.data.options.map(
-                                                                (option) => (
-                                                                    <RadioGroup.Item
-                                                                        key={
-                                                                            option.id
-                                                                        }
-                                                                        value={
-                                                                            option.id
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            option.label
-                                                                        }
-                                                                        .{" "}
-                                                                        {
-                                                                            option.content
-                                                                        }
-                                                                    </RadioGroup.Item>
-                                                                )
-                                                            )}
-                                                        </RadioGroup.Root>
-                                                    ) : (
-                                                        <TextArea
-                                                            className={
-                                                                TextAreaStyle.textInput
-                                                            }
-                                                            placeholder="在此輸入答案..."
-                                                            variant="soft"
-                                                            color="gray"
-                                                            value={
-                                                                answers[
-                                                                    question
-                                                                        .questionId
-                                                                ] ?? ""
-                                                            }
-                                                            maxLength={
-                                                                MAX_TEXT_ANSWER_LENGTH
-                                                            }
-                                                            disabled={
-                                                                isCompleted ||
-                                                                isSubmitting ||
-                                                                submittedQuestionIds.has(
-                                                                    question.questionId
-                                                                )
-                                                            }
-                                                            aria-invalid={Boolean(
-                                                                validationErrors[
-                                                                    question
-                                                                        .questionId
-                                                                ]
-                                                            )}
-                                                            onChange={(event) =>
-                                                                handleAnswerChange(
-                                                                    question.questionId,
-                                                                    event.target
-                                                                        .value
-                                                                )
-                                                            }
-                                                        />
-                                                    )}
-                                                </>
-                                            )}
-                                            {validationErrors[
-                                                question.questionId
-                                            ] && (
-                                                <span
-                                                    className={styles.errorText}
-                                                    role="alert"
-                                                >
-                                                    {
-                                                        validationErrors[
-                                                            question.questionId
-                                                        ]
-                                                    }
-                                                </span>
-                                            )}
-                                        </div>
+                                            question={{
+                                                id: question.questionId,
+                                                title: formatQuestionTitle(
+                                                    titleQuery?.data?.content ??
+                                                        "",
+                                                    index
+                                                ),
+                                                data: result?.data,
+                                            }}
+                                            isLoading={
+                                                result?.isLoading ?? true
+                                            }
+                                            error={
+                                                result?.isError ||
+                                                titleQuery?.isError
+                                                    ? "載入失敗"
+                                                    : null
+                                            }
+                                            answer={
+                                                answers[question.questionId] ??
+                                                ""
+                                            }
+                                            disabled={
+                                                reviewMode ||
+                                                isCompleted ||
+                                                isSubmitting ||
+                                                submittedQuestionIds.has(
+                                                    question.questionId
+                                                )
+                                            }
+                                            validationError={
+                                                validationErrors[
+                                                    question.questionId
+                                                ]
+                                            }
+                                            onAnswerChange={(answer) =>
+                                                handleAnswerChange(
+                                                    question.questionId,
+                                                    answer
+                                                )
+                                            }
+                                            reviewMode={reviewMode}
+                                            review={
+                                                reviews[question.questionId]
+                                            }
+                                        />
                                     );
                                 })}
                             </section>
@@ -346,7 +247,7 @@ export default function Questions({
                 </main>
                 <aside className={styles.chatSidebar}>
                     <CourseChat controller={chat} />
-                    {submissionError && (
+                    {submissionError && !reviewMode && (
                         <p
                             className={FooterStyles.submissionMessage}
                             role="alert"
@@ -358,17 +259,21 @@ export default function Questions({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={submit}
-                        disabled={isSubmitting}
+                        onClick={reviewMode ? onNext : submit}
+                        disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
-                        {isSubmitting
-                            ? "答案送出中…"
-                            : submissionError
-                              ? "重試送出"
-                              : isCompleted
-                                ? "前往下一頁"
-                                : "送出並前往下一頁"}
+                        {reviewMode
+                            ? isLastPage
+                                ? "返回教材首頁"
+                                : "前往下一頁"
+                            : isSubmitting
+                              ? "答案送出中…"
+                              : submissionError
+                                ? "重試送出"
+                                : isCompleted
+                                  ? "前往下一頁"
+                                  : "送出並前往下一頁"}
                     </Button>
                 </aside>
             </div>

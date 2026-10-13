@@ -48,10 +48,11 @@ export default function Summary() {
     );
     const summary = summarizeAnswerResults(results);
     const isLoading = resultQueries.some((query) => query.isFetching);
-    const hasResultError = resultQueries.some((query) => query.isError);
     const answeredQuestionCount = new Set(
         Object.values(attempt?.answersByPage ?? {}).flatMap((answers) =>
-            Object.keys(answers)
+            Object.entries(answers)
+                .filter(([, answer]) => answer.trim())
+                .map(([id]) => id)
         )
     ).size;
     const unavailableCount =
@@ -149,11 +150,10 @@ export default function Summary() {
                             )
                         }
                         onRetryResults={
-                            hasResultError
+                            resultQueries.length > 0
                                 ? () => {
                                       resultQueries.forEach((query) => {
-                                          if (query.isError)
-                                              void query.refetch();
+                                          void query.refetch();
                                       });
                                   }
                                 : undefined

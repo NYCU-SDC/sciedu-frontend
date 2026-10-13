@@ -158,7 +158,7 @@ export default function GeneticsCourse() {
     };
     return (
         <>
-            {reviewMode && resultQueries.some((query) => query.isError) && (
+            {reviewMode && resultQueries.length > 0 && (
                 <button
                     onClick={() =>
                         resultQueries.forEach((query) => {

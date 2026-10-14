@@ -20,6 +20,9 @@ import MaterialLibrary from "./features/courses/MaterialLibrary/MaterialLibrary"
 import Summary from "./features/courses/Summary/Summary";
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage";
 import RequireAdminRole from "./features/admin/components/RequireAdminRole";
+import ExperimentListPage from "./features/admin/pages/ExperimentListPage";
+import ExperimentDetailPage from "./features/admin/pages/ExperimentDetailPage";
+import CreateExperimentPage from "./features/admin/pages/CreateExperimentPage";
 
 const APP_MODE: "edu" | "llm" | "dev" = import.meta.env.VITE_APP_MODE;
 
@@ -46,19 +49,35 @@ const chatRoutes: RouteObject[] = [
 const courseRoutes: RouteObject[] = [
     {
         path: "/courses",
-        element: <Homepage />,
+        element: (
+            <RequireAuth>
+                <Homepage />
+            </RequireAuth>
+        ),
     },
     {
-        path: "/course/:id",
-        element: <GeneticsCourse />,
+        path: "/course/:courseId",
+        element: (
+            <RequireAuth>
+                <GeneticsCourse />
+            </RequireAuth>
+        ),
     },
     {
         path: "/courses/library",
-        element: <MaterialLibrary />,
+        element: (
+            <RequireAuth>
+                <MaterialLibrary />
+            </RequireAuth>
+        ),
     },
     {
         path: "/courses/summary",
-        element: <Summary />,
+        element: (
+            <RequireAuth>
+                <Summary />
+            </RequireAuth>
+        ),
     },
 ];
 
@@ -69,6 +88,46 @@ const adminRoutes: RouteObject[] = [
             <RequireAuth>
                 <RequireAdminRole>
                     <AdminDashboardPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
+    {
+        path: "/admin/experiments",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <ExperimentListPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
+    {
+        path: "/admin/experiments/new",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <CreateExperimentPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
+    {
+        path: "/admin/experiments/:experimentId",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <ExperimentDetailPage />
+                </RequireAdminRole>
+            </RequireAuth>
+        ),
+    },
+    {
+        path: "/admin/experiments/:experimentId/edit",
+        element: (
+            <RequireAuth>
+                <RequireAdminRole>
+                    <CreateExperimentPage />
                 </RequireAdminRole>
             </RequireAuth>
         ),
@@ -123,6 +182,26 @@ export const router = createBrowserRouter([
               {
                   path: "/admin",
                   element: <AdminDashboardPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+              {
+                  path: "/admin/experiments",
+                  element: <ExperimentListPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+              {
+                  path: "/admin/experiments/new",
+                  element: <CreateExperimentPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+              {
+                  path: "/admin/experiments/:experimentId",
+                  element: <ExperimentDetailPage />,
+                  errorElement: <RouteErrorBoundary />,
+              },
+              {
+                  path: "/admin/experiments/:experimentId/edit",
+                  element: <CreateExperimentPage />,
                   errorElement: <RouteErrorBoundary />,
               },
           ]

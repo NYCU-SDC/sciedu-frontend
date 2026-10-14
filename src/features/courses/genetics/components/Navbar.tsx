@@ -1,7 +1,7 @@
-import styles from "./Navbar.module.css";
 import type { JSX } from "react/jsx-runtime";
 import { LockKeyhole } from "lucide-react";
-import { SectionTitles } from "../../../../assets/NavbarContent";
+import type { CourseNavigation } from "../types/types";
+import styles from "./Navbar.module.css";
 
 type Props = {
     activeTitles: number[];
@@ -9,6 +9,8 @@ type Props = {
     highestUnlockedStep: number;
     secondaryTitle: string;
     onStepChange: (step: number) => void;
+    navigation: CourseNavigation;
+    stepLabels: string[];
 };
 
 export default function Navbar({
@@ -17,48 +19,79 @@ export default function Navbar({
     highestUnlockedStep,
     secondaryTitle,
     onStepChange,
+    navigation,
+    stepLabels,
 }: Props): JSX.Element {
-    return (
-        <nav className={styles.courseNavbar}>
-            <div className={styles.navbarContainer}>
-                {/* Left Main Title */}
-                <div className={styles.brandSection}>
-                    {SectionTitles.MainTitle}
+    if (navigation.variant === "stepper") {
+        return (
+            <nav
+                className={`${styles.courseNavbar} ${styles.stepperNavbar}`}
+                aria-label="教材進度"
+            >
+                <div className={styles.stepperBrand}>
+                    <strong>{navigation.mainTitle}</strong>
+                    <span>{secondaryTitle}</span>
                 </div>
-                {/* right side subtitle*/}
+                <div className={styles.stepperTrack}>
+                    {stepLabels.map((label, step) => {
+                        const isActive = activeStep === step;
+                        const isComplete = step < activeStep;
+                        const isLocked = step > highestUnlockedStep;
+                        return (
+                            <button
+                                key={`${step}-${label}`}
+                                type="button"
+                                className={`${styles.stepItem} ${isActive ? styles.stepActive : ""} ${isComplete ? styles.stepComplete : ""}`}
+                                aria-current={isActive ? "page" : undefined}
+                                disabled={isLocked}
+                                onClick={() => onStepChange(step)}
+                            >
+                                <span className={styles.stepCircle}>
+                                    {isLocked ? (
+                                        <LockKeyhole size={12} />
+                                    ) : (
+                                        String(step + 1).padStart(2, "0")
+                                    )}
+                                </span>
+                                <span className={styles.stepText}>{label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </nav>
+        );
+    }
+
+    return (
+        <nav className={styles.courseNavbar} aria-label="教材進度">
+            <div className={styles.navbarContainer}>
+                <div className={styles.brandSection}>
+                    {navigation.mainTitle}
+                </div>
                 <div className={styles.contentSection}>
                     <div className={styles.mainNavLinks}>
-                        {SectionTitles.SubTitle.map((title, index) => (
+                        {navigation.sectionTitles.map((title, index) => (
                             <span
-                                key={index}
+                                key={title}
                                 className={`${styles.navLink} ${activeTitles.includes(index) ? styles.navLinkActive : ""}`}
                             >
                                 {title}
                             </span>
                         ))}
                     </div>
-
-                    {/* Straight line */}
-                    <div className={styles.horizontalLine}></div>
-
+                    <div className={styles.horizontalLine} />
                     <div className={styles.subNavInfo}>
                         <div className={styles.currentSubtitle}>
                             {secondaryTitle}
                         </div>
-                        {/* number of pages */}
                         <div className={styles.pageProgress}>
-                            {[0, 1, 2].map((step) => {
+                            {stepLabels.map((_, step) => {
                                 const isActive = activeStep === step;
                                 const isLocked = step > highestUnlockedStep;
                                 const pageNumber = String(step + 1).padStart(
                                     2,
                                     "0"
                                 );
-                                const previousPageNumber = String(
-                                    step
-                                ).padStart(2, "0");
-                                const lockedMessage = `第 ${pageNumber} 頁尚未解鎖，請先完成第 ${previousPageNumber} 頁`;
-
                                 return (
                                     <button
                                         key={step}
@@ -70,11 +103,8 @@ export default function Navbar({
                                         }
                                         aria-label={
                                             isLocked
-                                                ? lockedMessage
+                                                ? `第 ${pageNumber} 頁尚未解鎖`
                                                 : `前往第 ${pageNumber} 頁`
-                                        }
-                                        title={
-                                            isLocked ? lockedMessage : undefined
                                         }
                                         onClick={() => {
                                             if (!isLocked) onStepChange(step);

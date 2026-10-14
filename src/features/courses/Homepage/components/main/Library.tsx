@@ -1,35 +1,26 @@
+import { useNavigate } from "react-router";
+
+import type { Course, CurrentExperiment } from "../../../types";
 import CurrentTaskCard from "../CurrentTaskCard";
 import MaterialProgressCard, {
     type MaterialListItem,
 } from "../MaterialProgressCard";
 
-const todayMaterials: MaterialListItem[] = [
-    {
-        id: "cell-division",
-        title: "細胞分裂",
-        totalPages: 3,
-        completedPage: 3,
-        status: "done",
-    },
-    {
-        id: "pea-seed-coat-current",
-        title: "碗豆－種皮形狀",
-        totalPages: 3,
-        completedPage: 1,
-        status: "in_progress",
-    },
-    {
-        id: "pea-seed-coat-next",
-        title: "碗豆－種皮形狀",
-        totalPages: 3,
-        completedPage: 1,
-        status: "not_started",
-    },
-];
+type Props = {
+    experiment: CurrentExperiment;
+    courses: Course[];
+};
 
 // 左邊「進行中任務」卡片較寬、右邊「今日教材清單」較窄，
 // 不是等寬雙欄；用 flex-wrap 讓手機時自動疊成單欄
-export default function Library() {
+export default function Library({ experiment, courses }: Props) {
+    const navigate = useNavigate();
+    const materials: MaterialListItem[] = courses.map((course) => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+    }));
+
     return (
         <div
             style={{
@@ -42,14 +33,18 @@ export default function Library() {
         >
             <div style={{ flex: "2 1 480px" }}>
                 <CurrentTaskCard
-                    eyebrow="開始實驗任務"
-                    title="碗豆－種皮形狀"
-                    totalPages={3}
-                    completedPage={1}
+                    eyebrow="目前進行中的實驗"
+                    title={experiment.name}
+                    description={experiment.description}
+                    buttonLabel="瀏覽實驗教材"
+                    onContinue={() => navigate("/courses/library")}
                 />
             </div>
             <div style={{ flex: "1 1 320px", maxWidth: "527px" }}>
-                <MaterialProgressCard items={todayMaterials} />
+                <MaterialProgressCard
+                    items={materials}
+                    onOpen={(courseId) => navigate(`/course/${courseId}`)}
+                />
             </div>
         </div>
     );

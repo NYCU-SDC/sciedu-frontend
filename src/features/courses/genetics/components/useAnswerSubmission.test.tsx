@@ -53,6 +53,8 @@ const questions: SubmittableQuestion[] = [
 const submittedAnswerResponse = {
     id: "answer-1",
     questionId: choiceQuestion.id,
+    experimentId: "experiment-1",
+    userId: "user-1",
     selectedOptionId: "option-a",
     createdAt: "2026-08-26T00:00:00Z",
 };
@@ -89,6 +91,40 @@ describe("validateAnswer", () => {
 });
 
 describe("useAnswerSubmission", () => {
+    it("skips empty optional answers without posting or blocking navigation", async () => {
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions: [{ ...questions[0], required: false }],
+                answers: { [choiceQuestion.id]: " " },
+                isCompleted: false,
+                onContinue,
+            })
+        );
+        await act(() => result.current.submit());
+        expect(submitAnswer).not.toHaveBeenCalled();
+        expect(onContinue).toHaveBeenCalledOnce();
+        expect(result.current.validationErrors).toEqual({});
+    });
+
+    it("validates nonempty optional answers", async () => {
+        const onContinue = vi.fn();
+        const { result } = renderHook(() =>
+            useAnswerSubmission({
+                questions: [{ ...questions[0], required: false }],
+                answers: { [choiceQuestion.id]: "invalid" },
+                isCompleted: false,
+                onContinue,
+            })
+        );
+        await act(() => result.current.submit());
+        expect(submitAnswer).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
+        expect(result.current.validationErrors[choiceQuestion.id]).toBe(
+            "請選擇有效的選項"
+        );
+    });
+
     it("does not submit until all required answers are valid", async () => {
         const onContinue = vi.fn();
         const { result } = renderHook(() =>
@@ -159,10 +195,14 @@ describe("useAnswerSubmission", () => {
             [textQuestion.id, "TEXT", "因為等位基因分離"],
         ]);
         expect(onSubmitted).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).toHaveBeenCalledWith([
+            submittedAnswerResponse,
+            expect.objectContaining({ questionId: textQuestion.id }),
+        ]);
         expect(onContinue).toHaveBeenCalledTimes(1);
     });
 
-    it("continues without recording a submission when every answer already exists", async () => {
+    it("keeps unknown duplicate submissions incomplete", async () => {
         vi.mocked(submitAnswer).mockRejectedValue(
             new ApiError("answer already exists", 409)
         );
@@ -183,15 +223,13 @@ describe("useAnswerSubmission", () => {
 
         await act(() => result.current.submit());
 
-        expect(result.current.submissionError).toBeNull();
-        expect(result.current.submittedQuestionIds).toEqual(
-            new Set([choiceQuestion.id, textQuestion.id])
-        );
+        expect(result.current.submissionError).toContain("無法確認");
+        expect(result.current.submittedQuestionIds).toEqual(new Set());
         expect(onSubmitted).not.toHaveBeenCalled();
-        expect(onContinue).toHaveBeenCalledTimes(1);
+        expect(onContinue).not.toHaveBeenCalled();
     });
 
-    it("completes a mixed new and duplicate submission", async () => {
+    it("retains known successes but does not complete a mixed duplicate submission", async () => {
         vi.mocked(submitAnswer)
             .mockResolvedValueOnce(submittedAnswerResponse)
             .mockRejectedValueOnce(new ApiError("answer already exists", 409));
@@ -212,12 +250,12 @@ describe("useAnswerSubmission", () => {
 
         await act(() => result.current.submit());
 
-        expect(result.current.submissionError).toBeNull();
+        expect(result.current.submissionError).toContain("無法確認");
         expect(result.current.submittedQuestionIds).toEqual(
-            new Set([choiceQuestion.id, textQuestion.id])
+            new Set([choiceQuestion.id])
         );
-        expect(onSubmitted).toHaveBeenCalledTimes(1);
-        expect(onContinue).toHaveBeenCalledTimes(1);
+        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onContinue).not.toHaveBeenCalled();
     });
 
     it("prevents duplicate requests while a submission is in progress", async () => {

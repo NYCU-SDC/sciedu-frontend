@@ -31,9 +31,32 @@ export type AnswerSubmissionRequest =
 export type SubmittedAnswerResponse = {
     id: string;
     questionId: string;
+    experimentId: string;
+    userId: string;
     selectedOptionId?: string;
     textAnswer?: string;
     createdAt: string;
+};
+
+export type AnswerResultStatus = "PENDING" | "GRADED" | "FAILED";
+
+export type AnswerGradingMethod = "DETERMINISTIC" | "MANUAL" | "LLM";
+
+export type AnswerResultResponse = {
+    answerId: string;
+    questionId: string;
+    status: AnswerResultStatus;
+    method?: AnswerGradingMethod;
+    resultVisible: boolean;
+    isCorrect?: boolean;
+    gradedAt?: string;
+};
+
+export type AnswerReviewState = {
+    result?: AnswerResultResponse;
+    isLoading: boolean;
+    isError: boolean;
+    isUnavailable?: boolean;
 };
 
 export type CourseAnswer = string;
@@ -43,7 +66,7 @@ export type CourseAnswers = Record<string, CourseAnswer>;
 export type MaterialType = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
         questionSections: MaterialQuestionSection[];
     };
@@ -52,12 +75,13 @@ export type MaterialType = {
 export type MaterialPage = {
     type: "material";
     content: {
-        imageId: string;
+        imageIds: string[];
         descriptionId: string;
     };
     questionSections: {
         titleId: string;
         questionId: string;
+        required?: boolean;
     }[];
 };
 
@@ -92,10 +116,12 @@ export type QuestionsType = {
 export type QuestionPage = {
     type: "questions";
     columns: {
-        labelId: string;
+        labelId?: string;
+        labelIds?: string[];
         questions: {
-            titleId: string;
+            titleId?: string;
             questionId: string;
+            required?: boolean;
         }[];
     }[];
 };
@@ -116,3 +142,31 @@ export type CoursePageRequest = {
     activeNavbarTitles: number[];
     secondaryTitle: string;
 };
+
+export type CourseNavigation =
+    | {
+          variant: "classic";
+          mainTitle: string;
+          sectionTitles: string[];
+      }
+    | {
+          variant: "stepper";
+          mainTitle: string;
+      };
+
+export type CourseDefinition = {
+    id: string;
+    code: string;
+    title: string;
+    pages: CoursePageRequest[];
+    navigation: CourseNavigation;
+};
+
+export type CourseQuestionReview = {
+    isCorrect: boolean;
+    studentAnswer: string;
+    correctAnswer: string;
+    explanation: string;
+};
+
+export type CourseReviews = Record<string, AnswerReviewState>;

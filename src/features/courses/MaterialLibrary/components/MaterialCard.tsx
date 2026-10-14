@@ -1,47 +1,15 @@
 import { ArrowRight } from "lucide-react";
 import { Button, Card, Text, Title } from "@mantine/core";
 
-export type MaterialStatus = "done" | "in_progress" | "not_started";
-
-const statusLabel: Record<MaterialStatus, string> = {
-    done: "已完成",
-    in_progress: "未完成",
-    not_started: "未完成",
-};
-
-const statusColor: Record<MaterialStatus, string> = {
-    done: "#00856e",
-    in_progress: "#925800",
-    not_started: "#925800",
-};
-
-function getMetaText(
-    status: MaterialStatus,
-    totalPages: number,
-    completedPage: number
-) {
-    if (status === "done") {
-        return `共 ${totalPages} 頁．已全部完成`;
-    }
-    if (status === "in_progress") {
-        return `共 ${totalPages} 頁．已完成第 ${completedPage} 頁`;
-    }
-    return `共 ${totalPages} 頁．尚未開始`;
-}
-
 type Props = {
     title: string;
-    totalPages: number;
-    completedPage: number;
-    status: MaterialStatus;
+    description?: string;
     onContinue?: () => void;
 };
 
 export default function MaterialCard({
     title,
-    totalPages,
-    completedPage,
-    status,
+    description,
     onContinue,
 }: Props) {
     return (
@@ -60,14 +28,14 @@ export default function MaterialCard({
                 boxShadow: "0px 16px 40px rgba(44, 79, 71, 0.08)",
             }}
         >
-            <Text fz="14px" lh="19px" fw={400} c={statusColor[status]}>
-                {statusLabel[status]}
+            <Text fz="14px" lh="19px" fw={400} c="#00856e">
+                已發布
             </Text>
             <Title order={3} fz="32px" lh="43px" fw={700} c="#000000">
                 {title}
             </Title>
             <Text fz="14px" lh="19px" c="var(--color-neutral-600)">
-                {getMetaText(status, totalPages, completedPage)}
+                {description || "開啟教材開始學習"}
             </Text>
             <Button
                 radius="16px"
@@ -94,7 +62,7 @@ export default function MaterialCard({
                     },
                 }}
             >
-                繼續目前任務
+                開啟教材
             </Button>
         </Card>
     );

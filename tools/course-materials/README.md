@@ -48,20 +48,47 @@ python3 tools/course-materials/publish.py
 python3 -m unittest tools/course-materials/test_publish.py
 ```
 
-When an authenticated SciEdu backend is available, upload through its API:
+Upload against a backend that implements creation `Idempotency-Key` support
+for courses, pages, TEXT, MEDIA, questions and PageBlocks (migration 23).
+The uploader checks the echoed key on each successful creation response;
+older backends are refused. Preview remains network-free.
 
 ```bash
-python3 tools/course-materials/publish.py --publish --api-base https://YOUR-DEV-BACKEND
+# Pick and retain one UUID for this batch. Reuse it on every restart.
+python3 tools/course-materials/publish.py --publish \
+  --api-base http://localhost:58081 \
+  --upload-id 8a8a4496-ea9c-4c66-a60a-c5cbad0f2011 \
+  --state /private/path/sciedu-c2-upload.json
 ```
 
-The command prompts for an authenticated `Cookie` header, so it is not exposed
-in shell history or saved in the repo. Use an EXPERIMENTER or ADMIN session.
-It creates both courses as **DRAFT**; it does not assign them to an experiment
-or publish them to students. Returned UUIDs are checkpointed in ignored
-`.data/upload-state.json`, and rerunning the same command verifies and reuses
-the resources. Use `--state /private/path/state.json` for a different backend.
-Do not delete the checkpoint mid-upload: the APIs do not provide a transaction
-across all resources, so a rerun without it could duplicate content.
+The command prompts for an EXPERIMENTER or ADMIN Cookie header. Cookies remain
+in memory, including refreshed cookies; they are never written to the state or
+command history. API redirects are refused to avoid forwarding credentials.
+The tool uses `fcntl` file locking and runs on macOS/Linux with Python 3.9+.
+
+The version-2 checkpoint binds the API origin, authenticated user ID, upload ID
+and full material/image fingerprint. It records each operation's deterministic
+UUID key and pending state **before** making a request, then records the returned
+resource ID only after reading it back and checking its content. File writes
+are atomic and synced. A second process cannot use the same state file.
+
+A timeout, lost response, 401 or interrupted process stops the run. Resolve the
+error, renew the session if necessary, and rerun with the **same upload ID and
+state**. Completed items are read and verified, and pending items replay the
+same key. If the state is lost, the same upload ID and unchanged source batch
+can recover IDs through backend replay. Backend keys do not expire. Different
+payloads or deleted resources return 409; they are not treated as success.
+
+Legacy checkpoints and mismatched origins/users/upload IDs/materials are
+rejected before writes. Do not discard a legacy checkpoint and start a new
+upload against existing partial data: review those resources explicitly first.
+Do not generate a new upload ID to work around a conflict. A new backend or
+account requires a separately reviewed upload and state file.
+
+The tool only creates/completes DRAFT courses. It verifies course status on
+resume and before child mutations, stops for PUBLISHED/ARCHIVED courses, and
+never publishes or assigns courses. Source labels use `sourceNumber`, including
+the original repeated BCI number 3; identities use course/page/question position.
 
 This importer stores each third-slide description in a separate TEXT content
 resource and a `displayOrder: 200` PageBlock. The Course Player intentionally

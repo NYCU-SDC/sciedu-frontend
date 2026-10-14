@@ -190,7 +190,7 @@ export function useAnswerSubmission({
                 return;
             }
 
-            toast.success("答案已成功送出");
+            toast.success("答案已成功送出", { position: "top-right" });
             if (submittedAnswersRef.current.length > 0) {
                 onSubmitted?.([...submittedAnswersRef.current]);
             }

@@ -149,6 +149,25 @@ class PublishTests(unittest.TestCase):
         with self.publisher() as p:
             with self.assertRaisesRegex(ValueError,"differs"): p.publish(self.course)
         self.assertEqual(len(self.api.posts),count)
+    def test_http_failures_stop_with_pending_keys_and_renewed_session_can_resume(self):
+        for code in (400, 401, 403, 409):
+            with self.subTest(code=code):
+                self.api=FakeAPI()
+                self.state=Path(self.tmp.name)/f"http-{code}.json"
+                def fail(path,key): raise RuntimeError(f"HTTP {code}")
+                self.api.before_request=fail
+                with self.publisher() as p:
+                    with self.assertRaisesRegex(RuntimeError,f"HTTP {code}"): p.publish(self.course)
+                items=json.loads(self.state.read_text())["items"]
+                self.assertEqual(len(items),1)
+                self.assertEqual(next(iter(items.values()))["status"],"pending")
+                self.assertEqual(self.api.posts,[])
+                if code==401:
+                    pending_key=next(iter(items.values()))["key"]
+                    self.api.before_request=None
+                    with self.publisher() as p: p.publish(self.course)
+                    self.assertEqual(next(iter(json.loads(self.state.read_text())["items"].values()))["key"],pending_key)
+
     def test_rejects_unsafe_origin_and_zero_upload_id(self):
         for base in ["https://user:pass@example.test", "https://example.test/api", "https://example.test/?secret=x"]:
             with self.assertRaises(ValueError): publish.normalize_base(base)

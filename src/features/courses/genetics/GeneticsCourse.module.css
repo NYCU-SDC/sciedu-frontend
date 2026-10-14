@@ -131,3 +131,35 @@
         background-color: transparent;
     }
 }
+
+@media (max-width: 63.999rem) {
+    .responsiveMaterial {
+        height: 100dvh;
+        overflow-y: auto;
+    }
+
+    .responsiveMaterial .mobileBlocker {
+        display: none;
+    }
+
+    .responsiveMaterial .courseWrapper,
+    .responsiveMaterial .pageSlot:not([hidden]) {
+        flex: none;
+        overflow: visible;
+    }
+
+    .responsiveMaterial nav {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 1rem;
+    }
+
+    .responsiveMaterial nav > div:first-child {
+        flex-basis: 100%;
+    }
+
+    .responsiveMaterial nav > div {
+        min-width: 0;
+        max-width: 100%;
+    }
+}

@@ -150,6 +150,12 @@ export default function CoursePlayer({
     const startedAtRef = useRef(
         restored?.startedAt ?? new Date().toISOString()
     );
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (containerRef.current) containerRef.current.scrollTop = 0;
+    }, [currentIndex]);
+
     const queryClient = useQueryClient();
     const posthog = usePostHog();
     const navigate = useNavigate();
@@ -265,7 +271,8 @@ export default function CoursePlayer({
 
     return (
         <div
-            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
+            ref={containerRef}
+            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""} ${currentPage.request.type === "material" ? styles.responsiveMaterial : ""}`}
         >
             <div className={styles.mobileBlocker}>
                 <div className={styles.blockerIcon}>

@@ -2,15 +2,18 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { usePostHog } from "@posthog/react";
 import { toast } from "sonner";
+import { ApiError } from "../../../shared/utils/api";
+import { useAuth } from "../../../shared/auth";
 import ChatRecovery from "../components/ChatRecovery";
 import useChat from "../services/useChat";
 import Thread from "../components/Thread";
 import Composer from "../components/Composer";
 import styles from "./ChatConversationPage.module.css";
 
-export default function ChatConversationPage() {
+function Conversation() {
     const { chatID = "" } = useParams<{ chatID: string }>();
-    const chat = useChat(chatID);
+    const { session } = useAuth();
+    const chat = useChat(chatID, session?.email);
     const posthog = usePostHog();
 
     const [draft, setDraft] = useState("");
@@ -96,6 +99,8 @@ export default function ChatConversationPage() {
                         onSubmit={handleSend}
                         busy={chat.status === "streaming"}
                         disabled={
+                            (chat.error instanceof ApiError &&
+                                [401, 404].includes(chat.error.status)) ||
                             chat.status === "loading" ||
                             Boolean(chat.recoveryMessage)
                         }
@@ -108,4 +113,11 @@ export default function ChatConversationPage() {
             </div>
         </div>
     );
+}
+
+// A route/account change owns a fresh editor and subscription lifecycle.
+export default function ChatConversationPage() {
+    const { chatID = "" } = useParams<{ chatID: string }>();
+    const { session } = useAuth();
+    return <Conversation key={`${session?.email ?? ""}:${chatID}`} />;
 }

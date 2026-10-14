@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "../../../shared/auth";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import { useChatMessages } from "../services/useChatMessages";
@@ -17,6 +18,7 @@ const MOBILE_QUERY = "(max-width: 53.75rem)";
 
 export default function ChatLayout({ basePath = "" }: { basePath?: string }) {
     const navigate = useNavigate();
+    const { session } = useAuth();
     const queryClient = useQueryClient();
     const { chatID } = useParams<{ chatID: string }>();
 
@@ -40,7 +42,7 @@ export default function ChatLayout({ basePath = "" }: { basePath?: string }) {
     }, []);
 
     // The title for the top bar / document: read from the shared chat cache.
-    const { data: chat } = useChatMessages(chatID ?? "");
+    const { data: chat } = useChatMessages(chatID ?? "", session?.email);
     const title = chatID ? (chat?.title ?? "對話") : "新對話";
     useDocumentTitle(title);
 

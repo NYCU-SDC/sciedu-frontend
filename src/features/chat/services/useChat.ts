@@ -8,7 +8,8 @@ import type {
 import { useQueryClient } from "@tanstack/react-query";
 import { chatQueryKey } from "./useChatMessages";
 import type { GetChatResponse } from "../types/chat";
-import { createMessage } from "../../../shared/network/chat";
+import { ApiError } from "../../../shared/utils/api";
+import { createMessage, getChat } from "../../../shared/network/chat";
 import { useBranchSelection } from "./useBranchSelection";
 import { useChatMessages } from "./useChatMessages";
 import { useMessageStream } from "./useMessageStream";
@@ -41,7 +42,7 @@ export type UseChatResult = {
     // Stream lifecycle.
     streamingMessageId: string | null;
     recoveryMessage: string | null;
-    reloadResult: () => void;
+    reloadResult: () => Promise<boolean>;
     abort: () => void;
 };
 
@@ -56,10 +57,11 @@ export type UseChatResult = {
  * streaming message id from its two origins (a just-sent reply and a message
  * already streaming on load) into one field.
  */
-export function useChat(chatID: string): UseChatResult {
-    const query = useChatMessages(chatID);
+export function useChat(chatID: string, account?: string): UseChatResult {
+    const query = useChatMessages(chatID, account);
     const client = useQueryClient();
     const sendingRef = useRef(false);
+    const [uncertain, setUncertain] = useState(false);
     const [sending, setSending] = useState(false);
     const [sendError, setSendError] = useState<Error | null>(null);
     const [attempt, setAttempt] = useState(0);
@@ -85,10 +87,13 @@ export function useChat(chatID: string): UseChatResult {
     const { state: stream, abort: abortStream } = useMessageStream(
         streamingMessageId,
         chatID,
-        attempt
+        attempt,
+        account
     );
     const currentStream =
+        stream?.messageID === streamingMessageId &&
         stream?.chatID === chatID &&
+        stream.account === account &&
         visible.some((m) => m.id === stream.messageID)
             ? stream
             : null;
@@ -130,24 +135,42 @@ export function useChat(chatID: string): UseChatResult {
     );
     const failedHistoryID =
         visible.at(-1)?.status === "failed" ? visible.at(-1)!.id : null;
-    const recoveryMessage = currentStream?.paused
-        ? "已停止接收，後端可能仍在產生回覆。"
-        : (currentStream?.snapshot.error ??
-          (failedHistoryID
-              ? "上次回覆未完成，請重新載入結果或重新生成。"
-              : null));
-    const reloadResult = useCallback(() => {
-        const target = currentStream?.messageID ?? failedHistoryID;
-        if (target) setSentReply({ chatID, id: target });
-        setSendError(null);
-        setAttempt((value) => value + 1);
-        void query.refetch();
-    }, [query, currentStream, chatID, failedHistoryID]);
+    const recoveryMessage = uncertain
+        ? "無法確認訊息是否已送出，請先重新載入結果。"
+        : currentStream?.paused
+          ? "已停止接收，後端可能仍在產生回覆。"
+          : (currentStream?.snapshot.error ??
+            (failedHistoryID
+                ? "上次回覆未完成，請重新載入結果或重新生成。"
+                : null));
+    const reloadResult = useCallback(async () => {
+        if (!chatID) return false;
+        abortStream();
+        try {
+            const incoming = await getChat(chatID);
+            client.setQueryData(chatQueryKey(chatID, account), incoming);
+            const target = incoming.messages.find(
+                (m) =>
+                    m.id === currentStream?.messageID &&
+                    m.status === "streaming"
+            )?.id;
+            setSentReply(target ? { chatID, id: target } : null);
+            setSendError(null);
+            setUncertain(false);
+            setAttempt((value) => value + 1);
+            return true;
+        } catch (error) {
+            setSendError(
+                error instanceof Error ? error : new Error("無法重新載入結果")
+            );
+            return false;
+        }
+    }, [abortStream, currentStream, chatID, account, client]);
 
     const sendMessage = useCallback(
         async (input: SendMessageInput) => {
             const trimmed = input.content.trim();
-            if (!trimmed || sendingRef.current) return;
+            if (!trimmed || sendingRef.current || uncertain) return;
             sendingRef.current = true;
             setSending(true);
             setSendError(null);
@@ -169,7 +192,7 @@ export function useChat(chatID: string): UseChatResult {
                 // Pin the freshly created sibling so it is the visible branch.
                 selectBranch(message.previousID, message.id);
                 client.setQueryData<GetChatResponse>(
-                    chatQueryKey(chatID),
+                    chatQueryKey(chatID, account),
                     (previous) =>
                         previous
                             ? {
@@ -192,6 +215,8 @@ export function useChat(chatID: string): UseChatResult {
                 setSentReply({ chatID, id: replyMessageID });
                 await query.refetch();
             } catch (error) {
+                if (!(error instanceof ApiError) || error.status >= 500)
+                    setUncertain(true);
                 setSendError(
                     error instanceof Error ? error : new Error("傳送失敗")
                 );
@@ -201,7 +226,7 @@ export function useChat(chatID: string): UseChatResult {
                 setSending(false);
             }
         },
-        [chatID, visible, selectBranch, query, client]
+        [chatID, visible, selectBranch, query, client, account, uncertain]
     );
 
     const resend = useCallback(
@@ -254,7 +279,15 @@ export function useChat(chatID: string): UseChatResult {
         chat,
         messages,
         status,
-        error: sendError ?? query.error,
+        error:
+            sendError ??
+            query.error ??
+            (currentStream?.snapshot.httpStatus
+                ? new ApiError(
+                      currentStream.snapshot.error ?? "無法接收回覆",
+                      currentStream.snapshot.httpStatus
+                  )
+                : null),
         sendMessage,
         resend,
         editAndSend,

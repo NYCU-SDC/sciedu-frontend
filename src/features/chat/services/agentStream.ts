@@ -7,6 +7,7 @@ export type AgentSnapshot = {
     activeAgents: string[];
     phase: "streaming" | "done" | "failed";
     error?: string;
+    httpStatus?: number;
 };
 export const initialSnapshot = (): AgentSnapshot => ({
     content: "",

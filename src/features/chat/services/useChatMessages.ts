@@ -1,10 +1,13 @@
+import { ApiError } from "../../../shared/utils/api";
 import type { GetChatResponse } from "../types/chat";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getChat } from "../../../shared/network/chat";
 
 /** Query key for a single chat's full payload (chat + messages). */
-export function chatQueryKey(chatID: string) {
-    return ["chat", chatID] as const;
+export function chatQueryKey(chatID: string, account?: string) {
+    return account
+        ? (["chat", account, chatID] as const)
+        : (["chat", chatID] as const);
 }
 
 /**
@@ -13,18 +16,21 @@ export function chatQueryKey(chatID: string) {
  * reconcile. Resume-on-load is a derivation off the result, not extra state:
  * `data?.messages.find(m => m.status === "streaming")`.
  */
-export function useChatMessages(chatID: string) {
+export function useChatMessages(chatID: string, account?: string) {
     const client = useQueryClient();
     return useQuery({
-        queryKey: chatQueryKey(chatID),
+        queryKey: chatQueryKey(chatID, account),
         queryFn: async () => {
             const incoming = await getChat(chatID);
             const previous = client.getQueryData<GetChatResponse>(
-                chatQueryKey(chatID)
+                chatQueryKey(chatID, account)
             );
             return reconcileChat(incoming, previous);
         },
         enabled: Boolean(chatID),
+        retry: (count, error) =>
+            !(error instanceof ApiError && [401, 404].includes(error.status)) &&
+            count < 1,
     });
 }
 
@@ -46,6 +52,7 @@ export function reconcileChat(
                 old.content.length > message.content.length
             )
                 return { ...old, status: message.status };
+            if (message.status !== "streaming") return message;
             return {
                 ...message,
                 characters: message.characters ?? old.characters,

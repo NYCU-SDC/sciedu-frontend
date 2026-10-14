@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useChat } from "./useChat";
+import { ApiError } from "../../../shared/utils/api";
 import { reconcileChat } from "./useChatMessages";
 import {
     getChat,
@@ -104,7 +105,7 @@ describe("chat lifecycle", () => {
         expect(result.current.recoveryMessage).toContain("停止接收");
         expect(result.current.messages.at(-1)?.content).toBe("完整回覆");
         expect(openStream).toHaveBeenCalledTimes(1);
-        act(() => result.current.reloadResult());
+        await act(() => result.current.reloadResult());
         await waitFor(() => expect(openStream).toHaveBeenCalledTimes(2));
         act(() => {
             handlers.onEvent({ type: "part_end", index: 0, part });
@@ -163,16 +164,12 @@ describe("chat lifecycle", () => {
             expect(result.current.recoveryMessage).toContain("上次回覆未完成")
         );
         expect(openStream).not.toHaveBeenCalled();
-        act(() => result.current.reloadResult());
-        await waitFor(() =>
-            expect(openStream).toHaveBeenCalledWith(
-                "chat-reply",
-                expect.any(Object)
-            )
-        );
+        await act(() => result.current.reloadResult());
+        await waitFor(() => expect(getChat).toHaveBeenCalledTimes(2));
+        expect(openStream).not.toHaveBeenCalled();
         expect(createMessage).not.toHaveBeenCalled();
     });
-    it("retains cast metadata while accepting a richer canonical history snapshot", () => {
+    it("does not mask missing metadata in a completed canonical snapshot", () => {
         const old = data();
         old.messages[1].characters = [
             { id: "teacher", displayName: "老師", role: "引導" },
@@ -182,8 +179,48 @@ describe("chat lifecycle", () => {
         incoming.messages[1].parts = [part];
         expect(reconcileChat(incoming, old).messages[1]).toMatchObject({
             parts: [part],
-            characters: old.messages[1].characters,
             status: "completed",
         });
+        expect(
+            reconcileChat(incoming, old).messages[1].characters
+        ).toBeUndefined();
     });
+});
+
+it("a lost send response is recovered by GET and never automatically posted again", async () => {
+    const completed = data();
+    completed.messages[1].status = "completed";
+    vi.mocked(getChat).mockResolvedValue(completed);
+    vi.mocked(createMessage).mockRejectedValue(new TypeError("response lost"));
+    const { result } = renderHook(() => useChat("chat"), { wrapper });
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+    await act(async () => {
+        await expect(
+            result.current.sendMessage({ content: "new" })
+        ).rejects.toThrow("response lost");
+    });
+    expect(result.current.recoveryMessage).toContain("無法確認");
+    await act(() => result.current.reloadResult());
+    expect(createMessage).toHaveBeenCalledTimes(1);
+    expect(openStream).not.toHaveBeenCalled();
+    expect(result.current.recoveryMessage).toBeNull();
+});
+it("SSE unauthorized errors retain a typed status for the login entry", async () => {
+    const { result } = renderHook(() => useChat("chat"), { wrapper });
+    await waitFor(() => expect(openStream).toHaveBeenCalledTimes(1));
+    act(() => handlers.onEnded(new ApiError("登入已過期", 401)));
+    expect(result.current.error).toMatchObject({ status: 401 });
+});
+it("switching account uses a separate query and never renders the old account's cached messages", async () => {
+    const { result, rerender } = renderHook(
+        ({ account }) => useChat("chat", account),
+        { wrapper, initialProps: { account: "a@example.test" } }
+    );
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+    vi.mocked(getChat).mockRejectedValue(new ApiError("not found", 404));
+    rerender({ account: "b@example.test" });
+    await waitFor(() =>
+        expect(result.current.error).toMatchObject({ status: 404 })
+    );
+    expect(result.current.messages).toHaveLength(0);
 });

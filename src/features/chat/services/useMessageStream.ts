@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ApiError } from "../../../shared/utils/api";
 import { useQueryClient } from "@tanstack/react-query";
 import {
     openStream,
     CHAT_HISTORY_QUERY_KEY,
+    getChat,
 } from "../../../shared/network/chat";
 import type { GetChatResponse } from "../types/chat";
-import { chatQueryKey } from "./useChatMessages";
+import { chatQueryKey, reconcileChat } from "./useChatMessages";
 import {
     initialSnapshot,
     reduceEvent,
@@ -13,6 +15,7 @@ import {
 } from "./agentStream";
 
 export type StreamState = {
+    account?: string;
     chatID: string;
     messageID: string;
     snapshot: AgentSnapshot;
@@ -21,7 +24,8 @@ export type StreamState = {
 export function useMessageStream(
     messageID: string | null,
     chatID: string,
-    attempt: number
+    attempt: number,
+    account?: string
 ) {
     const [state, setState] = useState<StreamState>(null);
     const client = useQueryClient();
@@ -31,10 +35,11 @@ export function useMessageStream(
         let snapshot = initialSnapshot();
         let live = true;
         let settled = false;
-        const publish = () => setState({ chatID, messageID, snapshot });
+        const publish = () =>
+            setState({ chatID, messageID, snapshot, account });
         const cache = () =>
             client.setQueryData<GetChatResponse>(
-                chatQueryKey(chatID),
+                chatQueryKey(chatID, account),
                 (previous) =>
                     previous
                         ? {
@@ -65,7 +70,32 @@ export function useMessageStream(
             );
         const reconcile = () => {
             cache();
-            void client.invalidateQueries({ queryKey: chatQueryKey(chatID) });
+            // Terminal events can precede DB persistence. Poll a bounded number of
+            // times; fresh canonical snapshots supply run IDs rather than cache fallback.
+            void (async () => {
+                for (const delay of [0, 150, 400, 1000, 2000]) {
+                    if (delay)
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, delay)
+                        );
+                    if (!live) return;
+                    try {
+                        const incoming = await getChat(chatID);
+                        if (!live) return;
+                        client.setQueryData<GetChatResponse>(
+                            chatQueryKey(chatID, account),
+                            (previous) => reconcileChat(incoming, previous)
+                        );
+                        if (
+                            incoming.messages.find((m) => m.id === messageID)
+                                ?.status !== "streaming"
+                        )
+                            return;
+                    } catch {
+                        return;
+                    }
+                }
+            })();
             void client.invalidateQueries({ queryKey: CHAT_HISTORY_QUERY_KEY });
         };
         publish();
@@ -96,6 +126,8 @@ export function useMessageStream(
                     phase: "failed",
                     activeAgents: [],
                     error: error.message,
+                    httpStatus:
+                        error instanceof ApiError ? error.status : undefined,
                 };
                 publish();
                 reconcile();
@@ -106,6 +138,7 @@ export function useMessageStream(
             close();
             setState({
                 chatID,
+                account,
                 messageID,
                 snapshot: { ...snapshot, activeAgents: [] },
                 paused: true,
@@ -117,7 +150,7 @@ export function useMessageStream(
             close();
             pauseRef.current = null;
         };
-    }, [messageID, chatID, attempt, client]);
+    }, [messageID, chatID, attempt, client, account]);
     const abort = useCallback(() => pauseRef.current?.(), []);
     return { state, abort };
 }

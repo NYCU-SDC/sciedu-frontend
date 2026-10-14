@@ -139,7 +139,9 @@ function UserEditor({
                 onKeyDown={(event) => {
                     if (
                         event.key === "Enter" &&
-                        (event.metaKey || event.ctrlKey)
+                        (event.metaKey || event.ctrlKey) &&
+                        !event.nativeEvent.isComposing &&
+                        event.nativeEvent.keyCode !== 229
                     ) {
                         event.preventDefault();
                         if (canSubmit) onSubmitEdit();

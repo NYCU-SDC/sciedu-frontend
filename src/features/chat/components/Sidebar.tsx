@@ -79,7 +79,7 @@ export default function Sidebar({
         isLoading,
         isError,
     } = useInfiniteQuery({
-        queryKey: CHAT_HISTORY_QUERY_KEY,
+        queryKey: [...CHAT_HISTORY_QUERY_KEY, session?.email ?? ""],
         initialPageParam: 1,
         queryFn: ({ pageParam }) => listChats(pageParam, PAGE_SIZE),
         getNextPageParam: (lastPage) =>

@@ -181,6 +181,15 @@ export default function GeneticsCourse() {
             <CoursePlayer
                 key={`${session?.email}-${experimentId}-${courseId}-${reviewMode}`}
                 definition={definition}
+                chatScope={
+                    session?.email
+                        ? {
+                              account: session.email,
+                              experimentId,
+                              courseId: definition.id,
+                          }
+                        : undefined
+                }
                 onComplete={complete}
                 reviewMode={reviewMode}
                 initialAnswers={attempt?.answersByPage}

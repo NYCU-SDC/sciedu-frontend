@@ -9,7 +9,7 @@
         "typecheck": "tsc -b",
         "lint": "eslint .",
         "format": "prettier . --check",
-        "test": "VITE_APP_MODE=dev vitest run",
+        "test": "VITE_APP_MODE=dev VITE_CHAT_MODE=real vitest run",
         "preview": "vite preview"
     },
     "dependencies": {

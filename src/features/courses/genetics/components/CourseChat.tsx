@@ -1,3 +1,4 @@
+import { ApiError } from "../../../../shared/utils/api";
 import { Sparkles, RefreshCcw } from "lucide-react";
 import ChatRecovery from "../../../chat/components/ChatRecovery";
 import Thread from "../../../chat/components/Thread";
@@ -12,6 +13,9 @@ type Props = {
 export default function CourseChat({ controller }: Props) {
     const {
         chat,
+        title,
+        handleRecover,
+        startupUncertain,
         messages,
         busy,
         creating,
@@ -34,7 +38,7 @@ export default function CourseChat({ controller }: Props) {
             <header className={styles.header}>
                 <div className={styles.chatTitle}>
                     <Sparkles className={styles.icon} />
-                    <div className={styles.title}>基因性狀討論</div>
+                    <div className={styles.title}>{title}</div>
                 </div>
                 <button
                     type="button"
@@ -84,7 +88,12 @@ export default function CourseChat({ controller }: Props) {
                 </>
             )}
 
-            <ChatRecovery chat={chat} />
+            <ChatRecovery
+                chat={chat}
+                onReload={handleRecover}
+                onRestart={handleRefresh}
+                extraError={errorMessage}
+            />
             <div className={styles.dock}>
                 <Composer
                     value={draft}
@@ -93,6 +102,9 @@ export default function CourseChat({ controller }: Props) {
                     busy={chat.status === "streaming"}
                     onStop={chat.abort}
                     disabled={
+                        (chat.error instanceof ApiError &&
+                            [401, 404].includes(chat.error.status)) ||
+                        startupUncertain ||
                         creating ||
                         chat.status === "loading" ||
                         Boolean(chat.recoveryMessage)

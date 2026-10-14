@@ -2,14 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { ApiError } from "../../../../shared/utils/api";
+import {
+    readCourseChat,
+    saveCourseChat,
+    type CourseChatScope,
+} from "../../../../shared/auth/courseChatStorage";
 import useChat from "../../../chat/services/useChat";
 import { startChat } from "../../../chat/services/startChat";
 import { CHAT_HISTORY_QUERY_KEY } from "../../../../shared/network/chat";
 
-export function useCourseChatController() {
+export function useCourseChatController(
+    scope?: CourseChatScope,
+    title = "教材討論",
+    active = true
+) {
     const queryClient = useQueryClient();
-    const [chatID, setChatID] = useState<string | null>(null);
-    const chat = useChat(chatID ?? "");
+    const [chatID, setChatID] = useState<string | null>(() =>
+        readCourseChat(scope)
+    );
+    const chat = useChat(active ? (chatID ?? "") : "", scope?.account);
     const [draft, setDraft] = useState("");
     const [creating, setCreating] = useState(false);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(
@@ -18,6 +30,9 @@ export function useCourseChatController() {
     const [editingDraft, setEditingDraft] = useState("");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const chatGenerationRef = useRef(0);
+    const sendingRef = useRef(false);
+    const createdIdRef = useRef<string | null>(null);
+    const [startupUncertain, setStartupUncertain] = useState(false);
 
     useEffect(
         () => () => {
@@ -26,6 +41,20 @@ export function useCourseChatController() {
         []
     );
 
+    useEffect(() => {
+        if (chat.error instanceof ApiError && chat.error.status === 404) {
+            saveCourseChat(scope, null);
+            let current = true;
+            queueMicrotask(() => {
+                if (!current) return;
+                setChatID(null);
+                setErrorMessage("原對話已不存在，請重新開始對話。");
+            });
+            return () => {
+                current = false;
+            };
+        }
+    }, [chat.error, scope]);
     const messages = chat.messages;
     const baseMessages = messages;
     const busy =
@@ -33,7 +62,8 @@ export function useCourseChatController() {
 
     const handleSend = async (text: string) => {
         const trimmed = text.trim();
-        if (!trimmed || busy) return;
+        if (!trimmed || busy || sendingRef.current || startupUncertain) return;
+        sendingRef.current = true;
 
         setDraft("");
         setErrorMessage(null);
@@ -43,7 +73,20 @@ export function useCourseChatController() {
             setCreating(true);
 
             try {
-                const { chatID: newID } = await startChat(queryClient, trimmed);
+                const { chatID: newID } = await startChat(
+                    queryClient,
+                    trimmed,
+                    {
+                        account: scope?.account,
+                        onCreated: (id) => {
+                            if (generation !== chatGenerationRef.current)
+                                return;
+                            createdIdRef.current = id;
+                            saveCourseChat(scope, id);
+                            setChatID(id);
+                        },
+                    }
+                );
                 if (generation !== chatGenerationRef.current) return;
 
                 void queryClient.invalidateQueries({
@@ -55,10 +98,19 @@ export function useCourseChatController() {
 
                 const message =
                     error instanceof Error ? error.message : String(error);
-                setErrorMessage(message);
+                const unknown =
+                    createdIdRef.current &&
+                    (!(error instanceof ApiError) || error.status >= 500);
+                setStartupUncertain(Boolean(unknown));
+                setErrorMessage(
+                    unknown
+                        ? "無法確認首次訊息是否已送出，請先重新載入結果。"
+                        : message
+                );
                 setDraft(trimmed);
                 toast.error(`建立對話失敗: ${message}`);
             } finally {
+                sendingRef.current = false;
                 if (generation === chatGenerationRef.current) {
                     setCreating(false);
                 }
@@ -75,6 +127,8 @@ export function useCourseChatController() {
             setErrorMessage(message);
             setDraft(trimmed);
             toast.error(`傳送失敗: ${message}`);
+        } finally {
+            sendingRef.current = false;
         }
     };
 
@@ -122,7 +176,10 @@ export function useCourseChatController() {
     const handleRefresh = () => {
         chatGenerationRef.current += 1;
         chat.abort();
+        saveCourseChat(scope, null);
         setChatID(null);
+        createdIdRef.current = null;
+        setStartupUncertain(false);
         setCreating(false);
         setDraft("");
         setEditingMessageId(null);
@@ -130,7 +187,16 @@ export function useCourseChatController() {
         setErrorMessage(null);
     };
 
+    const handleRecover = async () => {
+        if (await chat.reloadResult()) {
+            setStartupUncertain(false);
+            setErrorMessage(null);
+        }
+    };
     return {
+        startupUncertain,
+        title,
+        handleRecover,
         chat,
         messages,
         busy,

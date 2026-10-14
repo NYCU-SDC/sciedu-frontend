@@ -2,6 +2,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { usePostHog } from "@posthog/react";
 
+import {
+    loginReturnTo,
+    clearLoginReturnTo,
+} from "../../../shared/auth/loginReturnTo";
 import { useAuth } from "../../../shared/auth";
 import { useDocumentTitle } from "../../../shared/hooks";
 import Logo from "../../../shared/components/Logo";
@@ -43,7 +47,9 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            navigate("/", { replace: true });
+            const destination = loginReturnTo();
+            clearLoginReturnTo();
+            navigate(destination, { replace: true });
         }
     }, [isAuthenticated, isLoading, navigate]);
 

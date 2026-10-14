@@ -1,3 +1,4 @@
+import { ApiError } from "../utils/api";
 import type { ChatEvent } from "../../features/chat/types/sse";
 import { parseEvent } from "../../features/chat/services/agentStream";
 export type OpenStreamHandlers = {
@@ -11,10 +12,11 @@ export async function readChatStream(
     signal: AbortSignal
 ) {
     if (!response.ok)
-        throw new Error(
+        throw new ApiError(
             response.status === 401
                 ? "登入已過期，請重新登入。"
-                : `無法接收回覆（HTTP ${response.status}）`
+                : `無法接收回覆（HTTP ${response.status}）`,
+            response.status
         );
     if (
         !response.headers.get("content-type")?.includes("text/event-stream") ||

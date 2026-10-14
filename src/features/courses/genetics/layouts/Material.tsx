@@ -178,21 +178,25 @@ export default function Material({
         <div className={styles.pageContainer}>
             <main className={styles.overviewContent}>
                 <section className={styles.courseSection}>
-                    <MaterialImageGallery imageIds={req.content.imageIds} />
-                    <div className={styles.courseDescriptionWrapper}>
-                        <ExpandButton
-                            label="展開教材文字"
-                            onClick={() => setDescriptionExpanded(true)}
-                        />
-                        <div className={styles.courseDescription}>
-                            {descriptionLoading ? (
-                                <Skeleton minHeight="4rem" />
-                            ) : descriptionError ? (
-                                <p className={styles.errorText}>內容載入失敗</p>
-                            ) : (
-                                <p>{description?.content}</p>
-                            )}
+                    <div className={styles.readingRow}>
+                        <div className={styles.courseDescriptionWrapper}>
+                            <ExpandButton
+                                label="展開教材文字"
+                                onClick={() => setDescriptionExpanded(true)}
+                            />
+                            <div className={styles.courseDescription}>
+                                {descriptionLoading ? (
+                                    <Skeleton minHeight="4rem" />
+                                ) : descriptionError ? (
+                                    <p className={styles.errorText}>
+                                        內容載入失敗
+                                    </p>
+                                ) : (
+                                    <p>{description?.content}</p>
+                                )}
+                            </div>
                         </div>
+                        <MaterialImageGallery imageIds={req.content.imageIds} />
                     </div>
                     <div className={styles.questionList}>
                         {req.questionSections.map((section, index) => {

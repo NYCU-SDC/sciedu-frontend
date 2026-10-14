@@ -99,6 +99,11 @@ export default function CoursePlayer({
     onComplete,
 }: CoursePlayerProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (containerRef.current) containerRef.current.scrollTop = 0;
+    }, [currentIndex]);
     const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
     const [completedQuestionPages, setCompletedQuestionPages] = useState(
         new Set<number>()
@@ -205,7 +210,8 @@ export default function CoursePlayer({
 
     return (
         <div
-            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""}`}
+            ref={containerRef}
+            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""} ${currentPage.request.type === "material" ? styles.responsiveMaterial : ""}`}
         >
             <div className={styles.mobileBlocker}>
                 <div className={styles.blockerIcon}>

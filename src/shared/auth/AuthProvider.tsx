@@ -7,6 +7,9 @@ import { usePostHog } from "@posthog/react";
 
 import { ApiError } from "../utils/api";
 import { AuthContext } from "./AuthContext";
+import { clearPlayerSessions } from "../../features/courses/player/playerSession";
+import { clearCourseChatStorage } from "./courseChatStorage";
+import { loginReturnTo } from "./loginReturnTo";
 import { clearCourseAttemptStorage } from "./courseAttemptStorage";
 import { getSession, refreshAuthToken, requestLogout } from "./requests";
 import type {
@@ -48,6 +51,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const logout = useCallback(async () => {
         clearCourseAttemptStorage();
         clearRefreshTimer();
+        clearCourseChatStorage();
+        clearPlayerSessions();
         posthog.capture("user_logged_out");
         posthog.reset();
         try {
@@ -110,7 +115,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const login = useCallback((provider: AuthProviderName) => {
         const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
-        const redirectUrl = encodeURIComponent(`${window.location.origin}/`);
+        const redirectUrl = encodeURIComponent(
+            `${window.location.origin}${loginReturnTo()}`
+        );
         const urlMap: Record<AuthProviderName, string> = {
             google: `${baseUrl}/api/login/oauth/google?r=${redirectUrl}`,
         };

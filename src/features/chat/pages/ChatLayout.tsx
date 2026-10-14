@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "../../../shared/auth";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import { useChatMessages } from "../services/useChatMessages";
@@ -15,8 +16,9 @@ import styles from "./ChatLayout.module.css";
 
 const MOBILE_QUERY = "(max-width: 53.75rem)";
 
-export default function ChatLayout() {
+export default function ChatLayout({ basePath = "" }: { basePath?: string }) {
     const navigate = useNavigate();
+    const { session } = useAuth();
     const queryClient = useQueryClient();
     const { chatID } = useParams<{ chatID: string }>();
 
@@ -40,7 +42,7 @@ export default function ChatLayout() {
     }, []);
 
     // The title for the top bar / document: read from the shared chat cache.
-    const { data: chat } = useChatMessages(chatID ?? "");
+    const { data: chat } = useChatMessages(chatID ?? "", session?.email);
     const title = chatID ? (chat?.title ?? "對話") : "新對話";
     useDocumentTitle(title);
 
@@ -50,12 +52,12 @@ export default function ChatLayout() {
 
     const handleSelect = (selected: ChatSummary) => {
         closeOnMobile();
-        navigate(`/chat/${selected.id}`);
+        navigate(`${basePath}/chat/${selected.id}`);
     };
 
     const handleNewChat = () => {
         closeOnMobile();
-        navigate("/");
+        navigate(`${basePath}/`);
     };
 
     const handleDelete = async (target: ChatSummary) => {
@@ -67,7 +69,7 @@ export default function ChatLayout() {
                 queryKey: CHAT_HISTORY_QUERY_KEY,
             });
             toast.success("已刪除對話");
-            if (target.id === chatID) navigate("/");
+            if (target.id === chatID) navigate(`${basePath}/`);
         } catch (error) {
             toast.error(
                 `刪除對話失敗: ${

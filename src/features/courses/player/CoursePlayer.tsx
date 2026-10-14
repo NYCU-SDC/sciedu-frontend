@@ -3,6 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
 import { useNavigate } from "react-router";
 
+import {
+    PLAYER_SESSION_PREFIX,
+    readPlayerSession,
+    writePlayerSession,
+} from "./playerSession";
 import { api } from "../../../shared/utils/api";
 import { useDocumentTitle } from "../../../shared/hooks";
 import { generateRQRequestFromPage } from "../genetics/services/fetchPageContent";
@@ -24,6 +29,8 @@ import type {
     SubmittedAnswerResponse,
 } from "../genetics/types/types";
 
+import type { CourseChatScope } from "../../../shared/auth/courseChatStorage";
+
 type PageContentProps = {
     data: CoursePageRequest;
     chat: CourseChatController;
@@ -39,10 +46,16 @@ type PageContentProps = {
 
 function CoursePage({
     isActive,
+    chatScope,
+    chatTitle,
     ...props
-}: Omit<PageContentProps, "chat"> & { isActive: boolean }) {
+}: Omit<PageContentProps, "chat"> & {
+    isActive: boolean;
+    chatScope?: CourseChatScope;
+    chatTitle: string;
+}) {
     // Each mounted page owns its chat session and retains it during navigation.
-    const chat = useCourseChatController();
+    const chat = useCourseChatController(chatScope, chatTitle, isActive);
     return (
         <section
             className={styles.pageSlot}
@@ -77,6 +90,7 @@ function PageContent(props: PageContentProps) {
 
 export type CoursePlayerProps = {
     definition: CourseDefinition;
+    chatScope?: Omit<CourseChatScope, "pageId">;
     reviewMode?: boolean;
     reviews?: CourseReviews;
     initialAnswers?: Record<number, CourseAnswers>;
@@ -93,25 +107,55 @@ export type CourseCompletion = {
 /** A reusable player for either API-backed or locally defined courses. */
 export default function CoursePlayer({
     definition,
+    chatScope,
     reviewMode = false,
     reviews = {},
     initialAnswers = {},
     onComplete,
 }: CoursePlayerProps) {
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const storageKey =
+        !reviewMode && chatScope
+            ? PLAYER_SESSION_PREFIX +
+              JSON.stringify([
+                  chatScope.account,
+                  chatScope.experimentId,
+                  chatScope.courseId,
+              ])
+            : null;
+    const revision = JSON.stringify(
+        definition.pages.map((page) => [
+            page.pageId ?? page.pageIndex,
+            page.secondaryTitle,
+            page.request,
+        ])
+    );
+    const [restored] = useState(() =>
+        readPlayerSession(storageKey, revision, definition.pages.length)
+    );
+    const [currentIndex, setCurrentIndex] = useState(
+        restored?.currentIndex ?? 0
+    );
+    const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(
+        restored?.highestUnlockedIndex ?? 0
+    );
+    const [completedQuestionPages, setCompletedQuestionPages] = useState(
+        new Set<number>(restored?.completed ?? [])
+    );
+    const [answersByPage, setAnswersByPage] = useState<
+        Record<number, CourseAnswers>
+    >(restored?.answersByPage ?? initialAnswers);
+    const submissionsRef = useRef<SubmittedAnswerResponse[]>(
+        restored?.submissions ?? []
+    );
+    const startedAtRef = useRef(
+        restored?.startedAt ?? new Date().toISOString()
+    );
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (containerRef.current) containerRef.current.scrollTop = 0;
     }, [currentIndex]);
-    const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
-    const [completedQuestionPages, setCompletedQuestionPages] = useState(
-        new Set<number>()
-    );
-    const [answersByPage, setAnswersByPage] =
-        useState<Record<number, CourseAnswers>>(initialAnswers);
-    const submissionsRef = useRef<SubmittedAnswerResponse[]>([]);
-    const startedAtRef = useRef(new Date().toISOString());
+
     const queryClient = useQueryClient();
     const posthog = usePostHog();
     const navigate = useNavigate();
@@ -125,6 +169,23 @@ export default function CoursePlayer({
     const currentPage = pageRequests[currentIndex];
 
     useDocumentTitle(definition.title);
+    useEffect(() => {
+        writePlayerSession(storageKey, revision, {
+            currentIndex,
+            highestUnlockedIndex,
+            completed: [...completedQuestionPages],
+            answersByPage,
+            submissions: submissionsRef.current,
+            startedAt: startedAtRef.current,
+        });
+    }, [
+        storageKey,
+        revision,
+        currentIndex,
+        highestUnlockedIndex,
+        completedQuestionPages,
+        answersByPage,
+    ]);
 
     useEffect(() => {
         const nextPage = pageRequests[currentIndex + 1];
@@ -238,8 +299,19 @@ export default function CoursePlayer({
                 />
                 {pageRequests.slice(0, unlockedIndex + 1).map((page, index) => (
                     <CoursePage
-                        key={page.pageIndex}
+                        key={page.pageId ?? page.pageIndex}
                         isActive={index === currentIndex}
+                        chatScope={
+                            chatScope
+                                ? {
+                                      ...chatScope,
+                                      pageId:
+                                          page.pageId ??
+                                          `legacy:${page.pageIndex}`,
+                                  }
+                                : undefined
+                        }
+                        chatTitle={`${definition.title} · ${page.secondaryTitle}`}
                         data={page}
                         answers={answersByPage[page.pageIndex] ?? {}}
                         isCompleted={completedQuestionPages.has(page.pageIndex)}

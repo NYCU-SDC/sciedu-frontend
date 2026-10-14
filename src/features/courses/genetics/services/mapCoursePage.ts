@@ -28,6 +28,7 @@ export function mapPageBlocksToCoursePage(
         (a, b) => a.displayOrder - b.displayOrder
     );
     const base = {
+        pageId: page.id,
         pageIndex,
         activeNavbarTitles: [pageIndex],
         secondaryTitle: page.title,

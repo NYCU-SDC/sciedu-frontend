@@ -1,0 +1,31 @@
+.container {
+    flex-shrink: 0;
+    padding: 0 1rem;
+}
+.mock {
+    display: block;
+    text-align: center;
+    color: #586b69;
+    font-size: 0.75rem;
+    padding: 0.25rem;
+}
+.notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    font-size: 0.8125rem;
+    background: #fff4df;
+    border-radius: 0.75rem;
+}
+.notice button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid #8e6a22;
+    border-radius: 0.5rem;
+    background: white;
+    padding: 0.375rem 0.75rem;
+    color: #5b4315;
+}

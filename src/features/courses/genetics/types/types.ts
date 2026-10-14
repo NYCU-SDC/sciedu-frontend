@@ -137,6 +137,7 @@ export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
 };
 
 export type CoursePageRequest = {
+    pageId?: string;
     pageIndex: number;
     request: MaterialPage | OverviewPage | QuestionPage;
     activeNavbarTitles: number[];

@@ -1,6 +1,6 @@
 .root {
-    /* Feature-namespaced accent tints derived from the shared orange token. */
-    --color-chat-accent: var(--color-orange-500);
+    /* Chat surfaces share the course palette. */
+    --color-chat-accent: #438c82;
     --color-chat-accent-tint: color-mix(
         in srgb,
         var(--color-chat-accent) 8%,

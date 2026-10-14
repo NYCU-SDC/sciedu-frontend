@@ -15,9 +15,11 @@ export type StartChatResult = {
  */
 export async function startChat(
     queryClient: QueryClient,
-    content: string
+    content: string,
+    options: { account?: string; onCreated?: (id: string) => void } = {}
 ): Promise<StartChatResult> {
     const { chatID } = await createChat();
+    options.onCreated?.(chatID);
     const { message, replyMessageID } = await createMessage(chatID, content);
 
     const now = new Date().toISOString();
@@ -26,9 +28,19 @@ export async function startChat(
         title: message.content.slice(0, 40),
         createdAt: now,
         updatedAt: now,
-        messages: [message],
+        messages: [
+            message,
+            {
+                id: replyMessageID,
+                content: "",
+                previousID: message.id,
+                role: "assistant",
+                status: "streaming",
+                createdAt: now,
+            },
+        ],
     };
-    queryClient.setQueryData(chatQueryKey(chatID), optimistic);
+    queryClient.setQueryData(chatQueryKey(chatID, options.account), optimistic);
 
     return { chatID, replyMessageID };
 }

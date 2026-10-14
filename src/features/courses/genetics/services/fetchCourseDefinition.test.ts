@@ -43,6 +43,7 @@ describe("mapPageBlocksToCoursePage", () => {
         );
 
         expect(result).toEqual({
+            pageId: "page-1",
             pageIndex: 3,
             activeNavbarTitles: [3],
             secondaryTitle: "第一頁",

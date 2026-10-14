@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import type { BranchDirection, Message } from "../types/chat";
+import type { BranchDirection, MessageView } from "../types/chat";
 import MessageTurn from "./MessageTurn";
 import styles from "./Thread.module.css";
 
 type Props = {
-    messages: Message[];
+    messages: MessageView[];
     actionsDisabled: boolean;
     editingMessageId: string | null;
     editingDraft: string;
@@ -35,17 +35,32 @@ export default function Thread({
     onSubmitEdit,
     onRegenerate,
 }: Props) {
+    const pinnedRef = useRef(true);
+    const countRef = useRef(messages.length);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Keep pinned to the bottom as messages arrive / stream.
     const lastMessage = messages.at(-1);
     useEffect(() => {
         const el = scrollRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
-    }, [messages.length, lastMessage?.content]);
+        if (countRef.current !== messages.length) {
+            pinnedRef.current = true;
+            countRef.current = messages.length;
+        }
+        if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
+    }, [messages.length, lastMessage?.content, lastMessage?.parts]);
 
     return (
-        <div className={styles.scroll} ref={scrollRef}>
+        <div
+            className={styles.scroll}
+            ref={scrollRef}
+            onScroll={() => {
+                const el = scrollRef.current;
+                if (el)
+                    pinnedRef.current =
+                        el.scrollHeight - el.scrollTop - el.clientHeight < 64;
+            }}
+        >
             <div className={styles.thread}>
                 {messages.map((message) => (
                     <MessageTurn

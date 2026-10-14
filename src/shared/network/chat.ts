@@ -4,14 +4,16 @@ import type {
     ListChatsResponse,
     Message,
 } from "../../features/chat/types/chat";
-import type { StreamDelta } from "../../features/chat/types/sse";
+import { openRealStream } from "./chatStream";
+import type { OpenStreamHandlers } from "./chatStream";
+export type { OpenStreamHandlers } from "./chatStream";
+export const CHAT_MOCK_ENABLED = import.meta.env.VITE_CHAT_MODE === "mock";
+const mock = () => import("../../features/chat/services/mockChat");
 
 export type {
     ChatSummary,
     ListChatsResponse,
 } from "../../features/chat/types/chat";
-
-const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 /** React Query key for the paginated chat-history list. */
 export const CHAT_HISTORY_QUERY_KEY = ["chat-history"] as const;
@@ -43,6 +45,7 @@ export type CreateChatResponse = {
 
 /** POST /api/chat — create a new chat session. */
 export async function createChat(): Promise<CreateChatResponse> {
+    if (CHAT_MOCK_ENABLED) return (await mock()).createMockChat();
     return api<CreateChatResponse>("/api/chat", {
         method: "POST",
     });
@@ -57,17 +60,21 @@ export type CreateMessageResponse = {
 export async function createMessage(
     chatID: string,
     content: string,
-    previousID?: string
+    previousID?: string,
+    preset: string | undefined = import.meta.env.VITE_CHAT_PRESET || undefined
 ): Promise<CreateMessageResponse> {
+    if (CHAT_MOCK_ENABLED)
+        return (await mock()).createMockMessage(chatID, content, previousID);
     const response = await api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
-        body: JSON.stringify({ content, previousID }),
+        body: JSON.stringify({ content, previousID, preset }),
     });
     return { ...response, message: normalizeMessage(response.message) };
 }
 
 /** GET /api/chat/:chatId — the chat plus all of its messages. */
 export async function getChat(chatID: string): Promise<GetChatResponse> {
+    if (CHAT_MOCK_ENABLED) return (await mock()).getMockChat(chatID);
     const response = await api<GetChatResponse>(`/api/chat/${chatID}`, {
         method: "GET",
     });
@@ -79,6 +86,7 @@ export async function listChats(
     page = 1,
     pageSize = 20
 ): Promise<ListChatsResponse> {
+    if (CHAT_MOCK_ENABLED) return (await mock()).listMockChats(page, pageSize);
     const params = new URLSearchParams({
         page: String(page),
         pageSize: String(pageSize),
@@ -90,6 +98,7 @@ export async function listChats(
 
 /** DELETE /api/chat/:chatId. */
 export async function deleteChat(chatID: string): Promise<void> {
+    if (CHAT_MOCK_ENABLED) return (await mock()).deleteMockChat(chatID);
     await api<unknown>(`/api/chat/${chatID}`, {
         method: "DELETE",
     });
@@ -99,83 +108,22 @@ export async function deleteChat(chatID: string): Promise<void> {
 // SSE
 // ---------------------------------------------------------------------------
 
-export type OpenStreamHandlers = {
-    /** A content fragment arrived. */
-    onDelta: (delta: string) => void;
-    /** The assistant reply finished cleanly (`isFinished` / `done` event). */
-    onFinish: () => void;
-    /**
-     * The transport closed without a clean finish. This covers the spec's
-     * "no active stream" responses (400/404) as well as a mid-stream drop —
-     * EventSource exposes no HTTP status, so they are indistinguishable here.
-     * Recovery is the same regardless: re-read messages and let the message
-     * `status` (`completed` / `failed`) decide what to render. `hadData` tells
-     * the caller whether any delta was received before the close.
-     */
-    onEnded: (info: { hadData: boolean }) => void;
-};
-
-/**
- * Open the assistant reply stream for a message using the browser-native
- * EventSource API. Returns a function that closes the stream; calling it
- * suppresses any further callbacks (used as the abort handle).
- */
 export function openStream(
     messageID: string,
     handlers: OpenStreamHandlers
 ): () => void {
-    const source = new EventSource(`${BASE_URL}/api/chat/stream/${messageID}`, {
-        withCredentials: true,
-    });
-
-    let hadData = false;
-    let settled = false;
-
-    const close = () => {
-        settled = true;
-        source.close();
+    if (!CHAT_MOCK_ENABLED) return openRealStream(messageID, handlers);
+    let closed = false;
+    let cleanup: (() => void) | undefined;
+    void mock()
+        .then((module) => {
+            if (!closed) cleanup = module.openMockStream(messageID, handlers);
+        })
+        .catch((error) => {
+            if (!closed) handlers.onEnded(error);
+        });
+    return () => {
+        closed = true;
+        cleanup?.();
     };
-
-    const handleDelta = (event: MessageEvent<string>) => {
-        if (settled) return;
-        let chunk: StreamDelta;
-        try {
-            chunk = JSON.parse(event.data) as StreamDelta;
-        } catch {
-            return;
-        }
-
-        if (chunk.delta) {
-            hadData = true;
-            handlers.onDelta(chunk.delta);
-        }
-        if (chunk.isFinished) {
-            close();
-            handlers.onFinish();
-        }
-    };
-
-    const handleDone = () => {
-        if (settled) return;
-        close();
-        handlers.onFinish();
-    };
-
-    // Default (unnamed) events carry StreamDelta JSON; tolerate the named
-    // `delta` / `done` event form from the spec's sequence diagrams too.
-    source.onmessage = handleDelta;
-    source.addEventListener("delta", handleDelta as EventListener);
-    source.addEventListener("done", handleDone);
-
-    source.onerror = () => {
-        if (settled) return;
-        // EventSource auto-reconnects on transient errors (readyState
-        // CONNECTING); only a CLOSED socket is terminal for us.
-        if (source.readyState === EventSource.CLOSED) {
-            close();
-            handlers.onEnded({ hadData });
-        }
-    };
-
-    return close;
 }

@@ -344,3 +344,43 @@
         animation: none;
     }
 }
+
+.agentCard {
+    border: 1px solid #c6e2df;
+    border-radius: 1rem;
+    background: #fff;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.agentHeader {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: #245e58;
+}
+.avatar {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: #e6f4f1;
+    flex-shrink: 0;
+}
+.agentRole {
+    color: #586b69;
+    font-size: 0.75rem;
+}
+.activity {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: #586b69;
+    font-size: 0.8125rem;
+    padding: 0.5rem;
+}

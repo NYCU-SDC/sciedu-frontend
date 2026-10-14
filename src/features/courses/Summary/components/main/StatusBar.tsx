@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 
 const FONT_FAMILY = '"GenYoGothicTW", sans-serif';
 
-export default function StatusBar() {
+export default function StatusBar({ title }: { title: string }) {
     const navigate = useNavigate();
 
     return (
@@ -31,7 +31,7 @@ export default function StatusBar() {
                     ff={FONT_FAMILY}
                     c="brandTeal.8"
                 >
-                    生物遺傳機制推理學習
+                    {title}
                 </Title>
                 <Text fz="14px" lh="19px" ff={FONT_FAMILY} c="#00856e">
                     已完成

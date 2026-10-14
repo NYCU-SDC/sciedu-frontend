@@ -34,21 +34,17 @@ import {
     updateExperiment,
     updateExperimentStatus,
 } from "../services/adminRepository";
-import type { EditableExperimentPayload } from "../types";
+import {
+    buildExperimentPayload,
+    experimentToDraft,
+    feedbackSummary,
+    releaseLabels,
+    retryLabel,
+    toTaipeiInputValue,
+    type ExperimentDraft as Draft,
+} from "../services/experimentDraft";
 import styles from "./ExperimentAdmin.module.css";
 
-type Draft = {
-    name: string;
-    description: string;
-    startsAt: string;
-    endsAt: string;
-    maxAttempts: string;
-    result: "hidden" | "score" | "explanations";
-    release: "page" | "course" | "never";
-    courseIds: string[];
-};
-
-const TAIPEI_TIME_ZONE = "Asia/Taipei";
 const defaultExperimentDate = toTaipeiInputValue(
     new Date(Date.now() + 86_400_000).toISOString()
 ).slice(0, 10);
@@ -59,7 +55,9 @@ const initialDraft: Draft = {
     startsAt: `${defaultExperimentDate}T09:00`,
     endsAt: `${defaultExperimentDate}T16:00`,
     maxAttempts: "1",
-    result: "explanations",
+    allowRetry: false,
+    showScore: true,
+    showExplanations: true,
     release: "course",
     courseIds: [],
 };
@@ -70,25 +68,6 @@ const steps = [
     { label: "選擇教材", description: "至少一份已發布教材" },
     { label: "學生與確認", description: "學生可稍後加入" },
 ];
-
-function toTaipeiInputValue(value: string) {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-        timeZone: TAIPEI_TIME_ZONE,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-    }).formatToParts(new Date(value));
-    const part = (type: Intl.DateTimeFormatPartTypes) =>
-        parts.find((item) => item.type === type)?.value ?? "";
-    return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
-}
-
-function taipeiInputToISOString(value: string) {
-    return new Date(`${value}:00+08:00`).toISOString();
-}
 
 function errorMessage(error: unknown) {
     return error instanceof ApiError && error.message
@@ -147,31 +126,12 @@ export default function CreateExperimentPage() {
         )
             return;
         const experiment = experimentQuery.data;
-        setDraft({
-            name: experiment.name,
-            description: experiment.description ?? "",
-            startsAt: toTaipeiInputValue(experiment.scheduledStartAt),
-            endsAt: toTaipeiInputValue(experiment.scheduledEndAt),
-            maxAttempts: String(
-                Math.max(1, experiment.configuration.maxAttempts)
-            ),
-            result: experiment.configuration.showExplanations
-                ? "explanations"
-                : experiment.configuration.showScore
-                  ? "score"
-                  : "hidden",
-            release:
-                experiment.configuration.correctAnswerReleaseMode ===
-                "AFTER_PAGE_SUBMISSION"
-                    ? "page"
-                    : experiment.configuration.correctAnswerReleaseMode ===
-                        "NEVER"
-                      ? "never"
-                      : "course",
-            courseIds: (assignedCoursesQuery.data ?? []).map(
-                ({ course }) => course.id
-            ),
-        });
+        setDraft(
+            experimentToDraft(
+                experiment,
+                (assignedCoursesQuery.data ?? []).map(({ course }) => course.id)
+            )
+        );
         setPersistedCourseIds(
             (assignedCoursesQuery.data ?? []).map(({ course }) => course.id)
         );
@@ -219,7 +179,11 @@ export default function CreateExperimentPage() {
     const isReadOnly =
         currentStatus === "COMPLETED" || currentStatus === "ARCHIVED";
     const isActive = currentStatus === "ACTIVE";
-    const canEditCourses = !currentStatus || currentStatus === "DRAFT";
+    const canAddCourses =
+        !currentStatus ||
+        ["DRAFT", "SCHEDULED", "ACTIVE"].includes(currentStatus);
+    const canRemoveCourses =
+        !currentStatus || ["DRAFT", "SCHEDULED"].includes(currentStatus);
     const participantCount =
         participantsQuery.data?.length ??
         experimentQuery.data?.participantCount ??
@@ -228,7 +192,12 @@ export default function CreateExperimentPage() {
         setDraft((current) => ({ ...current, [field]: value }));
 
     const toggleCourse = (courseId: string) => {
-        if (!canEditCourses) return;
+        if (
+            draft.courseIds.includes(courseId)
+                ? !canRemoveCourses
+                : !canAddCourses
+        )
+            return;
         setCoursesTouched(true);
         setDraft((current) => ({
             ...current,
@@ -238,28 +207,8 @@ export default function CreateExperimentPage() {
         }));
     };
 
-    const payloadFromDraft = (): EditableExperimentPayload => ({
-        name: draft.name.trim(),
-        ...(draft.description.trim()
-            ? { description: draft.description.trim() }
-            : {}),
-        scheduledStartAt: taipeiInputToISOString(draft.startsAt),
-        scheduledEndAt: taipeiInputToISOString(draft.endsAt),
-        configuration: {
-            maxAttempts: Number(draft.maxAttempts),
-            allowRetry: Number(draft.maxAttempts) > 1,
-            showScore: draft.result !== "hidden",
-            showExplanations: draft.result === "explanations",
-            gradingMode:
-                experimentQuery.data?.configuration.gradingMode ?? "AUTOMATIC",
-            correctAnswerReleaseMode:
-                draft.release === "page"
-                    ? "AFTER_PAGE_SUBMISSION"
-                    : draft.release === "never"
-                      ? "NEVER"
-                      : "AFTER_COURSE_COMPLETION",
-        },
-    });
+    const payloadFromDraft = () =>
+        buildExperimentPayload(draft, experimentQuery.data);
 
     const persistExperiment = async () => {
         if (persistedExperimentId) {
@@ -271,7 +220,11 @@ export default function CreateExperimentPage() {
     };
 
     const syncCourses = async (id: string) => {
-        if (!canEditCourses || (!coursesTouched && step < 2)) return;
+        if (
+            (!canAddCourses && !canRemoveCourses) ||
+            (!coursesTouched && step < 2)
+        )
+            return;
         const selected = new Set(draft.courseIds);
         const persisted = new Set(persistedCourseIds);
         const additions = draft.courseIds.filter((id) => !persisted.has(id));
@@ -566,7 +519,9 @@ export default function CreateExperimentPage() {
                             <Stack className={styles.formFields}>
                                 <div className={styles.settingBlock}>
                                     <strong>評分方式 *</strong>
-                                    <small>本階段僅支援自動評分。</small>
+                                    <small>
+                                        新實驗使用自動評分，既有評分方式不會被修改。
+                                    </small>
                                     <Radio.Group
                                         value={
                                             experimentQuery.data?.configuration
@@ -597,9 +552,22 @@ export default function CreateExperimentPage() {
                                         設定學生完成後是否能重新挑戰教材。
                                     </small>
                                     <Radio.Group
-                                        value={draft.maxAttempts}
+                                        value={
+                                            (!draft.allowRetry &&
+                                                draft.maxAttempts === "1") ||
+                                            (draft.allowRetry &&
+                                                ["2", "3"].includes(
+                                                    draft.maxAttempts
+                                                ))
+                                                ? draft.maxAttempts
+                                                : "existing"
+                                        }
                                         onChange={(value) =>
-                                            setField("maxAttempts", value)
+                                            setDraft((current) => ({
+                                                ...current,
+                                                maxAttempts: value,
+                                                allowRetry: Number(value) > 1,
+                                            }))
                                         }
                                     >
                                         <div className={styles.choiceGrid}>
@@ -609,7 +577,7 @@ export default function CreateExperimentPage() {
                                                         isActive || isReadOnly
                                                     }
                                                     value="1"
-                                                    label="不允許"
+                                                    label="不允許重新作答（共 1 次）"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
@@ -618,7 +586,7 @@ export default function CreateExperimentPage() {
                                                         isActive || isReadOnly
                                                     }
                                                     value="2"
-                                                    label="允許 1 次"
+                                                    label="可重新作答 1 次（共 2 次）"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
@@ -627,60 +595,57 @@ export default function CreateExperimentPage() {
                                                         isActive || isReadOnly
                                                     }
                                                     value="3"
-                                                    label="最多 2 次"
+                                                    label="可重新作答 2 次（共 3 次）"
                                                 />
                                             </label>
+                                            {((!draft.allowRetry &&
+                                                draft.maxAttempts !== "1") ||
+                                                (draft.allowRetry &&
+                                                    !["2", "3"].includes(
+                                                        draft.maxAttempts
+                                                    ))) && (
+                                                <Radio
+                                                    value="existing"
+                                                    label={`沿用既有設定：${retryLabel(draft)}`}
+                                                    disabled
+                                                />
+                                            )}
                                         </div>
                                     </Radio.Group>
                                 </div>
                                 <div className={styles.settingBlock}>
-                                    <strong>結果顯示 *</strong>
+                                    <strong>學生可查看的回饋</strong>
                                     <small>
-                                        設定學生完成整份教材後能查看的內容。
+                                        分數、評分說明與正確答案分別控制，互不連動。尚未完成批改時顯示「待批改」。
                                     </small>
-                                    <Radio.Group
-                                        value={draft.result}
-                                        onChange={(value) =>
+                                    <Checkbox
+                                        label="顯示分數與答對答錯"
+                                        checked={draft.showScore}
+                                        disabled={isActive || isReadOnly}
+                                        onChange={(event) =>
                                             setField(
-                                                "result",
-                                                value as Draft["result"]
+                                                "showScore",
+                                                event.currentTarget.checked
                                             )
                                         }
-                                    >
-                                        <div className={styles.choiceGrid}>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="score"
-                                                    label="只顯示分數"
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="explanations"
-                                                    label="顯示分數與詳解"
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="hidden"
-                                                    label="不顯示分數與詳解"
-                                                />
-                                            </label>
-                                        </div>
-                                    </Radio.Group>
+                                    />
+                                    <Checkbox
+                                        label="顯示評分說明"
+                                        checked={draft.showExplanations}
+                                        disabled={isActive || isReadOnly}
+                                        onChange={(event) =>
+                                            setField(
+                                                "showExplanations",
+                                                event.currentTarget.checked
+                                            )
+                                        }
+                                    />
                                 </div>
                                 <div className={styles.settingBlock}>
-                                    <strong>正確答案公開 *</strong>
-                                    <small>避免作答期間提前看到答案。</small>
+                                    <strong>正確答案公開時機 *</strong>
+                                    <small>
+                                        須完成該頁或整份教材的必要作答；瀏覽頁面、進入最後一頁或實驗結束皆不代表完成。
+                                    </small>
                                     <Radio.Group
                                         value={draft.release}
                                         onChange={(value) =>
@@ -697,7 +662,7 @@ export default function CreateExperimentPage() {
                                                         isActive || isReadOnly
                                                     }
                                                     value="page"
-                                                    label="每頁完成後公開"
+                                                    label="本頁提交成功後"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
@@ -706,7 +671,7 @@ export default function CreateExperimentPage() {
                                                         isActive || isReadOnly
                                                     }
                                                     value="course"
-                                                    label="整份教材完成後公開"
+                                                    label="整份教材完成後"
                                                 />
                                             </label>
                                             <label className={styles.choice}>
@@ -721,6 +686,9 @@ export default function CreateExperimentPage() {
                                         </div>
                                     </Radio.Group>
                                 </div>
+                                <p role="status" aria-label="教學設定摘要">
+                                    {feedbackSummary(draft)}
+                                </p>
                             </Stack>
                         </Card>
                         <Card
@@ -734,10 +702,10 @@ export default function CreateExperimentPage() {
                                 這些設定會套用到本實驗中的所有教材。排程後仍可檢查內容，實驗開始後部分欄位會鎖定。
                             </p>
                             <div className={styles.guidanceItem}>
-                                ✓ 評分方式目前固定為自動評分
+                                ✓ 新實驗使用自動評分；既有評分方式保留
                             </div>
                             <div className={styles.guidanceItem}>
-                                ✓ 結果顯示與答案公開可分開設定
+                                ✓ 分數、評分說明與正確答案各自獨立
                             </div>
                             <div className={styles.guidanceItem}>
                                 ✓ ACTIVE 後不可修改評分與公開規則
@@ -797,7 +765,11 @@ export default function CreateExperimentPage() {
                                                 )}
                                                 disabled={
                                                     !available ||
-                                                    !canEditCourses ||
+                                                    (draft.courseIds.includes(
+                                                        course.id
+                                                    )
+                                                        ? !canRemoveCourses
+                                                        : !canAddCourses) ||
                                                     isSaving
                                                 }
                                                 onChange={() =>
@@ -854,7 +826,7 @@ export default function CreateExperimentPage() {
                                             variant="subtle"
                                             size="xs"
                                             disabled={
-                                                !canEditCourses || isSaving
+                                                !canRemoveCourses || isSaving
                                             }
                                             onClick={() =>
                                                 toggleCourse(course.id)
@@ -866,7 +838,11 @@ export default function CreateExperimentPage() {
                                 ))}
                             </Stack>
                             <div className={styles.warning}>
-                                排程後不可更換教材
+                                {isActive
+                                    ? "進行中可新增教材，但不可移除既有教材"
+                                    : isReadOnly
+                                      ? "目前狀態不可調整教材"
+                                      : "草稿與已排程實驗可新增或移除教材"}
                             </div>
                         </Card>
                     </div>
@@ -915,33 +891,41 @@ export default function CreateExperimentPage() {
                                 <div className={styles.settingRows}>
                                     <div className={styles.settingRow}>
                                         <span>評分方式</span>
-                                        <strong>自動評分</strong>
-                                    </div>
-                                    <div className={styles.settingRow}>
-                                        <span>重新作答</span>
                                         <strong>
-                                            {draft.maxAttempts === "1"
-                                                ? "不允許"
-                                                : `最多 ${Number(draft.maxAttempts) - 1} 次`}
+                                            {experimentQuery.data?.configuration
+                                                .gradingMode === "MANUAL"
+                                                ? "人工評分"
+                                                : "自動評分"}
                                         </strong>
                                     </div>
                                     <div className={styles.settingRow}>
-                                        <span>結果顯示</span>
+                                        <span>重新作答</span>
+                                        <strong>{retryLabel(draft)}</strong>
+                                    </div>
+                                    <div className={styles.settingRow}>
+                                        <span>分數與答對答錯</span>
                                         <strong>
-                                            {draft.result === "explanations"
-                                                ? "顯示分數與詳解"
-                                                : "只顯示分數"}
+                                            {draft.showScore
+                                                ? "顯示"
+                                                : "不顯示"}
+                                        </strong>
+                                    </div>
+                                    <div className={styles.settingRow}>
+                                        <span>評分說明</span>
+                                        <strong>
+                                            {draft.showExplanations
+                                                ? "顯示"
+                                                : "不顯示"}
                                         </strong>
                                     </div>
                                     <div className={styles.settingRow}>
                                         <span>正確答案</span>
                                         <strong>
-                                            {draft.release === "course"
-                                                ? "完成整份教材後公開"
-                                                : "每頁完成後公開"}
+                                            {releaseLabels[draft.release]}
                                         </strong>
                                     </div>
                                 </div>
+                                <p>{feedbackSummary(draft)}</p>
                             </Card>
                             <Card
                                 className={`${styles.card} ${styles.formCard}`}

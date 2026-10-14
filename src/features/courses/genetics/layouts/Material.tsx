@@ -8,6 +8,7 @@ import type {
     CourseReviews,
     MaterialPage,
     QuestionResponse,
+    SubmittedAnswerResponse,
 } from "../types/types";
 import styles from "./Material.module.css";
 import FooterStyles from "../components/Footer.module.css";
@@ -32,6 +33,7 @@ type Props = {
     reviewMode?: boolean;
     reviews?: CourseReviews;
     isLastPage?: boolean;
+    onAnswersSubmitted?: (answers: SubmittedAnswerResponse[]) => void;
 };
 
 export function MaterialImageGallery({ imageIds }: { imageIds: string[] }) {
@@ -103,6 +105,7 @@ export default function Material({
     reviewMode = false,
     reviews = {},
     isLastPage = false,
+    onAnswersSubmitted,
 }: Props) {
     const req = data.request as MaterialPage;
     const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -142,6 +145,7 @@ export default function Material({
                 const query = questionQueries[index];
                 return {
                     questionId: section.questionId,
+                    required: section.required,
                     question: query.data,
                     isUnavailable:
                         query.isLoading || query.isError || !query.data,
@@ -161,6 +165,7 @@ export default function Material({
         questions: submittableQuestions,
         answers,
         isCompleted,
+        onSubmitted: onAnswersSubmitted,
         onContinue: onNext,
     });
 

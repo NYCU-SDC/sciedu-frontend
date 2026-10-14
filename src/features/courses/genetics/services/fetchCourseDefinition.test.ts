@@ -53,8 +53,16 @@ describe("mapPageBlocksToCoursePage", () => {
                     imageIds: ["image-1", "image-2"],
                 },
                 questionSections: [
-                    { titleId: "title-1", questionId: "question-1" },
-                    { titleId: "title-2", questionId: "question-2" },
+                    {
+                        titleId: "title-1",
+                        questionId: "question-1",
+                        required: true,
+                    },
+                    {
+                        titleId: "title-2",
+                        questionId: "question-2",
+                        required: true,
+                    },
                 ],
             },
         });
@@ -71,5 +79,26 @@ describe("mapPageBlocksToCoursePage", () => {
                 0
             )
         ).toThrow("缺少 QUESTION block");
+    });
+
+    it("ignores the LLM-only description at displayOrder 200", () => {
+        const result = mapPageBlocksToCoursePage(
+            page([
+                block("TEXT", "description", 0),
+                block("MEDIA", "image", 10),
+                block("TEXT", "title", 100),
+                block("QUESTION", "question", 101),
+                block("TEXT", "llm-image-description", 200),
+            ]),
+            0
+        );
+
+        expect(result.request.type).toBe("material");
+        expect(
+            result.request.type === "material" &&
+                result.request.questionSections
+        ).toEqual([
+            { titleId: "title", questionId: "question", required: true },
+        ]);
     });
 });

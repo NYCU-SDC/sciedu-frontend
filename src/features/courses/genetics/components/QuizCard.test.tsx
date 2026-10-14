@@ -45,11 +45,13 @@ describe("QuizCard review mode", () => {
             </MantineProvider>
         );
 
-        expect(screen.getByRole("status").textContent).toContain(
-            "尚無作答紀錄"
-        );
-        expect(screen.queryByRole("textbox")).toBeNull();
-        expect(screen.queryByRole("button")).toBeNull();
+        expect(
+            screen.getByText("目前 API 未提供評分說明與正確答案。")
+        ).toBeTruthy();
+        expect(
+            (screen.getByRole("textbox") as HTMLTextAreaElement).disabled
+        ).toBe(true);
+        expect(screen.queryByText("答錯")).toBeNull();
         expect(onAnswerChange).not.toHaveBeenCalled();
     });
 });

@@ -166,7 +166,7 @@ class PublishTests(unittest.TestCase):
                     pending_key=next(iter(items.values()))["key"]
                     self.api.before_request=None
                     with self.publisher() as p: p.publish(self.course)
-                    self.assertEqual(next(iter(json.loads(self.state.read_text())["items"].values()))["key"],pending_key)
+                    self.assertEqual(json.loads(self.state.read_text())["items"][self.course["code"]+":course"]["key"],pending_key)
 
     def test_rejects_unsafe_origin_and_zero_upload_id(self):
         for base in ["https://user:pass@example.test", "https://example.test/api", "https://example.test/?secret=x"]:

@@ -4,12 +4,16 @@ on:
     pull_request:
         paths:
             - "tools/course-materials/**"
+            - "tools/argumentation/**"
+            - "public/simulations/**"
             - ".github/workflows/course-materials.yaml"
     push:
         branches:
             - main
         paths:
             - "tools/course-materials/**"
+            - "tools/argumentation/**"
+            - "public/simulations/**"
             - ".github/workflows/course-materials.yaml"
 
 permissions:
@@ -28,3 +32,14 @@ jobs:
 
             - name: Run extraction regression tests
               run: python3 -m unittest discover -s tools/course-materials -p 'test_*.py' -v
+
+            - name: Run argumentation extraction regression tests
+              run: python3 -m unittest discover -s tools/argumentation -p 'test_*.py' -v
+
+            - name: Set up Node.js for upload safety tests
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+
+            - name: Run draft upload safety tests
+              run: node --test tools/argumentation/test_upload.mjs

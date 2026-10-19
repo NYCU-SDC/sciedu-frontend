@@ -43,3 +43,31 @@ it("logout clears the local player snapshot while retaining unrelated data", () 
     expect(readPlayerSession(key, "revision", 3)).toBeUndefined();
     expect(sessionStorage.getItem("other")).toBe("keep");
 });
+
+it("isolates simulation state by account and experiment and clears it at logout", () => {
+    const first =
+        PLAYER_SESSION_PREFIX +
+        JSON.stringify(["student-a", "experiment-a", "course"]);
+    writePlayerSession(first, "revision", {
+        ...state,
+        simulationState: { led: false, partition: true },
+    });
+    expect(readPlayerSession(first, "revision", 3)?.simulationState).toEqual({
+        led: false,
+        partition: true,
+    });
+    for (const scope of [
+        ["student-b", "experiment-a", "course"],
+        ["student-a", "experiment-b", "course"],
+    ]) {
+        expect(
+            readPlayerSession(
+                PLAYER_SESSION_PREFIX + JSON.stringify(scope),
+                "revision",
+                3
+            )
+        ).toBeUndefined();
+    }
+    clearPlayerSessions();
+    expect(readPlayerSession(first, "revision", 3)).toBeUndefined();
+});

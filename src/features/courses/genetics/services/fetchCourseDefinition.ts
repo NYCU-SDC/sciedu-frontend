@@ -1,3 +1,4 @@
+import { parsePresentation } from "../../player/presentation";
 import { api } from "../../../../shared/utils/api";
 import type { CourseDefinition, CourseNavigation } from "../types/types";
 
@@ -45,11 +46,33 @@ export async function fetchCourseDefinition(
         orderedPages.map((page) => api<PageDetail>(`/api/pages/${page.id}`))
     );
 
+    const mappedPages = await Promise.all(
+        pageDetails.map(async (page, index) => {
+            const configs = page.blocks.filter(
+                (b) => b.type === "TEXT" && b.displayOrder === 201
+            );
+            if (configs.length > 1)
+                throw new Error("教材頁面設定重複，請聯絡管理者。");
+            const config = configs[0];
+            const presentation = config
+                ? parsePresentation(
+                      (
+                          await api<{ content: string }>(
+                              `/api/content/text/${config.resourceId}`
+                          )
+                      ).content,
+                      index
+                  )
+                : undefined;
+            return mapPageBlocksToCoursePage(page, index, presentation);
+        })
+    );
+
     return {
         id: course.id,
         code: course.code,
         title: course.title,
-        pages: pageDetails.map(mapPageBlocksToCoursePage),
+        pages: mappedPages,
         navigation,
     };
 }

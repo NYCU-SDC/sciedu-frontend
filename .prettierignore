@@ -8,3 +8,5 @@ node_modules
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+# Preserve supplied simulation asset bytes.
+public/simulations/dark-room/v1/assets/

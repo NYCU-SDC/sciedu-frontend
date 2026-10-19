@@ -1,0 +1,50 @@
+/* Keep the supplied simulation controls readable in a half-width lesson panel. */
+html,
+body {
+    margin: 0;
+    min-width: 0;
+}
+.shell {
+    width: 100%;
+    max-width: none;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.heading {
+    display: none;
+}
+.simulation-controls {
+    flex-wrap: wrap;
+}
+.viewport {
+    min-height: 260px;
+    height: 48vh;
+}
+
+html,
+body {
+    height: 100%;
+}
+.shell {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.scene-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.viewport {
+    flex: 1;
+    height: auto !important;
+    min-height: 130px !important;
+}
+.simulation-controls,
+.scene-footer {
+    flex: none;
+}
+.model-note {
+    margin: 4px 0;
+}

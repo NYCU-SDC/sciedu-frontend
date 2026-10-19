@@ -35,6 +35,7 @@
 }
 
 .quizCard > p {
+    white-space: pre-wrap;
     margin: 0.3125rem 0 0.75rem;
 }
 

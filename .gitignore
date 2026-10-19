@@ -29,3 +29,6 @@ dist-ssr
 CLAUDE.md
 .claude/
 .env.local
+
+# Python material extraction caches
+__pycache__/

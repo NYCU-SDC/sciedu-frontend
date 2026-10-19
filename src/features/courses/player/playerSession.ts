@@ -1,3 +1,4 @@
+import { isSimulationState, type SimulationState } from "./presentation";
 import type {
     CourseAnswers,
     SubmittedAnswerResponse,
@@ -10,6 +11,7 @@ export type PlayerSession = {
     answersByPage: Record<number, CourseAnswers>;
     submissions: SubmittedAnswerResponse[];
     startedAt: string;
+    simulationState?: SimulationState;
 };
 // Local navigation/answer recovery only. Never used as server progress or access permission.
 export function readPlayerSession(
@@ -41,6 +43,8 @@ export function readPlayerSession(
                 (a: SubmittedAnswerResponse) =>
                     typeof a.id === "string" && typeof a.questionId === "string"
             ) ||
+            (s.simulationState !== undefined &&
+                !isSimulationState(s.simulationState)) ||
             typeof s.startedAt !== "string"
         )
             return;

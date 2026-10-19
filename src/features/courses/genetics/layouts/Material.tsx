@@ -1,3 +1,5 @@
+import Simulation from "../../player/Simulation";
+import type { SimulationState } from "../../player/presentation";
 import { Button, Skeleton } from "@radix-ui/themes";
 import { useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -25,7 +27,11 @@ const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL as string;
 
 type Props = {
     data: CoursePageRequest;
-    chat: CourseChatController;
+    chat?: CourseChatController;
+    isActive?: boolean;
+    previousAnswer?: string;
+    simulationState?: SimulationState;
+    onSimulationChange?: (state: SimulationState) => void;
     answers: CourseAnswers;
     isCompleted: boolean;
     onNext: () => void;
@@ -106,8 +112,13 @@ export default function Material({
     reviews = {},
     isLastPage = false,
     onAnswersSubmitted,
+    isActive = true,
+    previousAnswer,
+    simulationState,
+    onSimulationChange,
 }: Props) {
     const req = data.request as MaterialPage;
+    const noChat = req.presentation?.chatEnabled === false;
     const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
     const {
@@ -176,7 +187,9 @@ export default function Material({
 
     return (
         <div className={styles.pageContainer}>
-            <main className={styles.overviewContent}>
+            <main
+                className={`${styles.overviewContent} ${noChat ? styles.withoutChat : ""}`}
+            >
                 <section className={styles.courseSection}>
                     <div className={styles.readingRow}>
                         <div className={styles.courseDescriptionWrapper}>
@@ -196,57 +209,93 @@ export default function Material({
                                 )}
                             </div>
                         </div>
-                        <MaterialImageGallery imageIds={req.content.imageIds} />
-                    </div>
-                    <div className={styles.questionList}>
-                        {req.questionSections.map((section, index) => {
-                            const titleQuery = titleQueries[index];
-                            const questionQuery = questionQueries[index];
-                            return (
-                                <QuizCard
-                                    key={section.questionId}
-                                    question={{
-                                        id: section.questionId,
-                                        title: formatQuestionTitle(
-                                            titleQuery.data?.content ?? "",
-                                            index
-                                        ),
-                                        data: questionQuery.data,
-                                    }}
-                                    isLoading={questionQuery.isLoading}
-                                    error={
-                                        questionQuery.isError
-                                            ? (questionQuery.error?.message ??
-                                              "載入失敗")
-                                            : null
-                                    }
-                                    answer={answers[section.questionId] ?? ""}
-                                    disabled={
-                                        reviewMode ||
-                                        isCompleted ||
-                                        isSubmitting ||
-                                        submittedQuestionIds.has(
-                                            section.questionId
-                                        )
-                                    }
-                                    validationError={
-                                        validationErrors[section.questionId]
-                                    }
-                                    onAnswerChange={(answer) =>
-                                        handleAnswerChange(
-                                            section.questionId,
-                                            answer
-                                        )
-                                    }
-                                    reviewMode={reviewMode}
-                                    review={reviews[section.questionId]}
+                        {req.presentation?.simulationId ? (
+                            isActive && (
+                                <Simulation
+                                    id={req.presentation.simulationId}
+                                    state={simulationState}
+                                    onChange={onSimulationChange}
                                 />
-                            );
-                        })}
+                            )
+                        ) : (
+                            <div className={styles.visualPanel}>
+                                {req.presentation?.preview && (
+                                    <p className={styles.previewLabel}>
+                                        靜態示意圖・互動模擬於第三頁開放
+                                    </p>
+                                )}
+                                <MaterialImageGallery
+                                    imageIds={req.content.imageIds}
+                                />
+                            </div>
+                        )}
                     </div>
+                    {req.presentation?.previousAnswerPageIndex !==
+                        undefined && (
+                        <section
+                            className={styles.previousAnswer}
+                            aria-label="學生之前的回答"
+                        >
+                            <h2>學生之前的回答</h2>
+                            <p>
+                                {previousAnswer ||
+                                    "本次作答紀錄尚未提供，請返回第一頁確認。"}
+                            </p>
+                        </section>
+                    )}
+                    {req.questionSections.length > 0 && (
+                        <div className={styles.questionList}>
+                            {req.questionSections.map((section, index) => {
+                                const titleQuery = titleQueries[index];
+                                const questionQuery = questionQueries[index];
+                                return (
+                                    <QuizCard
+                                        key={section.questionId}
+                                        question={{
+                                            id: section.questionId,
+                                            title: formatQuestionTitle(
+                                                titleQuery.data?.content ?? "",
+                                                index
+                                            ),
+                                            data: questionQuery.data,
+                                        }}
+                                        isLoading={questionQuery.isLoading}
+                                        error={
+                                            questionQuery.isError
+                                                ? (questionQuery.error
+                                                      ?.message ?? "載入失敗")
+                                                : null
+                                        }
+                                        answer={
+                                            answers[section.questionId] ?? ""
+                                        }
+                                        disabled={
+                                            reviewMode ||
+                                            isCompleted ||
+                                            isSubmitting ||
+                                            submittedQuestionIds.has(
+                                                section.questionId
+                                            )
+                                        }
+                                        validationError={
+                                            validationErrors[section.questionId]
+                                        }
+                                        onAnswerChange={(answer) =>
+                                            handleAnswerChange(
+                                                section.questionId,
+                                                answer
+                                            )
+                                        }
+                                        reviewMode={reviewMode}
+                                        review={reviews[section.questionId]}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
                 </section>
                 <aside className={styles.chatSidebar}>
-                    <CourseChat controller={chat} />
+                    {!noChat && chat && <CourseChat controller={chat} />}
                     {submissionError && !reviewMode && (
                         <p
                             className={FooterStyles.submissionMessage}
@@ -259,7 +308,11 @@ export default function Material({
                         className={FooterStyles.shadowButton}
                         variant="solid"
                         highContrast
-                        onClick={reviewMode ? onNext : submit}
+                        onClick={
+                            reviewMode || req.questionSections.length === 0
+                                ? onNext
+                                : submit
+                        }
                         disabled={!reviewMode && isSubmitting}
                         radius="full"
                     >
@@ -271,7 +324,8 @@ export default function Material({
                               ? "答案送出中…"
                               : submissionError
                                 ? "重試送出"
-                                : isCompleted
+                                : isCompleted ||
+                                    req.questionSections.length === 0
                                   ? "前往下一頁"
                                   : "送出並前往下一頁"}
                     </Button>

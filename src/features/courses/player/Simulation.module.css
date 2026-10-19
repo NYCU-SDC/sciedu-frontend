@@ -1,0 +1,54 @@
+.panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    background: white;
+    border: 2px solid var(--color-genetics-brand-teal);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+.toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+}
+.toolbar strong {
+    margin-right: auto;
+}
+.panel button {
+    cursor: pointer;
+    border: 1px solid #b3ceca;
+    border-radius: 0.5rem;
+    background: #f1f8f6;
+    padding: 0.4rem;
+    color: #205d54;
+}
+.panel iframe {
+    display: block;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+}
+.panel p,
+.panel [role="alert"] {
+    margin: 0.5rem;
+}
+.expanded {
+    position: fixed;
+    inset: 1rem;
+    z-index: 1000;
+    box-shadow: 0 0 0 100vmax #0008;
+}
+@media (max-width: 63.999rem) {
+    .panel {
+        height: 34rem;
+    }
+    .expanded {
+        height: auto;
+    }
+}

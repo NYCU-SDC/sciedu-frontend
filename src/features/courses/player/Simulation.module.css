@@ -34,6 +34,11 @@
     min-height: 0;
     border: 0;
 }
+.toolbar .expandButton {
+    position: static;
+    flex-shrink: 0;
+    padding: 0;
+}
 .panel p,
 .panel [role="alert"] {
     margin: 0.5rem;

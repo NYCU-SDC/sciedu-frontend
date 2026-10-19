@@ -42,4 +42,4 @@ jobs:
                   node-version: 24
 
             - name: Run draft upload safety tests
-              run: node --test tools/argumentation/test_upload.mjs
+              run: node --test tools/argumentation/test_*.mjs

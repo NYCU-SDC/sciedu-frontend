@@ -10,14 +10,16 @@
 ```sh
 python3 tools/argumentation/extract.py '/path/to/論證_學生操作介面_20261013.pptx'
 python3 -m unittest discover -s tools/argumentation -p 'test_*.py' -v
-node --test tools/argumentation/test_upload.mjs
+node --test tools/argumentation/test_*.mjs
 ```
 
 `manifest.json` 記錄來源雜湊與投影片頁碼。抽取器保留來源題意，只組合段落與標籤，
 第四頁另外補上「同一份回答中依序回應五項問題」的操作提示。
 來源階段或引導問題不符時停止，不猜測其他版本的 shape 對應。
-`simulation-source.json` 記錄原始資產 SHA-256；七個供應資產（含 Three.js 授權）維持原始 bytes。
-`index.html` 只增加獨立 `bridge.js` 與 `embed.css`，不修改原始光學模型。
+`simulation-source.json` 記錄原始資產 SHA-256；六個供應資產（含 Three.js 授權）維持原始 bytes。
+`lab.js` 僅反轉垂直拖曳的角度增量，使上下拖曳與左右旋轉方向一致；
+記錄原始與修改後 SHA-256，回歸測試會反向套用這一字元修改並核對原始 bytes。
+`index.html` 只增加獨立 `bridge.js` 與 `embed.css`，不修改原始光學模型；學生介面移除模型限制說明，描述仍保存在隱藏教材 metadata。
 
 ## 與現有 API 的契約
 

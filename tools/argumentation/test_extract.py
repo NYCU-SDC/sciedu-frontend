@@ -62,5 +62,13 @@ class ExtractionTest(unittest.TestCase):
         assets=root.parent.parent/'public/simulations/dark-room/v1/assets'
         for name, digest in records.items():
             self.assertEqual(hashlib.sha256((assets/name).read_bytes()).hexdigest(),digest)
+        # Verify the deployed camera change can be reversed to the original bytes.
+        patched=json.loads((root/'simulation-source.json').read_text())['patchedAssets']['lab.js']
+        raw=(assets/'lab.js').read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),patched['sha256'])
+        before=b'orbit.phi+(e.clientY-drag.y)*.006'
+        after=b'orbit.phi-(e.clientY-drag.y)*.006'
+        self.assertEqual(raw.count(after),1)
+        self.assertEqual(hashlib.sha256(raw.replace(after,before)).hexdigest(),patched['sourceSha256'])
 
 if __name__=='__main__':unittest.main()

@@ -7,6 +7,7 @@ import {
     type SimulationState,
 } from "./presentation";
 import styles from "./Simulation.module.css";
+import ExpandButton from "../genetics/components/ExpandButton";
 
 const CHANNEL = "sciedu-dark-room-v1";
 export default function Simulation({
@@ -97,13 +98,12 @@ export default function Simulation({
                 >
                     重設 LED／隔板
                 </button>
-                <button
-                    type="button"
-                    aria-expanded={expanded}
+                <ExpandButton
+                    className={styles.expandButton}
+                    label={expanded ? "縮回教材" : "放大模擬"}
+                    expanded={expanded}
                     onClick={() => setExpanded(!expanded)}
-                >
-                    {expanded ? "縮回教材" : "放大模擬"}
-                </button>
+                />
             </div>
             {status === "loading" && <p role="status">模擬載入中…</p>}
             {status === "error" && (

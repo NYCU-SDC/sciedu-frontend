@@ -72,3 +72,23 @@ it("shows a recoverable failure when the sandbox never becomes ready", () => {
     fireEvent.click(screen.getByText("重新載入模擬"));
     expect(screen.getByRole("status").textContent).toContain("載入中");
 });
+it("uses named expand and collapse icons and keeps the simulation mounted", () => {
+    render(<Simulation id="dark-room-v1" />);
+    const frame = screen.getByTitle("黑暗房間中的玩偶互動模擬");
+    const expand = screen.getByRole("button", { name: "放大模擬" });
+    expect(expand.textContent).toBe("");
+    expect(expand.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(expand);
+    const collapse = screen.getByRole("button", { name: "縮回教材" });
+    expect(collapse.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByTitle("黑暗房間中的玩偶互動模擬")).toBe(frame);
+    fireEvent.click(collapse);
+    expect(
+        screen
+            .getByRole("button", { name: "放大模擬" })
+            .getAttribute("aria-expanded")
+    ).toBe("false");
+    fireEvent.click(screen.getByRole("button", { name: "放大模擬" }));
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.getByRole("button", { name: "放大模擬" })).toBeTruthy();
+});

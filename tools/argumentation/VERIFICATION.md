@@ -46,7 +46,7 @@ Chat 開關、第三／四頁 simulation 及跨頁控制項保存。沒有以管
 - 新抽取／來源雜湊：4 個 Python 測試通過；原始 deck 重複抽取與已提交 manifest 完全一致。
 - 舊教材抽取／上傳回歸：22 個 Python 測試通過。
 - 草稿上傳安全：4 個 Node 測試通過，涵蓋 pending 禁止重送、checkpoint 寫入順序、斷線停止、已發布父課程禁止新增。
-- 型別、ESLint、Prettier、production build、git diff whitespace 檢查通過。
+- 型別、ESLint、Prettier、production build、git diff whitespace 檢查通過。原始 simulation 資產保留 CRLF／EOF，透過 .gitattributes 排除文字正規化與 whitespace 檢查。
 - 新流程測試包含提交失敗留在原頁、成功後才前進、跨帳號與實驗狀態隔離、登出清理、未知 simulation／非法設定、iframe 訊息來源與格式及載入逾時恢復。
 - 既有 Summary PENDING／FAILED 與其他教材測試隨完整測試套件通過。
 

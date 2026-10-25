@@ -15,7 +15,8 @@ import { CHAT_HISTORY_QUERY_KEY } from "../../../../shared/network/chat";
 export function useCourseChatController(
     scope?: CourseChatScope,
     title = "教材討論",
-    active = true
+    active = true,
+    prepareMessage?: (text: string) => Promise<string>
 ) {
     const queryClient = useQueryClient();
     const [chatID, setChatID] = useState<string | null>(() =>
@@ -65,8 +66,29 @@ export function useCourseChatController(
         if (!trimmed || busy || sendingRef.current || startupUncertain) return;
         sendingRef.current = true;
 
-        setDraft("");
         setErrorMessage(null);
+        setCreating(true);
+        const generationAtSend = chatGenerationRef.current;
+        let content: string;
+        try {
+            content = prepareMessage ? await prepareMessage(trimmed) : trimmed;
+            if (generationAtSend !== chatGenerationRef.current) return;
+        } catch (error) {
+            if (generationAtSend === chatGenerationRef.current) {
+                setDraft(trimmed);
+                setErrorMessage(
+                    error instanceof Error
+                        ? error.message
+                        : "無法載入教材討論內容。"
+                );
+            }
+            return;
+        } finally {
+            setCreating(false);
+            sendingRef.current = false;
+        }
+        sendingRef.current = true;
+        setDraft("");
 
         if (!chatID) {
             const generation = chatGenerationRef.current;
@@ -75,7 +97,7 @@ export function useCourseChatController(
             try {
                 const { chatID: newID } = await startChat(
                     queryClient,
-                    trimmed,
+                    content,
                     {
                         account: scope?.account,
                         onCreated: (id) => {
@@ -120,7 +142,7 @@ export function useCourseChatController(
         }
 
         try {
-            await chat.sendMessage({ content: trimmed });
+            await chat.sendMessage({ content });
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : String(error);

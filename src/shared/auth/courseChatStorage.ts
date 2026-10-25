@@ -1,3 +1,4 @@
+import { backendEnvironment } from "../network/materialChat";
 export type CourseChatScope = {
     account: string;
     experimentId: string;
@@ -9,6 +10,7 @@ export function courseChatKey(scope: CourseChatScope) {
     return (
         COURSE_CHAT_PREFIX +
         JSON.stringify([
+            backendEnvironment(),
             scope.account,
             scope.experimentId,
             scope.courseId,

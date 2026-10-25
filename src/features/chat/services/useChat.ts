@@ -1,3 +1,4 @@
+import { encodeMaterialMessage } from "../../../shared/network/materialChat";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
     BranchDirection,
@@ -234,7 +235,12 @@ export function useChat(chatID: string, account?: string): UseChatResult {
             const target = allMessages.find((m) => m.id === messageId);
             if (!target) return;
             await sendMessage({
-                content: target.content,
+                content: target.materialContext
+                    ? encodeMaterialMessage(
+                          target.content,
+                          target.materialContext
+                      )
+                    : target.content,
                 previousID: target.previousID,
             });
         },
@@ -245,7 +251,12 @@ export function useChat(chatID: string, account?: string): UseChatResult {
         async (messageId: string, content: string) => {
             const target = allMessages.find((m) => m.id === messageId);
             if (!target) return;
-            await sendMessage({ content, previousID: target.previousID });
+            await sendMessage({
+                content: target.materialContext
+                    ? encodeMaterialMessage(content, target.materialContext)
+                    : content,
+                previousID: target.previousID,
+            });
         },
         [allMessages, sendMessage]
     );

@@ -1,3 +1,4 @@
+import { backendEnvironment } from "../../../../shared/network/materialChat";
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -10,7 +11,7 @@ import {
     type CourseAttempt,
 } from "./courseAttempt";
 let attempt: CourseAttempt;
-const key = "sciedu-course-attempt:student%40example.test:e1:genetics";
+const key = `sciedu-course-attempt:${encodeURIComponent(backendEnvironment())}:student%40example.test:e1:genetics`;
 beforeEach(() => {
     clearCourseAttemptStorage();
     attempt = {
@@ -118,4 +119,15 @@ describe("attempt ownership and logout", () => {
         );
         expect(load()).toBeNull();
     });
+});
+
+it("does not restore attempts or navigation state from a different backend", () => {
+    vi.stubEnv("VITE_BACKEND_BASE_URL", "https://dev.example");
+    attempt.sessionId = getAttemptSessionId();
+    saveCourseAttempt(attempt);
+    vi.stubEnv("VITE_BACKEND_BASE_URL", "https://nchc.example");
+    expect(load(attempt.userEmail, "e1", attempt)).toBeNull();
+    vi.stubEnv("VITE_BACKEND_BASE_URL", "https://dev.example");
+    expect(load()).toEqual(attempt);
+    vi.unstubAllEnvs();
 });

@@ -1,3 +1,4 @@
+import type { MaterialContext } from "../../../shared/network/materialChat";
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -223,4 +224,47 @@ it("switching account uses a separate query and never renders the old account's 
         expect(result.current.error).toMatchObject({ status: 404 })
     );
     expect(result.current.messages).toHaveLength(0);
+});
+it("replays the original material snapshot for regeneration and editing", async () => {
+    const { ARGUMENTATION_CODE, ARGUMENTATION_PRESET, decodeMaterialMessage } =
+        await import("../../../shared/network/materialChat");
+    const context: MaterialContext = {
+        version: 1 as const,
+        preset: ARGUMENTATION_PRESET,
+        snapshot: {
+            capturedAt: "original-time",
+            course: { id: "c", code: ARGUMENTATION_CODE, title: "教材" },
+            experimentId: "e",
+            page: {
+                id: "p",
+                title: "頁面",
+                stage: "simulation",
+                body: "original body",
+                descriptions: ["hidden"],
+            },
+            questions: [],
+            simulation: { led: true, partition: false },
+        },
+    };
+    const original = data();
+    original.messages[0].materialContext = context;
+    original.messages[1].status = "completed";
+    vi.mocked(getChat).mockResolvedValue(original);
+    vi.mocked(createMessage).mockImplementation(async (_id, content) => ({
+        message: { ...original.messages[0], id: "edited-user", content },
+        replyMessageID: "edited-reply",
+    }));
+    const { result } = renderHook(() => useChat("chat", "account"), {
+        wrapper,
+    });
+    await waitFor(() => expect(result.current.messages.length).toBe(2));
+    await act(() => result.current.resend("chat-user"));
+    expect(
+        decodeMaterialMessage(vi.mocked(createMessage).mock.calls[0][1])
+    ).toEqual({ text: "問題", context });
+    await act(() => result.current.editAndSend("chat-user", "edited question"));
+    expect(
+        decodeMaterialMessage(vi.mocked(createMessage).mock.calls[1][1])
+    ).toEqual({ text: "edited question", context });
+    expect(vi.mocked(createMessage).mock.calls[1][2]).toBeUndefined();
 });

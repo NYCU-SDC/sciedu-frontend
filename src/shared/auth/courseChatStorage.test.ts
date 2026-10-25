@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, expect, it } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import {
     clearCourseChatStorage,
     readCourseChat,
@@ -55,4 +55,11 @@ it("only keeps a safe local return URL", () => {
         "/chat/\n",
     ])
         expect(safeReturnTo(value)).toBe("/");
+});
+it("does not reuse chat IDs when the backend deployment changes", () => {
+    vi.stubEnv("VITE_BACKEND_BASE_URL", "https://dev.example");
+    saveCourseChat(scope, id);
+    vi.stubEnv("VITE_BACKEND_BASE_URL", "https://nchc.example");
+    expect(readCourseChat(scope)).toBeNull();
+    vi.unstubAllEnvs();
 });

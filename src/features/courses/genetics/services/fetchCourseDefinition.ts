@@ -64,7 +64,13 @@ export async function fetchCourseDefinition(
                       index
                   )
                 : undefined;
-            return mapPageBlocksToCoursePage(page, index, presentation);
+            const mapped = mapPageBlocksToCoursePage(page, index, presentation);
+            if (course.code === "scientific-argumentation-dark-room") {
+                mapped.contextTextIds = page.blocks
+                    .filter((b) => b.type === "TEXT" && b.displayOrder === 200)
+                    .map((b) => b.resourceId);
+            }
+            return mapped;
         })
     );
 

@@ -81,3 +81,9 @@ fixture 只模擬內容與文字提交；完成頁顯示提交給播放器完成
 ## 本輪不包含
 
 CCM 教材、教學模式切換、LLM context／專用 prompt、文字題正式批改、正式發布與指派。
+
+## 教材 Chat（僅前端，PR #61）
+
+科學論證固定綁定 `augmentation_teacher_and_peer`，使用現有 Chat API 的 content 封裝上下文，不需要 #62 或後端／LLM 配套。[功能說明](../../docs/material-chat.md)與[驗證報告／本機啟動指令](CHAT_VERIFICATION.md)。
+
+`preview.html?course=<真實課程 ID>` 現在會確認真實登入與目前 ACTIVE 指派；不再用 local-preview 身分驗收遠端課程。真實預覽題目唯讀，但聊天會保存至目前登入帳號。純本機 fixture 仍用 `preview.html`，不連線 dev。

@@ -1,7 +1,10 @@
+import type { MaterialContext } from "../../../shared/network/materialChat";
 export type MessageRole = "user" | "assistant";
 export type MessageStatus = "streaming" | "completed" | "failed";
 
 export type Message = {
+    /** Client-only decoded metadata. Never sent as an API field. */
+    materialContext?: MaterialContext;
     id: string;
     content: string;
     parts?: MessagePart[];

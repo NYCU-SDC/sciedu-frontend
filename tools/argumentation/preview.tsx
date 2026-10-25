@@ -19,8 +19,34 @@ import CoursePlayer, {
     type CourseCompletion,
 } from "../../src/features/courses/player/CoursePlayer";
 import { fetchCourseDefinition } from "../../src/features/courses/genetics/services/fetchCourseDefinition";
+import { getSession } from "../../src/shared/auth/requests";
+import { getCurrentExperiment } from "../../src/features/courses/services/currentExperimentRepository";
 const id = new URLSearchParams(location.search).get("course") ?? "preview";
 export function Preview() {
+    const remoteContext = useQuery({
+        queryKey: ["preview-auth-scope", id],
+        enabled: id !== "preview",
+        queryFn: async () => {
+            const [session, current] = await Promise.all([
+                getSession(),
+                getCurrentExperiment(),
+            ]);
+            if (
+                !current ||
+                current.experiment.status !== "ACTIVE" ||
+                !current.courses.some((c) => c.id === id)
+            ) {
+                throw new Error(
+                    "此帳號沒有指派這份教材的進行中實驗，無法驗收真實教材聊天。"
+                );
+            }
+            return {
+                account: session.email,
+                experimentId: current.experiment.id,
+                courseId: id,
+            };
+        },
+    });
     const [completion, setCompletion] = useState<CourseCompletion>();
     const { data, error } = useQuery({
         queryKey: ["preview", id],
@@ -30,6 +56,14 @@ export function Preview() {
                 mainTitle: "科學論證",
             }),
     });
+    if (id !== "preview" && !remoteContext.data)
+        return (
+            <p>
+                {remoteContext.error
+                    ? String(remoteContext.error)
+                    : "確認真實登入與教材指派…"}
+            </p>
+        );
     if (completion)
         return (
             <main style={{ padding: "2rem" }}>
@@ -42,16 +76,25 @@ export function Preview() {
             </main>
         );
     return data ? (
-        <CoursePlayer
-            definition={data}
-            chatScope={{
-                account: "local-preview",
-                experimentId: "local-preview",
-                courseId: id,
-            }}
-            reviewMode={id !== "preview"}
-            onComplete={setCompletion}
-        />
+        <>
+            {id !== "preview" && (
+                <p role="status">
+                    真實後端教材預覽：聊天會保存到目前登入帳號；題目僅供閱讀，不提交答案。
+                </p>
+            )}
+            <CoursePlayer
+                definition={data}
+                chatScope={
+                    remoteContext.data ?? {
+                        account: "local-preview",
+                        experimentId: "local-preview",
+                        courseId: id,
+                    }
+                }
+                reviewMode={id !== "preview"}
+                onComplete={setCompletion}
+            />
+        </>
     ) : (
         <p>{error ? String(error) : "載入教材…"}</p>
     );

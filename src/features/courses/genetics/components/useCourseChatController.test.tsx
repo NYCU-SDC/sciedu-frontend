@@ -127,3 +127,27 @@ it("restart removes the page reference and does not delete history", async () =>
     expect(readCourseChat(scope)).toBeNull();
     expect(createChat).not.toHaveBeenCalled();
 });
+it("context load failure preserves text and never creates a chat or sends partial data", async () => {
+    const prepare = vi
+        .fn()
+        .mockRejectedValue(new Error("missing descriptions"));
+    const { result } = renderHook(
+        () => useCourseChatController(scope, "教材", true, prepare),
+        { wrapper }
+    );
+    await act(() => result.current.handleSend("my question"));
+    expect(result.current.draft).toBe("my question");
+    expect(result.current.errorMessage).toBe("missing descriptions");
+    expect(createChat).not.toHaveBeenCalled();
+    expect(createMessage).not.toHaveBeenCalled();
+});
+it("sends the prepared snapshot for the initial message", async () => {
+    const prepare = vi.fn().mockResolvedValue("wire snapshot");
+    const { result } = renderHook(
+        () => useCourseChatController(scope, "教材", true, prepare),
+        { wrapper }
+    );
+    await act(() => result.current.handleSend("my question"));
+    expect(prepare).toHaveBeenCalledWith("my question");
+    expect(createMessage).toHaveBeenCalledWith(id, "wire snapshot");
+});

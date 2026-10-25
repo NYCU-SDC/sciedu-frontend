@@ -139,6 +139,8 @@ export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
 };
 
 export type CoursePageRequest = {
+    /** Hidden importer descriptions, never rendered as student body text. */
+    contextTextIds?: string[];
     pageId?: string;
     pageIndex: number;
     request: MaterialPage | OverviewPage | QuestionPage;

@@ -1,3 +1,5 @@
+import { prepareMaterialMessage } from "../chat/prepareMaterialMessage";
+import { backendEnvironment } from "../../../shared/network/materialChat";
 import { DEFAULT_SIMULATION_STATE, type SimulationState } from "./presentation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,6 +35,7 @@ import type {
 import type { CourseChatScope } from "../../../shared/auth/courseChatStorage";
 
 type PageContentProps = {
+    prepareMessage?: (text: string) => Promise<string>;
     data: CoursePageRequest;
     chat: CourseChatController;
     isActive: boolean;
@@ -90,7 +93,12 @@ function PageWithChat({
     chatScope?: CourseChatScope;
     chatTitle: string;
 }) {
-    const chat = useCourseChatController(chatScope, chatTitle, props.isActive);
+    const chat = useCourseChatController(
+        chatScope,
+        chatTitle,
+        props.isActive,
+        props.prepareMessage
+    );
     return <PageContent {...props} chat={chat} />;
 }
 
@@ -144,6 +152,7 @@ export default function CoursePlayer({
         !reviewMode && chatScope
             ? PLAYER_SESSION_PREFIX +
               JSON.stringify([
+                  backendEnvironment(),
                   chatScope.account,
                   chatScope.experimentId,
                   chatScope.courseId,
@@ -331,7 +340,13 @@ export default function CoursePlayer({
                 />
                 {pageRequests.slice(0, unlockedIndex + 1).map((page, index) => (
                     <CoursePage
-                        key={page.pageId ?? page.pageIndex}
+                        key={JSON.stringify([
+                            backendEnvironment(),
+                            chatScope?.account,
+                            chatScope?.experimentId,
+                            definition.id,
+                            page.pageId ?? page.pageIndex,
+                        ])}
                         isActive={index === currentIndex}
                         chatScope={
                             chatScope
@@ -344,6 +359,23 @@ export default function CoursePlayer({
                                 : undefined
                         }
                         chatTitle={`${definition.title} · ${page.secondaryTitle}`}
+                        prepareMessage={(text) =>
+                            prepareMaterialMessage(text, {
+                                definition,
+                                page,
+                                scope: chatScope
+                                    ? {
+                                          ...chatScope,
+                                          pageId:
+                                              page.pageId ??
+                                              `legacy:${page.pageIndex}`,
+                                      }
+                                    : undefined,
+                                answersByPage,
+                                submissions: submissionsRef.current,
+                                simulation: simulationState,
+                            })
+                        }
                         simulationState={simulationState}
                         onSimulationChange={setSimulationState}
                         previousAnswer={

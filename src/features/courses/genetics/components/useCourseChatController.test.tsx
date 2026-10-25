@@ -127,3 +127,87 @@ it("restart removes the page reference and does not delete history", async () =>
     expect(readCourseChat(scope)).toBeNull();
     expect(createChat).not.toHaveBeenCalled();
 });
+
+const learningScope: CourseChatScope = {
+    account: "learner@coursechat.test",
+    experimentId: "a3000000-0000-4000-8000-000000000010",
+    courseId: "a3000000-0000-4000-8000-000000000011",
+    pageId: "a3000000-0000-4000-8000-000000000012",
+};
+import type * as LearningNetwork from "../../../../shared/network/learning";
+vi.mock("../../../../shared/network/learning", async (original) => ({
+    ...(await original<typeof LearningNetwork>()),
+    learnerChatConfiguration: vi.fn(),
+}));
+import { learnerChatConfiguration } from "../../../../shared/network/learning";
+
+it("configured course starts with a typed action and current draft/simulation only", async () => {
+    vi.mocked(learnerChatConfiguration).mockResolvedValue({
+        configuration: {
+            preset: "augmentation_teacher_and_peer",
+            workflow: "argumentation-v1",
+            locked: false,
+        },
+    });
+    const binding = {
+        experimentId: learningScope.experimentId,
+        courseId: learningScope.courseId,
+        pageId: learningScope.pageId,
+    };
+    vi.mocked(getChat).mockResolvedValue({
+        id,
+        title: "bound",
+        createdAt: "now",
+        updatedAt: "now",
+        messages: [],
+        courseContext: binding,
+    });
+    const { result, rerender } = renderHook(
+        ({ value }) =>
+            useCourseChatController(learningScope, "論證", true, {
+                draftAnswers: [{ questionId: "q", value }],
+                simulationState: { led: true, partition: false },
+            }),
+        { wrapper, initialProps: { value: "舊草稿" } }
+    );
+    await waitFor(() => expect(result.current.isArgumentation).toBe(true));
+    rerender({ value: "送出當下的草稿" });
+    await act(() => result.current.handleAction("start"));
+    expect(createChat).toHaveBeenCalledWith(binding);
+    expect(createMessage).toHaveBeenCalledWith(
+        id,
+        "",
+        undefined,
+        undefined,
+        expect.objectContaining({
+            action: "start",
+            draftAnswers: [{ questionId: "q", value: "送出當下的草稿" }],
+            simulationState: { led: true, partition: false },
+        })
+    );
+    expect(readCourseChat(learningScope)).toBe(id);
+});
+it("configuration failure blocks sending instead of falling back to global preset", async () => {
+    vi.mocked(learnerChatConfiguration).mockRejectedValue(
+        new ApiError("configuration unavailable", 503)
+    );
+    const { result } = renderHook(
+        () => useCourseChatController(learningScope),
+        { wrapper }
+    );
+    await waitFor(() =>
+        expect(result.current.configurationError).toContain("不會改用預設角色")
+    );
+    await act(() => result.current.handleSend("should not send"));
+    expect(createChat).not.toHaveBeenCalled();
+    expect(createMessage).not.toHaveBeenCalled();
+});
+it("disabled lesson chat performs no configuration or message requests", async () => {
+    const { result } = renderHook(
+        () => useCourseChatController(learningScope, "no chat", false),
+        { wrapper }
+    );
+    expect(learnerChatConfiguration).not.toHaveBeenCalled();
+    expect(getChat).not.toHaveBeenCalled();
+    expect(result.current.messages).toEqual([]);
+});

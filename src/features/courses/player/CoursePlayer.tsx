@@ -36,6 +36,7 @@ type PageContentProps = {
     data: CoursePageRequest;
     chat: CourseChatController;
     isActive: boolean;
+    draftAnswers: { questionId: string; value: string }[];
     previousAnswer?: string;
     simulationState: SimulationState;
     onSimulationChange: (state: SimulationState) => void;
@@ -90,7 +91,14 @@ function PageWithChat({
     chatScope?: CourseChatScope;
     chatTitle: string;
 }) {
-    const chat = useCourseChatController(chatScope, chatTitle, props.isActive);
+    const chat = useCourseChatController(chatScope, chatTitle, props.isActive, {
+        draftAnswers: props.draftAnswers,
+        simulationState:
+            props.data.request.type === "material" &&
+            props.data.request.presentation?.simulationId
+                ? props.simulationState
+                : undefined,
+    });
     return <PageContent {...props} chat={chat} />;
 }
 
@@ -344,6 +352,15 @@ export default function CoursePlayer({
                                 : undefined
                         }
                         chatTitle={`${definition.title} · ${page.secondaryTitle}`}
+                        draftAnswers={Object.values(answersByPage).flatMap(
+                            (answers) =>
+                                Object.entries(answers).map(
+                                    ([questionId, value]) => ({
+                                        questionId,
+                                        value,
+                                    })
+                                )
+                        )}
                         simulationState={simulationState}
                         onSimulationChange={setSimulationState}
                         previousAnswer={

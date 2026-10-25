@@ -1,3 +1,7 @@
+import type {
+    CourseContext,
+    LearningInput,
+} from "../../../shared/network/learning";
 import type { QueryClient } from "@tanstack/react-query";
 import type { GetChatResponse } from "../types/chat";
 import { createChat, createMessage } from "../../../shared/network/chat";
@@ -16,15 +20,25 @@ export type StartChatResult = {
 export async function startChat(
     queryClient: QueryClient,
     content: string,
-    options: { account?: string; onCreated?: (id: string) => void } = {}
+    options: {
+        account?: string;
+        onCreated?: (id: string) => void;
+        courseContext?: CourseContext;
+        learning?: LearningInput;
+    } = {}
 ): Promise<StartChatResult> {
-    const { chatID } = await createChat();
+    const { chatID } = await (options.courseContext
+        ? createChat(options.courseContext)
+        : createChat());
     options.onCreated?.(chatID);
-    const { message, replyMessageID } = await createMessage(chatID, content);
+    const { message, replyMessageID } = await (options.learning
+        ? createMessage(chatID, content, undefined, undefined, options.learning)
+        : createMessage(chatID, content));
 
     const now = new Date().toISOString();
     const optimistic: GetChatResponse = {
         id: chatID,
+        courseContext: options.courseContext,
         title: message.content.slice(0, 40),
         createdAt: now,
         updatedAt: now,
@@ -32,6 +46,7 @@ export async function startChat(
             message,
             {
                 id: replyMessageID,
+                learning: message.learning,
                 content: "",
                 previousID: message.id,
                 role: "assistant",

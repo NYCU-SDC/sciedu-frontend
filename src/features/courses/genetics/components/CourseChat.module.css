@@ -87,3 +87,17 @@
     flex-shrink: 0;
     padding: 0.375rem 0.875rem 0.75rem;
 }
+
+.learningActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.learningActions button {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-brand-teal-dark);
+    border-radius: 0.5rem;
+    background: white;
+    color: var(--color-brand-teal-dark);
+    cursor: pointer;
+}

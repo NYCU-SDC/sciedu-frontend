@@ -1,3 +1,4 @@
+import CourseChatSettings from "../components/CourseChatSettings";
 import { useMemo, useState } from "react";
 import {
     ActionIcon,
@@ -542,6 +543,15 @@ export default function ExperimentDetailPage() {
                                             </div>
                                             <Progress value={0} color="teal" />
                                         </div>
+                                        <CourseChatSettings
+                                            experimentId={experiment.id}
+                                            courseId={course.id}
+                                            courseCode={course.code}
+                                            disabled={[
+                                                "COMPLETED",
+                                                "ARCHIVED",
+                                            ].includes(experiment.status)}
+                                        />
                                         <Button
                                             variant="subtle"
                                             disabled

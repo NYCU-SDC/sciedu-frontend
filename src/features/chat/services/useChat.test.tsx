@@ -224,3 +224,36 @@ it("switching account uses a separate query and never renders the old account's 
     );
     expect(result.current.messages).toHaveLength(0);
 });
+it("learning SSE completion loads committed teaching state before resume subscription disappears", async () => {
+    const learning = {
+        action: "start" as const,
+        preset: "augmentation_teacher_and_peer",
+        context: {},
+    };
+    const initial = data();
+    initial.messages[0].content = "";
+    initial.messages[0].learning = learning;
+    initial.messages[1].learning = learning;
+    vi.mocked(getChat).mockResolvedValue(initial);
+    const { result } = renderHook(() => useChat("chat"), { wrapper });
+    await waitFor(() => expect(openStream).toHaveBeenCalled());
+    const completed = structuredClone(initial);
+    completed.messages[1].status = "completed";
+    completed.messages[1].learning = {
+        ...learning,
+        teachingState: { stage: "claim", phase: "awaiting_answer" },
+    };
+    vi.mocked(getChat).mockResolvedValue(completed);
+    act(() =>
+        handlers.onEvent({
+            type: "done",
+            status: "completed",
+            finishReason: "stop",
+        })
+    );
+    await waitFor(() =>
+        expect(result.current.messages.at(-1)?.learning?.teachingState).toEqual(
+            { stage: "claim", phase: "awaiting_answer" }
+        )
+    );
+});

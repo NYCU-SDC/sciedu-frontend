@@ -1,3 +1,4 @@
+import type { CourseContext, LearningInput } from "./learning";
 import { api } from "../utils/api";
 import type {
     GetChatResponse,
@@ -44,10 +45,13 @@ export type CreateChatResponse = {
 };
 
 /** POST /api/chat — create a new chat session. */
-export async function createChat(): Promise<CreateChatResponse> {
+export async function createChat(
+    courseContext?: CourseContext
+): Promise<CreateChatResponse> {
     if (CHAT_MOCK_ENABLED) return (await mock()).createMockChat();
     return api<CreateChatResponse>("/api/chat", {
         method: "POST",
+        body: courseContext ? JSON.stringify({ courseContext }) : undefined,
     });
 }
 
@@ -61,13 +65,19 @@ export async function createMessage(
     chatID: string,
     content: string,
     previousID?: string,
-    preset: string | undefined = import.meta.env.VITE_CHAT_PRESET || undefined
+    preset: string | undefined = import.meta.env.VITE_CHAT_PRESET || undefined,
+    learning?: LearningInput
 ): Promise<CreateMessageResponse> {
     if (CHAT_MOCK_ENABLED)
         return (await mock()).createMockMessage(chatID, content, previousID);
     const response = await api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
-        body: JSON.stringify({ content, previousID, preset }),
+        body: JSON.stringify({
+            content,
+            previousID,
+            preset: learning ? undefined : preset,
+            learning,
+        }),
     });
     return { ...response, message: normalizeMessage(response.message) };
 }

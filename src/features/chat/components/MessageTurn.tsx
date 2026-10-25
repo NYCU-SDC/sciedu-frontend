@@ -73,16 +73,18 @@ function UserMeta({
                     </button>
                 </div>
             ) : null}
-            <button
-                type="button"
-                className={styles.iconbtn}
-                onClick={() => onEdit(message.id)}
-                disabled={actionsDisabled}
-                aria-label="編輯訊息"
-                title="編輯訊息"
-            >
-                <Pencil size={15} strokeWidth={1.6} />
-            </button>
+            {(!message.learning || message.learning.action === "message") && (
+                <button
+                    type="button"
+                    className={styles.iconbtn}
+                    onClick={() => onEdit(message.id)}
+                    disabled={actionsDisabled}
+                    aria-label="編輯訊息"
+                    title="編輯訊息"
+                >
+                    <Pencil size={15} strokeWidth={1.6} />
+                </button>
+            )}
             <button
                 type="button"
                 className={styles.iconbtn}
@@ -275,6 +277,18 @@ function AssistantMessage({ message }: Pick<Props, "message">) {
 
 export default function MessageTurn(props: Props) {
     const { message, isEditing } = props;
+
+    if (
+        message.role === "user" &&
+        message.learning &&
+        message.learning.action !== "message"
+    ) {
+        return (
+            <div className={styles.controlMeta} aria-label="論證操作">
+                <UserMeta {...props} />
+            </div>
+        );
+    }
 
     if (message.role === "user") {
         return (

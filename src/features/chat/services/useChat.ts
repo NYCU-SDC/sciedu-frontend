@@ -1,3 +1,7 @@
+import {
+    replayLearningInput,
+    type LearningInput,
+} from "../../../shared/network/learning";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
     BranchDirection,
@@ -17,6 +21,7 @@ import { useMessageStream } from "./useMessageStream";
 export type ChatStatus = "loading" | "idle" | "streaming" | "error";
 
 export type SendMessageInput = {
+    learning?: LearningInput;
     content: string;
     /** Parent to branch from. Defaults to the last visible message. */
     previousID?: string;
@@ -170,7 +175,12 @@ export function useChat(chatID: string, account?: string): UseChatResult {
     const sendMessage = useCallback(
         async (input: SendMessageInput) => {
             const trimmed = input.content.trim();
-            if (!trimmed || sendingRef.current || uncertain) return;
+            if (
+                (!trimmed && !input.learning) ||
+                sendingRef.current ||
+                uncertain
+            )
+                return;
             sendingRef.current = true;
             setSending(true);
             setSendError(null);
@@ -183,11 +193,15 @@ export function useChat(chatID: string, account?: string): UseChatResult {
                     "previousID" in input
                         ? input.previousID
                         : visible.at(-1)?.id;
-                const { message, replyMessageID } = await createMessage(
-                    chatID,
-                    trimmed,
-                    parentID
-                );
+                const { message, replyMessageID } = input.learning
+                    ? await createMessage(
+                          chatID,
+                          trimmed,
+                          parentID,
+                          undefined,
+                          input.learning
+                      )
+                    : await createMessage(chatID, trimmed, parentID);
 
                 // Pin the freshly created sibling so it is the visible branch.
                 selectBranch(message.previousID, message.id);
@@ -202,6 +216,7 @@ export function useChat(chatID: string, account?: string): UseChatResult {
                                       message,
                                       {
                                           id: replyMessageID,
+                                          learning: message.learning,
                                           content: "",
                                           role: "assistant",
                                           previousID: message.id,
@@ -236,6 +251,7 @@ export function useChat(chatID: string, account?: string): UseChatResult {
             await sendMessage({
                 content: target.content,
                 previousID: target.previousID,
+                learning: replayLearningInput(target),
             });
         },
         [allMessages, sendMessage]
@@ -245,7 +261,11 @@ export function useChat(chatID: string, account?: string): UseChatResult {
         async (messageId: string, content: string) => {
             const target = allMessages.find((m) => m.id === messageId);
             if (!target) return;
-            await sendMessage({ content, previousID: target.previousID });
+            await sendMessage({
+                content,
+                previousID: target.previousID,
+                learning: replayLearningInput(target),
+            });
         },
         [allMessages, sendMessage]
     );
@@ -272,6 +292,7 @@ export function useChat(chatID: string, account?: string): UseChatResult {
               title: query.data.title,
               createdAt: query.data.createdAt,
               updatedAt: query.data.updatedAt,
+              courseContext: query.data.courseContext,
           }
         : undefined;
 

@@ -74,3 +74,17 @@ it("hides legacy thinking blocks while preserving visible answers", () => {
     expect(screen.getByText("可見回答")).toBeTruthy();
     expect(document.body.textContent).not.toContain("SECRET");
 });
+it("typed teaching controls have retry actions without fabricated user speech or edit", () => {
+    show({
+        role: "user",
+        content: "",
+        learning: {
+            action: "start",
+            preset: "augmentation_teacher_and_peer",
+            context: {},
+        },
+    });
+    expect(screen.getByLabelText("論證操作")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "重新生成" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "編輯訊息" })).toBeNull();
+});

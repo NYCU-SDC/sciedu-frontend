@@ -1,3 +1,5 @@
+import CourseChatSettings from "../components/CourseChatSettings";
+import { courseChatConfiguration } from "../../../shared/network/learning";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Badge,
@@ -267,6 +269,26 @@ export default function CreateExperimentPage() {
         try {
             const experiment = await persistExperiment();
             await syncCourses(experiment.id);
+            if (options.schedule) {
+                for (const course of selectedCourses) {
+                    if (course.code !== "scientific-argumentation-dark-room")
+                        continue;
+                    const { configuration } = await courseChatConfiguration(
+                        experiment.id,
+                        course.id
+                    );
+                    if (
+                        !configuration ||
+                        configuration.workflow !== "argumentation-v1"
+                    ) {
+                        setStep(3);
+                        throw new ApiError(
+                            "請先儲存科學論證教材的 preset 與四階段對話設定",
+                            400
+                        );
+                    }
+                }
+            }
             if (options.schedule && experiment.status !== "SCHEDULED") {
                 await updateExperimentStatus(experiment.id, "SCHEDULED");
             }
@@ -850,6 +872,26 @@ export default function CreateExperimentPage() {
 
                 {step === 3 && (
                     <div className={styles.reviewGrid}>
+                        <Card className={styles.card} radius="lg">
+                            <Title order={2}>各教材對話設定</Title>
+                            <p>
+                                選擇本實驗使用的
+                                preset；第一個教材聊天室建立後即鎖定。
+                            </p>
+                            <Stack>
+                                {selectedCourses.map((course) => (
+                                    <section key={course.id}>
+                                        <h3>{course.title}</h3>
+                                        <CourseChatSettings
+                                            experimentId={persistedExperimentId}
+                                            courseId={course.id}
+                                            courseCode={course.code}
+                                            disabled={isReadOnly}
+                                        />
+                                    </section>
+                                ))}
+                            </Stack>
+                        </Card>
                         <Stack>
                             <Card
                                 className={`${styles.card} ${styles.formCard}`}

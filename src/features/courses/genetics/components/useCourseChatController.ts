@@ -1,5 +1,11 @@
+import {
+    learnerChatConfiguration,
+    type DraftAnswer,
+    type LearningAction,
+    type LearningInput,
+} from "../../../../shared/network/learning";
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { ApiError } from "../../../../shared/utils/api";
@@ -15,9 +21,44 @@ import { CHAT_HISTORY_QUERY_KEY } from "../../../../shared/network/chat";
 export function useCourseChatController(
     scope?: CourseChatScope,
     title = "教材討論",
-    active = true
+    active = true,
+    learningContext?: {
+        draftAnswers: DraftAnswer[];
+        simulationState?: { led: boolean; partition: boolean };
+    }
 ) {
     const queryClient = useQueryClient();
+    const realScope = Boolean(
+        scope &&
+        [scope.experimentId, scope.courseId, scope.pageId].every((value) =>
+            /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(value)
+        )
+    );
+    const configuration = useQuery({
+        queryKey: [
+            "course-chat-configuration",
+            scope?.account,
+            scope?.experimentId,
+            scope?.courseId,
+            scope?.pageId,
+        ],
+        queryFn: () =>
+            learnerChatConfiguration({
+                experimentId: scope!.experimentId,
+                courseId: scope!.courseId,
+                pageId: scope!.pageId,
+            }),
+        enabled: active && realScope,
+        retry: false,
+    });
+    const configured = configuration.data?.configuration;
+    const isArgumentation = configured?.workflow === "argumentation-v1";
+    const configurationLoading = active && realScope && configuration.isPending;
+    const liveContext = useRef(learningContext);
+    useEffect(() => {
+        liveContext.current = learningContext;
+    }, [learningContext]);
+
     const [chatID, setChatID] = useState<string | null>(() =>
         readCourseChat(scope)
     );
@@ -55,14 +96,49 @@ export function useCourseChatController(
             };
         }
     }, [chat.error, scope]);
+    useEffect(() => {
+        if (!configured || !chat.chat || chat.chat.courseContext) return;
+        let current = true;
+        queueMicrotask(() => {
+            if (current) {
+                saveCourseChat(scope, null);
+                setChatID(null);
+            }
+        });
+        return () => {
+            current = false;
+        };
+    }, [configured, chat.chat, scope]);
     const messages = chat.messages;
+    const lastLearning = [...messages]
+        .reverse()
+        .find((message) => message.learning)?.learning;
+    const teachingState =
+        lastLearning?.teachingState ?? lastLearning?.beforeState;
+
     const baseMessages = messages;
     const busy =
         creating || chat.status === "streaming" || chat.status === "loading";
 
-    const handleSend = async (text: string) => {
+    const send = async (text: string, action: LearningAction = "message") => {
         const trimmed = text.trim();
-        if (!trimmed || busy || sendingRef.current || startupUncertain) return;
+        if (
+            (!trimmed && action === "message") ||
+            busy ||
+            sendingRef.current ||
+            startupUncertain ||
+            configurationLoading ||
+            configuration.isError
+        )
+            return;
+        const learning: LearningInput | undefined = configured
+            ? {
+                  requestId: crypto.randomUUID(),
+                  action,
+                  draftAnswers: liveContext.current?.draftAnswers ?? [],
+                  simulationState: liveContext.current?.simulationState,
+              }
+            : undefined;
         sendingRef.current = true;
 
         setDraft("");
@@ -78,6 +154,15 @@ export function useCourseChatController(
                     trimmed,
                     {
                         account: scope?.account,
+                        courseContext:
+                            configured && scope
+                                ? {
+                                      experimentId: scope.experimentId,
+                                      courseId: scope.courseId,
+                                      pageId: scope.pageId,
+                                  }
+                                : undefined,
+                        learning,
                         onCreated: (id) => {
                             if (generation !== chatGenerationRef.current)
                                 return;
@@ -120,7 +205,7 @@ export function useCourseChatController(
         }
 
         try {
-            await chat.sendMessage({ content: trimmed });
+            await chat.sendMessage({ content: trimmed, learning });
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : String(error);
@@ -132,6 +217,8 @@ export function useCourseChatController(
         }
     };
 
+    const handleSend = (text: string) => send(text);
+    const handleAction = (action: LearningAction) => send("", action);
     const handleEdit = (messageId: string) => {
         const target = baseMessages.find((message) => message.id === messageId);
         if (!target) return;
@@ -194,6 +281,13 @@ export function useCourseChatController(
         }
     };
     return {
+        isArgumentation,
+        teachingState,
+        handleAction,
+        configurationLoading,
+        configurationError: configuration.isError
+            ? "無法讀取教材對話設定，請重新整理；本頁不會改用預設角色。"
+            : null,
         startupUncertain,
         title,
         handleRecover,

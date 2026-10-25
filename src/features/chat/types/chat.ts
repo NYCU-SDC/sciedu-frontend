@@ -1,7 +1,12 @@
+import type {
+    CourseContext,
+    LearningMetadata,
+} from "../../../shared/network/learning";
 export type MessageRole = "user" | "assistant";
 export type MessageStatus = "streaming" | "completed" | "failed";
 
 export type Message = {
+    learning?: LearningMetadata;
     id: string;
     content: string;
     parts?: MessagePart[];
@@ -14,6 +19,7 @@ export type Message = {
 };
 
 export type Chat = {
+    courseContext?: CourseContext;
     id: string;
     title: string;
     createdAt: string;

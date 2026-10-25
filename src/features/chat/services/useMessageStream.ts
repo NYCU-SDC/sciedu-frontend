@@ -59,7 +59,8 @@ export function useMessageStream(
                                                   }
                                                 : {}),
                                             status:
-                                                snapshot.phase === "done"
+                                                snapshot.phase === "done" &&
+                                                !message.learning
                                                     ? "completed"
                                                     : message.status,
                                         }
@@ -68,6 +69,9 @@ export function useMessageStream(
                           }
                         : previous
             );
+        // Keep learning replies pending in cache until the canonical GET supplies
+        // their committed teaching state; otherwise resumeId disappears and
+        // cleanup cancels the very request that makes the next action available.
         const reconcile = () => {
             cache();
             // Terminal events can precede DB persistence. Poll a bounded number of

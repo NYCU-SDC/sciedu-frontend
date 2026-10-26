@@ -1,0 +1,1635 @@
+{
+    "runId": "ARCHIVE-QA-e52afe4a35",
+    "apiBase": "http://localhost:58080",
+    "createdAt": "2026-10-26T07:15:52.382671+00:00",
+    "checks": [
+        {
+            "name": "ACTIVE archive releases overlap; preserves schedule, assignments, answer; student transfers",
+            "status": "PASS",
+            "answerId": "0d200ce7-850a-40b0-9842-384d877e36c7"
+        },
+        {
+            "name": "DRAFT archive releases overlap",
+            "status": "PASS"
+        },
+        {
+            "name": "SCHEDULED archive releases overlap",
+            "status": "PASS"
+        },
+        {
+            "name": "COMPLETED archive releases overlap",
+            "status": "PASS"
+        }
+    ],
+    "http": [
+        {
+            "role": "student",
+            "method": "GET",
+            "path": "/api/experiments/current",
+            "status": 404,
+            "request": null,
+            "response": {
+                "title": "Not Found",
+                "status": 404,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+                "detail": "current experiment not found"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/courses",
+            "status": 201,
+            "request": {
+                "code": "ARCHIVE-QA-e52afe4a35",
+                "title": "ARCHIVE-QA-e52afe4a35"
+            },
+            "response": {
+                "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                "code": "ARCHIVE-QA-e52afe4a35",
+                "title": "ARCHIVE-QA-e52afe4a35",
+                "status": "DRAFT",
+                "createdAt": "2026-10-26T07:15:52.410674Z",
+                "updatedAt": "2026-10-26T07:15:52.410674Z"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/questions",
+            "status": 201,
+            "request": {
+                "type": "TEXT",
+                "content": "QA：請輸入測試答案"
+            },
+            "response": {
+                "id": "0ad651a4-5556-442f-a699-e6af5fc0bff6",
+                "type": "TEXT",
+                "content": "QA：請輸入測試答案"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/courses/f5e7c7b7-329c-41e4-93f4-5b3a174b06c8/pages",
+            "status": 201,
+            "request": {
+                "title": "QA",
+                "displayOrder": 0
+            },
+            "response": {
+                "id": "9599be31-6225-4141-99d3-6f8a964ac5d1",
+                "courseId": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                "title": "QA",
+                "displayOrder": 0,
+                "createdAt": "2026-10-26T07:15:52.419991Z",
+                "updatedAt": "2026-10-26T07:15:52.419991Z",
+                "blocks": []
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/pages/9599be31-6225-4141-99d3-6f8a964ac5d1/blocks",
+            "status": 201,
+            "request": {
+                "type": "QUESTION",
+                "resourceId": "0ad651a4-5556-442f-a699-e6af5fc0bff6",
+                "displayOrder": 0,
+                "required": true
+            },
+            "response": {
+                "id": "2ff91218-ff99-4b43-a1a3-9a3558829a7e",
+                "pageId": "9599be31-6225-4141-99d3-6f8a964ac5d1",
+                "type": "QUESTION",
+                "resourceId": "0ad651a4-5556-442f-a699-e6af5fc0bff6",
+                "displayOrder": 0,
+                "required": true,
+                "createdAt": "2026-10-26T07:15:52.425438Z",
+                "updatedAt": "2026-10-26T07:15:52.425438Z"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/courses/f5e7c7b7-329c-41e4-93f4-5b3a174b06c8/status",
+            "status": 200,
+            "request": {
+                "status": "PUBLISHED"
+            },
+            "response": {
+                "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                "code": "ARCHIVE-QA-e52afe4a35",
+                "title": "ARCHIVE-QA-e52afe4a35",
+                "status": "PUBLISHED",
+                "createdAt": "2026-10-26T07:15:52.410674Z",
+                "updatedAt": "2026-10-26T07:15:52.42864Z"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.431128Z",
+                "updatedAt": "2026-10-26T07:15:52.431128Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "e39e4863-0f31-4f04-8ec5-8d10d42b720f",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.434211Z",
+                "updatedAt": "2026-10-26T07:15:52.434211Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/courses",
+            "status": 200,
+            "request": {
+                "courseIds": ["f5e7c7b7-329c-41e4-93f4-5b3a174b06c8"]
+            },
+            "response": [
+                {
+                    "course": {
+                        "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                        "code": "ARCHIVE-QA-e52afe4a35",
+                        "title": "ARCHIVE-QA-e52afe4a35",
+                        "status": "PUBLISHED",
+                        "createdAt": "2026-10-26T07:15:52.410674Z",
+                        "updatedAt": "2026-10-26T07:15:52.42864Z"
+                    },
+                    "linkedAt": "2026-10-26T07:15:52.436898Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/e39e4863-0f31-4f04-8ec5-8d10d42b720f/courses",
+            "status": 200,
+            "request": {
+                "courseIds": ["f5e7c7b7-329c-41e4-93f4-5b3a174b06c8"]
+            },
+            "response": [
+                {
+                    "course": {
+                        "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                        "code": "ARCHIVE-QA-e52afe4a35",
+                        "title": "ARCHIVE-QA-e52afe4a35",
+                        "status": "PUBLISHED",
+                        "createdAt": "2026-10-26T07:15:52.410674Z",
+                        "updatedAt": "2026-10-26T07:15:52.42864Z"
+                    },
+                    "linkedAt": "2026-10-26T07:15:52.440266Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.443318Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/status",
+            "status": 200,
+            "request": {
+                "status": "ACTIVE"
+            },
+            "response": {
+                "id": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ACTIVE",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.431128Z",
+                "updatedAt": "2026-10-26T07:15:52.447766Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb",
+            "status": 200,
+            "request": null,
+            "response": {
+                "id": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ACTIVE",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.431128Z",
+                "updatedAt": "2026-10-26T07:15:52.447766Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/participants",
+            "status": 200,
+            "request": null,
+            "response": {
+                "items": [
+                    {
+                        "participant": {
+                            "id": "a0000000-0000-4000-8000-000000000002",
+                            "email": "student-a@phase-b.example.test",
+                            "name": "Phase B 學生甲",
+                            "roles": ["STUDENT"],
+                            "createdAt": "2026-10-13T14:54:33.459856Z",
+                            "updatedAt": "2026-10-13T14:54:33.459856Z"
+                        },
+                        "assignedAt": "2026-10-26T07:15:52.443318Z"
+                    }
+                ],
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "pageSize": 20,
+                "hasNextPage": false
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/courses",
+            "status": 200,
+            "request": null,
+            "response": {
+                "items": [
+                    {
+                        "course": {
+                            "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                            "code": "ARCHIVE-QA-e52afe4a35",
+                            "title": "ARCHIVE-QA-e52afe4a35",
+                            "status": "PUBLISHED",
+                            "createdAt": "2026-10-26T07:15:52.410674Z",
+                            "updatedAt": "2026-10-26T07:15:52.42864Z"
+                        },
+                        "linkedAt": "2026-10-26T07:15:52.436898Z"
+                    }
+                ],
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "pageSize": 20,
+                "hasNextPage": false
+            }
+        },
+        {
+            "role": "student",
+            "method": "PUT",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/status",
+            "status": 403,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "title": "Forbidden",
+                "status": 403,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+                "detail": "Make sure you have the right permissions"
+            }
+        },
+        {
+            "role": "student",
+            "method": "POST",
+            "path": "/api/questions/0ad651a4-5556-442f-a699-e6af5fc0bff6/answers",
+            "status": 201,
+            "request": {
+                "textAnswer": "Archive QA retained answer"
+            },
+            "response": {
+                "id": "0d200ce7-850a-40b0-9842-384d877e36c7",
+                "questionId": "0ad651a4-5556-442f-a699-e6af5fc0bff6",
+                "userId": "a0000000-0000-4000-8000-000000000002",
+                "experimentId": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                "textAnswer": "Archive QA retained answer",
+                "createdAt": "2026-10-26T07:15:52.463858Z"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/questions/0ad651a4-5556-442f-a699-e6af5fc0bff6/answers?experimentId=42f0b279-1839-434d-afa7-f1424c69c3fb",
+            "status": 200,
+            "request": null,
+            "response": {
+                "items": [
+                    {
+                        "id": "0d200ce7-850a-40b0-9842-384d877e36c7",
+                        "questionId": "0ad651a4-5556-442f-a699-e6af5fc0bff6",
+                        "userId": "a0000000-0000-4000-8000-000000000002",
+                        "experimentId": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                        "textAnswer": "Archive QA retained answer",
+                        "createdAt": "2026-10-26T07:15:52.463858Z",
+                        "gradingStatus": "PENDING"
+                    }
+                ],
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "pageSize": 20,
+                "hasNextPage": false
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/e39e4863-0f31-4f04-8ec5-8d10d42b720f/participants",
+            "status": 409,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": {
+                "title": "Conflict",
+                "status": 409,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409",
+                "detail": "experiment conflict: participant schedule overlaps another experiment"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.431128Z",
+                "updatedAt": "2026-10-26T07:15:52.479015Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/participants",
+            "status": 200,
+            "request": null,
+            "response": {
+                "items": [
+                    {
+                        "participant": {
+                            "id": "a0000000-0000-4000-8000-000000000002",
+                            "email": "student-a@phase-b.example.test",
+                            "name": "Phase B 學生甲",
+                            "roles": ["STUDENT"],
+                            "createdAt": "2026-10-13T14:54:33.459856Z",
+                            "updatedAt": "2026-10-13T14:54:33.459856Z"
+                        },
+                        "assignedAt": "2026-10-26T07:15:52.443318Z"
+                    }
+                ],
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "pageSize": 20,
+                "hasNextPage": false
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/courses",
+            "status": 200,
+            "request": null,
+            "response": {
+                "items": [
+                    {
+                        "course": {
+                            "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                            "code": "ARCHIVE-QA-e52afe4a35",
+                            "title": "ARCHIVE-QA-e52afe4a35",
+                            "status": "PUBLISHED",
+                            "createdAt": "2026-10-26T07:15:52.410674Z",
+                            "updatedAt": "2026-10-26T07:15:52.42864Z"
+                        },
+                        "linkedAt": "2026-10-26T07:15:52.436898Z"
+                    }
+                ],
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "pageSize": 20,
+                "hasNextPage": false
+            }
+        },
+        {
+            "role": "admin",
+            "method": "GET",
+            "path": "/api/questions/0ad651a4-5556-442f-a699-e6af5fc0bff6/answers?experimentId=42f0b279-1839-434d-afa7-f1424c69c3fb",
+            "status": 200,
+            "request": null,
+            "response": {
+                "items": [
+                    {
+                        "id": "0d200ce7-850a-40b0-9842-384d877e36c7",
+                        "questionId": "0ad651a4-5556-442f-a699-e6af5fc0bff6",
+                        "userId": "a0000000-0000-4000-8000-000000000002",
+                        "experimentId": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                        "textAnswer": "Archive QA retained answer",
+                        "createdAt": "2026-10-26T07:15:52.463858Z",
+                        "gradingStatus": "PENDING"
+                    }
+                ],
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "pageSize": 20,
+                "hasNextPage": false
+            }
+        },
+        {
+            "role": "student",
+            "method": "GET",
+            "path": "/api/experiments/current",
+            "status": 404,
+            "request": null,
+            "response": {
+                "title": "Not Found",
+                "status": 404,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+                "detail": "current experiment not found"
+            }
+        },
+        {
+            "role": "student",
+            "method": "GET",
+            "path": "/api/courses/f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+            "status": 403,
+            "request": null,
+            "response": {
+                "title": "Forbidden",
+                "status": 403,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+                "detail": "Make sure you have the right permissions"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/e39e4863-0f31-4f04-8ec5-8d10d42b720f/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.501692Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/e39e4863-0f31-4f04-8ec5-8d10d42b720f/status",
+            "status": 200,
+            "request": {
+                "status": "ACTIVE"
+            },
+            "response": {
+                "id": "e39e4863-0f31-4f04-8ec5-8d10d42b720f",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ACTIVE",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.434211Z",
+                "updatedAt": "2026-10-26T07:15:52.50943Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "student",
+            "method": "GET",
+            "path": "/api/experiments/current",
+            "status": 200,
+            "request": null,
+            "response": {
+                "experiment": {
+                    "id": "e39e4863-0f31-4f04-8ec5-8d10d42b720f",
+                    "name": "ARCHIVE-QA-e52afe4a35 ACTIVE next",
+                    "description": "Dedicated local archive acceptance fixture",
+                    "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                    "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                    "status": "ACTIVE",
+                    "configuration": {
+                        "maxAttempts": 1,
+                        "allowRetry": false,
+                        "showScore": true,
+                        "showExplanations": false,
+                        "gradingMode": "AUTOMATIC",
+                        "correctAnswerReleaseMode": "NEVER"
+                    },
+                    "createdBy": "a0000000-0000-4000-8000-000000000001",
+                    "createdAt": "2026-10-26T07:15:52.434211Z",
+                    "updatedAt": "2026-10-26T07:15:52.50943Z"
+                },
+                "courses": [
+                    {
+                        "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                        "code": "ARCHIVE-QA-e52afe4a35",
+                        "title": "ARCHIVE-QA-e52afe4a35",
+                        "status": "PUBLISHED",
+                        "createdAt": "2026-10-26T07:15:52.410674Z",
+                        "updatedAt": "2026-10-26T07:15:52.42864Z"
+                    }
+                ]
+            }
+        },
+        {
+            "role": "student",
+            "method": "GET",
+            "path": "/api/courses/f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+            "status": 200,
+            "request": null,
+            "response": {
+                "id": "f5e7c7b7-329c-41e4-93f4-5b3a174b06c8",
+                "code": "ARCHIVE-QA-e52afe4a35",
+                "title": "ARCHIVE-QA-e52afe4a35",
+                "status": "PUBLISHED",
+                "createdAt": "2026-10-26T07:15:52.410674Z",
+                "updatedAt": "2026-10-26T07:15:52.42864Z"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/e39e4863-0f31-4f04-8ec5-8d10d42b720f/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "e39e4863-0f31-4f04-8ec5-8d10d42b720f",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.434211Z",
+                "updatedAt": "2026-10-26T07:15:52.518575Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "7745f240-0d51-4c3d-9f2c-e67207b4bc5e",
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.521502Z",
+                "updatedAt": "2026-10-26T07:15:52.521502Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "0be0adcd-2d8a-40e9-a894-400f8d94daf6",
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.526022Z",
+                "updatedAt": "2026-10-26T07:15:52.526022Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/7745f240-0d51-4c3d-9f2c-e67207b4bc5e/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.528415Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/0be0adcd-2d8a-40e9-a894-400f8d94daf6/participants",
+            "status": 409,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": {
+                "title": "Conflict",
+                "status": 409,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409",
+                "detail": "experiment conflict: participant schedule overlaps another experiment"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/7745f240-0d51-4c3d-9f2c-e67207b4bc5e/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "7745f240-0d51-4c3d-9f2c-e67207b4bc5e",
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.521502Z",
+                "updatedAt": "2026-10-26T07:15:52.533145Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/0be0adcd-2d8a-40e9-a894-400f8d94daf6/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.535391Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/0be0adcd-2d8a-40e9-a894-400f8d94daf6/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "0be0adcd-2d8a-40e9-a894-400f8d94daf6",
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.526022Z",
+                "updatedAt": "2026-10-26T07:15:52.540062Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "12888103-47b1-44ab-8862-6efa6b9787a3",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.54302Z",
+                "updatedAt": "2026-10-26T07:15:52.54302Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "322b94aa-fd2f-48cf-aff3-adec4d0a8c14",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.545591Z",
+                "updatedAt": "2026-10-26T07:15:52.545591Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/12888103-47b1-44ab-8862-6efa6b9787a3/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.548181Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/12888103-47b1-44ab-8862-6efa6b9787a3/status",
+            "status": 200,
+            "request": {
+                "status": "SCHEDULED"
+            },
+            "response": {
+                "id": "12888103-47b1-44ab-8862-6efa6b9787a3",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "SCHEDULED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.54302Z",
+                "updatedAt": "2026-10-26T07:15:52.55139Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/322b94aa-fd2f-48cf-aff3-adec4d0a8c14/participants",
+            "status": 409,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": {
+                "title": "Conflict",
+                "status": 409,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409",
+                "detail": "experiment conflict: participant schedule overlaps another experiment"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/12888103-47b1-44ab-8862-6efa6b9787a3/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "12888103-47b1-44ab-8862-6efa6b9787a3",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.54302Z",
+                "updatedAt": "2026-10-26T07:15:52.556233Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/322b94aa-fd2f-48cf-aff3-adec4d0a8c14/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.558548Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/322b94aa-fd2f-48cf-aff3-adec4d0a8c14/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "322b94aa-fd2f-48cf-aff3-adec4d0a8c14",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.545591Z",
+                "updatedAt": "2026-10-26T07:15:52.561138Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "58cc1553-ae64-482d-9e75-7dfdce993d6a",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.56405Z",
+                "updatedAt": "2026-10-26T07:15:52.56405Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments",
+            "status": 201,
+            "request": {
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671+00:00",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671+00:00",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                }
+            },
+            "response": {
+                "id": "992b546d-8845-48ff-b9a4-ca4e2194005f",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "DRAFT",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.571459Z",
+                "updatedAt": "2026-10-26T07:15:52.571459Z",
+                "participantCount": 0,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/58cc1553-ae64-482d-9e75-7dfdce993d6a/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.574117Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/58cc1553-ae64-482d-9e75-7dfdce993d6a/status",
+            "status": 200,
+            "request": {
+                "status": "COMPLETED"
+            },
+            "response": {
+                "id": "58cc1553-ae64-482d-9e75-7dfdce993d6a",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "COMPLETED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.56405Z",
+                "updatedAt": "2026-10-26T07:15:52.584399Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/992b546d-8845-48ff-b9a4-ca4e2194005f/participants",
+            "status": 409,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": {
+                "title": "Conflict",
+                "status": 409,
+                "type": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409",
+                "detail": "experiment conflict: participant schedule overlaps another experiment"
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/58cc1553-ae64-482d-9e75-7dfdce993d6a/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "58cc1553-ae64-482d-9e75-7dfdce993d6a",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.56405Z",
+                "updatedAt": "2026-10-26T07:15:52.596976Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "POST",
+            "path": "/api/experiments/992b546d-8845-48ff-b9a4-ca4e2194005f/participants",
+            "status": 200,
+            "request": {
+                "userIds": ["a0000000-0000-4000-8000-000000000002"]
+            },
+            "response": [
+                {
+                    "participant": {
+                        "id": "a0000000-0000-4000-8000-000000000002",
+                        "email": "student-a@phase-b.example.test",
+                        "name": "Phase B 學生甲",
+                        "roles": ["STUDENT"],
+                        "createdAt": "2026-10-13T14:54:33.459856Z",
+                        "updatedAt": "2026-10-13T14:54:33.459856Z"
+                    },
+                    "assignedAt": "2026-10-26T07:15:52.604012Z"
+                }
+            ]
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/992b546d-8845-48ff-b9a4-ca4e2194005f/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "992b546d-8845-48ff-b9a4-ca4e2194005f",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.571459Z",
+                "updatedAt": "2026-10-26T07:15:52.606149Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/42f0b279-1839-434d-afa7-f1424c69c3fb/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "42f0b279-1839-434d-afa7-f1424c69c3fb",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.431128Z",
+                "updatedAt": "2026-10-26T07:15:52.611307Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/e39e4863-0f31-4f04-8ec5-8d10d42b720f/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "e39e4863-0f31-4f04-8ec5-8d10d42b720f",
+                "name": "ARCHIVE-QA-e52afe4a35 ACTIVE next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.434211Z",
+                "updatedAt": "2026-10-26T07:15:52.6135Z",
+                "participantCount": 1,
+                "courseCount": 1
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/7745f240-0d51-4c3d-9f2c-e67207b4bc5e/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "7745f240-0d51-4c3d-9f2c-e67207b4bc5e",
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.521502Z",
+                "updatedAt": "2026-10-26T07:15:52.615741Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/0be0adcd-2d8a-40e9-a894-400f8d94daf6/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "0be0adcd-2d8a-40e9-a894-400f8d94daf6",
+                "name": "ARCHIVE-QA-e52afe4a35 DRAFT next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.526022Z",
+                "updatedAt": "2026-10-26T07:15:52.618038Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/12888103-47b1-44ab-8862-6efa6b9787a3/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "12888103-47b1-44ab-8862-6efa6b9787a3",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.54302Z",
+                "updatedAt": "2026-10-26T07:15:52.620228Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/322b94aa-fd2f-48cf-aff3-adec4d0a8c14/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "322b94aa-fd2f-48cf-aff3-adec4d0a8c14",
+                "name": "ARCHIVE-QA-e52afe4a35 SCHEDULED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.545591Z",
+                "updatedAt": "2026-10-26T07:15:52.623157Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/58cc1553-ae64-482d-9e75-7dfdce993d6a/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "58cc1553-ae64-482d-9e75-7dfdce993d6a",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED old",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.56405Z",
+                "updatedAt": "2026-10-26T07:15:52.624958Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        },
+        {
+            "role": "admin",
+            "method": "PUT",
+            "path": "/api/experiments/992b546d-8845-48ff-b9a4-ca4e2194005f/status",
+            "status": 200,
+            "request": {
+                "status": "ARCHIVED"
+            },
+            "response": {
+                "id": "992b546d-8845-48ff-b9a4-ca4e2194005f",
+                "name": "ARCHIVE-QA-e52afe4a35 COMPLETED next",
+                "description": "Dedicated local archive acceptance fixture",
+                "scheduledStartAt": "2026-10-26T06:15:52.382671Z",
+                "scheduledEndAt": "2026-10-26T09:15:52.382671Z",
+                "status": "ARCHIVED",
+                "configuration": {
+                    "maxAttempts": 1,
+                    "allowRetry": false,
+                    "showScore": true,
+                    "showExplanations": false,
+                    "gradingMode": "AUTOMATIC",
+                    "correctAnswerReleaseMode": "NEVER"
+                },
+                "createdBy": "a0000000-0000-4000-8000-000000000001",
+                "createdAt": "2026-10-26T07:15:52.571459Z",
+                "updatedAt": "2026-10-26T07:15:52.626836Z",
+                "participantCount": 1,
+                "courseCount": 0
+            }
+        }
+    ]
+}

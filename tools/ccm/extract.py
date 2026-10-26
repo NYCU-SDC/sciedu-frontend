@@ -40,11 +40,12 @@ def extract(source, output=ROOT):
                 if not match:raise ValueError(f'Missing source number in slide {slide}: {raw}')
                 prompt=match[2].split('□')[0].strip()
                 prompts.append({'type':'TEXT','sourceNumber':int(match[1]),'label':f'題目 {match[1]}','prompt':prompt})
-            description=f'Mental Set {mental}\n\n{topic}\n\n{titles[i]}'
-            if i in [2,5]:description+='\n\n請參考下方本次回答整理，與 CCM 老師討論你的想法。你也可以直接前往下一頁。'
-            if i in [4,5]:description+='\n\n原始預測引用第一頁「心臟功能」的回答；本單元觀察的是血球生成。'
+            heading=next(t for t in texts(slide) if t.startswith('STEP '))
+            # User-requested English wording; retain source wording in the audit notes.
+            if i==0:heading='STEP 1. 迷思概念的外顯化（Naive Conceptual Articulation）'
+            description=f'## {heading}\n\n> 問題：{topic}'
             pages.append({'code':f'ccm-{i+1}','title':f'{i+1:02d} {titles[i]}','sourceSlide':slide,'description':description,'questions':prompts,'presentation':presentation,'images':[{'file':'assets/heart-preview.png','mimeType':'image/png','sha256':sha(image),'sourceMedia':'ppt/media/image1.png'}] if i==0 else [],'imageDescriptionForLLM':metadata[0 if i==0 else 1 if mental==1 else 2]+'\n\n測試版固定線性流程，所有學生皆學習 Mental Set 2，沒有依迷思進行分流。回答整理中的初始預測指第一頁心臟功能回答。模擬狀態僅為當前設定，不代表已完成觀察或正式評分。'})
-        m={'schemaVersion':1,'code':'ccm-heart-and-blood','title':'CCM：心臟的功能與血球的生成','source':{'filename':deck.name,'sha256':sha(deck.read_bytes())},'sourceNotes':['21 張來源整理為七頁；3/6/10/12/15/19/21 為重複文字排版，4/7/9/16/18 為圖說與表格註記，1/13 為階段封面。','第 21 張末題誤寫心臟功能，依第 20 張血球生成的解釋保存。','第 9/18 張的表格由本次學生答案呈現；不把示意表格當靜態答案圖片。','影片縮圖與播放介面由原始 HTML 模擬取代；不重複放入投影片的播放器 UI。'],'pages':pages}
+        m={'schemaVersion':1,'code':'ccm-heart-and-blood','title':'CCM：心臟的功能與血球的生成','source':{'filename':deck.name,'sha256':sha(deck.read_bytes())},'sourceNotes':['第一頁英文標題依使用者要求使用 Naive Conceptual Articulation；原稿為 Naïve Conception Articulation。','21 張來源整理為七頁；3/6/10/12/15/19/21 為重複文字排版，4/7/9/16/18 為圖說與表格註記，1/13 為階段封面。','第 21 張末題誤寫心臟功能，依第 20 張血球生成的解釋保存。','第 9/18 張的表格由本次學生答案呈現；不把示意表格當靜態答案圖片。','影片縮圖與播放介面由原始 HTML 模擬取代；不重複放入投影片的播放器 UI。'],'pages':pages}
         (output/'manifest.json').write_text(json.dumps(m,ensure_ascii=False,indent=4)+'\n')
     return m
 if __name__=='__main__':

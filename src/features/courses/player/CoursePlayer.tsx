@@ -6,7 +6,11 @@ import {
 } from "./presentation";
 import { resolveAnswerReferences, type AnswerRow } from "./answerReferences";
 import { prepareMaterialMessage } from "../chat/prepareMaterialMessage";
-import { backendEnvironment } from "../../../shared/network/materialChat";
+import {
+    backendEnvironment,
+    CCM_CODE,
+    CCM_PRESET,
+} from "../../../shared/network/materialChat";
 import { DEFAULT_SIMULATION_STATE, type SimulationState } from "./presentation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -398,6 +402,10 @@ export default function CoursePlayer({
                             chatScope
                                 ? {
                                       ...chatScope,
+                                      profile:
+                                          definition.code === CCM_CODE
+                                              ? `${CCM_PRESET}:material-context-v2`
+                                              : undefined,
                                       pageId:
                                           page.pageId ??
                                           `legacy:${page.pageIndex}`,

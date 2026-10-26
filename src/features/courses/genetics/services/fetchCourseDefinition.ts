@@ -1,4 +1,7 @@
-import { materialPreset } from "../../../../shared/network/materialChat";
+import {
+    CCM_CODE,
+    materialPreset,
+} from "../../../../shared/network/materialChat";
 import { parsePresentation } from "../../player/presentation";
 import { api } from "../../../../shared/utils/api";
 import type { CourseDefinition, CourseNavigation } from "../types/types";
@@ -55,6 +58,10 @@ export async function fetchCourseDefinition(
             if (configs.length > 1)
                 throw new Error("教材頁面設定重複，請聯絡管理者。");
             const config = configs[0];
+            if (course.code === CCM_CODE && !config)
+                throw new Error(
+                    "CCM 教材缺少頁面設定，請聯絡管理者；無法以一般教材模式開啟。"
+                );
             const presentation = config
                 ? parsePresentation(
                       (

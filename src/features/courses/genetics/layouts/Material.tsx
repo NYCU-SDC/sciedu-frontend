@@ -1,3 +1,4 @@
+import ReactMarkdown from "react-markdown";
 import CCMSimulation from "../../player/CCMSimulation";
 import type { CCMSimulationStates } from "../../player/presentation";
 import type { AnswerRow } from "../../player/answerReferences";
@@ -127,6 +128,7 @@ export default function Material({
     onSimulationChange,
 }: Props) {
     const req = data.request as MaterialPage;
+    const combined = req.presentation?.stage.startsWith("ccm-") ?? false;
     const noChat = req.presentation?.chatEnabled === false;
     const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
@@ -199,13 +201,18 @@ export default function Material({
             <main
                 className={`${styles.overviewContent} ${noChat ? styles.withoutChat : ""}`}
             >
-                <section className={styles.courseSection}>
-                    {req.presentation?.mentalSet && (
+                <section
+                    className={`${styles.courseSection} ${combined ? styles.combinedSection : ""}`}
+                >
+                    {!combined && req.presentation?.mentalSet && (
                         <p className={styles.previewLabel}>
                             Mental Set {req.presentation.mentalSet}
                         </p>
                     )}
-                    <div className={styles.readingRow}>
+                    <div
+                        className={`${styles.readingRow} ${combined ? styles.combinedContent : ""}`}
+                        aria-label={combined ? "教材圖文與互動" : undefined}
+                    >
                         <div className={styles.courseDescriptionWrapper}>
                             <ExpandButton
                                 label="展開教材文字"
@@ -219,7 +226,9 @@ export default function Material({
                                         內容載入失敗
                                     </p>
                                 ) : (
-                                    <p>{description?.content}</p>
+                                    <ReactMarkdown>
+                                        {description?.content ?? ""}
+                                    </ReactMarkdown>
                                 )}
                             </div>
                         </div>
@@ -235,6 +244,7 @@ export default function Material({
                             ) : (
                                 <CCMSimulation
                                     id={req.presentation.simulationId}
+                                    embedded={combined}
                                     state={
                                         ccmSimulationStates?.[
                                             req.presentation.simulationId
@@ -409,7 +419,7 @@ export default function Material({
                 title="教材文字"
                 onClose={() => setDescriptionExpanded(false)}
             >
-                <p>{description?.content}</p>
+                <ReactMarkdown>{description?.content ?? ""}</ReactMarkdown>
             </CourseContentModal>
         </div>
     );

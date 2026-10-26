@@ -63,3 +63,13 @@ it("does not reuse chat IDs when the backend deployment changes", () => {
     expect(readCourseChat(scope)).toBeNull();
     vi.unstubAllEnvs();
 });
+it("starts CCM context chats separately from previously created default-preset chats", () => {
+    saveCourseChat(scope, id);
+    const ccm = { ...scope, profile: "ccm-agent-test-tw:material-context-v2" };
+    expect(readCourseChat(ccm)).toBeNull();
+    saveCourseChat(ccm, id);
+    expect(readCourseChat(ccm)).toBe(id);
+    expect(readCourseChat(scope)).toBe(id);
+    clearCourseChatStorage();
+    expect(readCourseChat(ccm)).toBeNull();
+});

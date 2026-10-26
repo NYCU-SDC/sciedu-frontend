@@ -1,0 +1,49 @@
+{
+    "origin": "https://dev.sciedu.sdc.nycu.club",
+    "email": "hsien.eason@gmail.com",
+    "courseId": "8cdcc816-7e40-456b-957f-c868734edcf1",
+    "pages": [
+        {
+            "pageId": "c54bb0d0-66e5-4f4a-925c-26386139b013",
+            "blockId": "26ca702f-e287-4789-8bc9-aacdcd4c6805",
+            "before": "Mental Set 1\n\n心臟的功能是什麼？\n\n迷思概念外顯化",
+            "after": "## STEP 1. 迷思概念的外顯化（Naive Conceptual Articulation）\n\n> 問題：心臟的功能是什麼？"
+        },
+        {
+            "pageId": "a3dc4e77-6b50-4013-ac5c-46e8544494ea",
+            "blockId": "9c3bd504-b2d2-4c7d-ac6b-a92e19cd48ed",
+            "before": "Mental Set 1\n\n心臟的功能是什麼？\n\n心臟模擬與觀察",
+            "after": "## STEP 2. 認知衝突引發與關鍵概念架構（Key Mental Sets）的提供\n\n> 問題：心臟的功能是什麼？"
+        },
+        {
+            "pageId": "49efbb7b-a494-4651-9f1b-c27ae554692c",
+            "blockId": "22931624-240e-4464-8020-e10f8980d9b0",
+            "before": "Mental Set 1\n\n心臟的功能是什麼？\n\n心臟概念診斷與討論\n\n請參考下方本次回答整理，與 CCM 老師討論你的想法。你也可以直接前往下一頁。",
+            "after": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：心臟的功能是什麼？"
+        },
+        {
+            "pageId": "a803215c-0dbc-4bb8-a334-04a8a751f5bb",
+            "blockId": "b48fc768-f3bc-40bb-a53d-27ed87bc0c23",
+            "before": "Mental Set 1\n\n心臟的功能是什麼？\n\n心臟概念重建後作答",
+            "after": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：心臟的功能是什麼？"
+        },
+        {
+            "pageId": "c908fe6a-56ed-4936-878e-ec576eefa59c",
+            "blockId": "f79112d9-bb4c-4abb-afb4-63e72f914f1a",
+            "before": "Mental Set 2\n\n血球在哪裡生成？\n\n骨髓模擬與觀察\n\n原始預測引用第一頁「心臟功能」的回答；本單元觀察的是血球生成。",
+            "after": "## STEP 2. 認知衝突引發與關鍵概念架構（Key Mental Set 2）的提供\n\n> 問題：血球在哪裡生成？"
+        },
+        {
+            "pageId": "e641711b-bd66-4dae-9a88-80bb04bed14d",
+            "blockId": "24671483-bf52-4544-8e78-9d8d441b13ee",
+            "before": "Mental Set 2\n\n血球在哪裡生成？\n\n血球生成診斷與討論\n\n請參考下方本次回答整理，與 CCM 老師討論你的想法。你也可以直接前往下一頁。\n\n原始預測引用第一頁「心臟功能」的回答；本單元觀察的是血球生成。",
+            "after": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：血球在哪裡生成？"
+        },
+        {
+            "pageId": "df8f433a-c0ae-44aa-b776-23708d617f5d",
+            "blockId": "b51e2d29-0b22-4f3b-b7f3-ea11769f84c7",
+            "before": "Mental Set 2\n\n血球在哪裡生成？\n\n血球生成概念重建後作答",
+            "after": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：血球在哪裡生成？"
+        }
+    ]
+}

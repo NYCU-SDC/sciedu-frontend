@@ -79,3 +79,7 @@ python3 tools/ccm/serve.py --state /tmp/sciedu-ccm-preview-state.json --port 300
 逾時或回覆遺失的 POST 結果不明時停止，不刪進度重跑。已取得 ID 可續核；401 重新登入後續傳；發布結果不明先 GET 查核。同時只允許一個上傳程序。腳本不提供跨環境切換；本輪不供國網上傳。
 
 新播放器須部署該 PR 才能呈現 CCM；Dev 資料發布不代表 Dev 已有新 UI。真實學生作答與 LLM 驗收仍需管理者指派有效實驗。
+
+## 2026-10-27 版型與上下文修正
+
+見 [修正紀錄](REVISION-20261027.md)：七頁 STEP Markdown、圖文合併卡、獨立題目卡、跨頁圖說上下文與 Dev 原課程正文更新。請使用 PR #64 預覽，PR #63 不支援 CCM。

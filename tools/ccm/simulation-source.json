@@ -3,7 +3,7 @@
         "source": "q1-heart-pump-simulation_心臟輸送_20261014.html",
         "sourceSha256": "15385f79784cb3fbb735c4016b2a4750ecf59f0ff1bd5b875c889819451f3826",
         "output": "public/simulations/ccm/v1/heart.html",
-        "outputSha256": "98b799976037d0d46a51594367e70ea21e46c8b642f345869e6f46be99087079",
+        "outputSha256": "67a794765b4417dd2aa693aa9e7d8596a9369618504d2fc6a998120ae0f9591b",
         "embeddedAssetSha256": [
             "182f6b4e821169eef8ef1ddbc295b9b2b888e80dd4ed88666b9d2ce8a44b606d",
             "75c0cd2767dc9fae395d9d4b534d95b0f08ea80bde99dfc7919e547e6dd4c38e"

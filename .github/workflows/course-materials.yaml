@@ -50,4 +50,4 @@ jobs:
               run: |
                   python3 tools/ccm/validate.py
                   python3 tools/ccm/build_upload.py
-                  node --test tools/ccm/test_upload.mjs
+                  node --test tools/ccm/test_*.mjs

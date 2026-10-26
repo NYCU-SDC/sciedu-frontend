@@ -7,6 +7,7 @@
         "sha256": "0f36fffb933ceb81c8d7e1ff49d7336223e3d418a9be6f830288c0dd6b752726"
     },
     "sourceNotes": [
+        "第一頁英文標題依使用者要求使用 Naive Conceptual Articulation；原稿為 Naïve Conception Articulation。",
         "21 張來源整理為七頁；3/6/10/12/15/19/21 為重複文字排版，4/7/9/16/18 為圖說與表格註記，1/13 為階段封面。",
         "第 21 張末題誤寫心臟功能，依第 20 張血球生成的解釋保存。",
         "第 9/18 張的表格由本次學生答案呈現；不把示意表格當靜態答案圖片。",
@@ -17,7 +18,7 @@
             "code": "ccm-1",
             "title": "01 迷思概念外顯化",
             "sourceSlide": 2,
-            "description": "Mental Set 1\n\n心臟的功能是什麼？\n\n迷思概念外顯化",
+            "description": "## STEP 1. 迷思概念的外顯化（Naive Conceptual Articulation）\n\n> 問題：心臟的功能是什麼？",
             "questions": [
                 {
                     "type": "TEXT",
@@ -54,7 +55,7 @@
             "code": "ccm-2",
             "title": "02 心臟模擬與觀察",
             "sourceSlide": 5,
-            "description": "Mental Set 1\n\n心臟的功能是什麼？\n\n心臟模擬與觀察",
+            "description": "## STEP 2. 認知衝突引發與關鍵概念架構（Key Mental Sets）的提供\n\n> 問題：心臟的功能是什麼？",
             "questions": [
                 {
                     "type": "TEXT",
@@ -95,7 +96,7 @@
             "code": "ccm-3",
             "title": "03 心臟概念診斷與討論",
             "sourceSlide": 8,
-            "description": "Mental Set 1\n\n心臟的功能是什麼？\n\n心臟概念診斷與討論\n\n請參考下方本次回答整理，與 CCM 老師討論你的想法。你也可以直接前往下一頁。",
+            "description": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：心臟的功能是什麼？",
             "questions": [],
             "presentation": {
                 "version": 1,
@@ -138,7 +139,7 @@
             "code": "ccm-4",
             "title": "04 心臟概念重建後作答",
             "sourceSlide": 11,
-            "description": "Mental Set 1\n\n心臟的功能是什麼？\n\n心臟概念重建後作答",
+            "description": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：心臟的功能是什麼？",
             "questions": [
                 {
                     "type": "TEXT",
@@ -167,7 +168,7 @@
             "code": "ccm-5",
             "title": "05 骨髓模擬與觀察",
             "sourceSlide": 14,
-            "description": "Mental Set 2\n\n血球在哪裡生成？\n\n骨髓模擬與觀察\n\n原始預測引用第一頁「心臟功能」的回答；本單元觀察的是血球生成。",
+            "description": "## STEP 2. 認知衝突引發與關鍵概念架構（Key Mental Set 2）的提供\n\n> 問題：血球在哪裡生成？",
             "questions": [
                 {
                     "type": "TEXT",
@@ -209,7 +210,7 @@
             "code": "ccm-6",
             "title": "06 血球生成診斷與討論",
             "sourceSlide": 17,
-            "description": "Mental Set 2\n\n血球在哪裡生成？\n\n血球生成診斷與討論\n\n請參考下方本次回答整理，與 CCM 老師討論你的想法。你也可以直接前往下一頁。\n\n原始預測引用第一頁「心臟功能」的回答；本單元觀察的是血球生成。",
+            "description": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：血球在哪裡生成？",
             "questions": [],
             "presentation": {
                 "version": 1,
@@ -252,7 +253,7 @@
             "code": "ccm-7",
             "title": "07 血球生成概念重建後作答",
             "sourceSlide": 20,
-            "description": "Mental Set 2\n\n血球在哪裡生成？\n\n血球生成概念重建後作答",
+            "description": "## STEP 3. AI 輔助適性鷹架與概念重建\n\n> 問題：血球在哪裡生成？",
             "questions": [
                 {
                     "type": "TEXT",

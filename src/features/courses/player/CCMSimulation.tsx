@@ -11,8 +11,10 @@ export default function CCMSimulation({
     id,
     state,
     onChange,
+    embedded = false,
 }: {
     id: "ccm-heart-v1" | "ccm-marrow-v1";
+    embedded?: boolean;
     state?: CCMSimulationState;
     onChange?: (state: CCMSimulationState) => void;
 }) {
@@ -67,7 +69,7 @@ export default function CCMSimulation({
     }, [expanded]);
     return (
         <section
-            className={`${styles.panel} ${expanded ? styles.expanded : ""}`}
+            className={`${styles.panel} ${embedded && !expanded ? styles.embedded : ""} ${expanded ? styles.expanded : ""}`}
             aria-label={SIMULATIONS[id].title}
         >
             <div className={styles.toolbar}>

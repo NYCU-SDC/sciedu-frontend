@@ -26,7 +26,17 @@ export type MaterialContext = {
             stage: string;
             body: string;
             descriptions: string[];
+            mentalSet?: 1 | 2;
         };
+        materialPages?: {
+            id: string;
+            title: string;
+            stage: string;
+            mentalSet?: 1 | 2;
+            body: string;
+            descriptions: string[];
+            simulationId?: string;
+        }[];
         questions: {
             id: string;
             pageId: string;

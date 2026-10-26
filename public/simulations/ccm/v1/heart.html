@@ -250,7 +250,7 @@
       .orientation, .legend { display: none; }
     }
   </style>
-<style>html,body{margin:0;min-width:0;overflow:auto;background:#f1f8f6}body{padding:10px;box-sizing:border-box}header{margin:0 auto 10px}#player{max-width:100%;min-width:0!important}video{max-width:100%;object-fit:contain}.controls{flex-wrap:wrap}*{box-sizing:border-box}@media(max-width:600px){header h1{font-size:18px}.controls{gap:8px;padding:10px}header p{font-size:13px}}</style></head>
+<style>html,body{margin:0;min-width:0;overflow:auto;background:#f1f8f6}body{padding:10px;box-sizing:border-box}header{margin:0 auto 10px}#player{max-width:100%;min-width:0!important}video{max-width:100%;object-fit:contain}.controls{flex-wrap:wrap}*{box-sizing:border-box}@media(max-width:600px){header h1{font-size:18px}.controls{gap:8px;padding:10px}header p{font-size:13px}}</style><style>.page{min-height:0;padding:8px;display:block}.player{container-type:inline-size}.controls{display:flex;flex-wrap:wrap;gap:8px;padding:8px}.control-button{white-space:nowrap;padding:0 12px;min-height:36px}.control-button.primary{min-width:80px}.timeline{flex:1 1 140px;min-width:80px}.speed-wrap{flex-wrap:wrap}.label{font-size:clamp(8px,1.45cqw,17px)}.orientation,.phase{font-size:clamp(8px,1.35cqw,14px)}.legend{font-size:clamp(8px,1.25cqw,13px)}header h1{font-size:clamp(18px,2vw,24px)}header .scope{display:none}.subtitle{font-size:13px}</style></head>
 <body>
   <main class="page">
     <header>
@@ -381,7 +381,7 @@
         const header = document.querySelector('header');
         const availableWidth = Math.min(1180, window.innerWidth - 40);
         const controlsHeight = document.querySelector('.controls').offsetHeight;
-        const availableHeight = Math.max(260, window.innerHeight - header.offsetHeight - controlsHeight - 58);
+        const availableHeight = Math.max(150, window.innerHeight - header.offsetHeight - controlsHeight - 58);
         const fittedWidth = Math.min(availableWidth, availableHeight * 16 / 9);
         player.style.width = Math.max(300, fittedWidth) + 'px';
       };

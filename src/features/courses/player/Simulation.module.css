@@ -57,3 +57,16 @@
         height: auto;
     }
 }
+
+/* A simulation can live inside the same card as its Markdown introduction. */
+.embedded {
+    border: 0;
+    border-radius: 0;
+    flex: none;
+    height: 36rem;
+}
+@media (max-width: 40rem) {
+    .embedded {
+        height: 32rem;
+    }
+}

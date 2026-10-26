@@ -62,6 +62,27 @@ describe("admin demo isolation", () => {
         expect(await repo.listExperimentParticipants(created.id)).toEqual([]);
         expect(fetchMock).not.toHaveBeenCalled();
     });
+    it("archives demo experiments without network calls or removing assignments", async () => {
+        vi.stubEnv("VITE_ADMIN_DEMO_MODE", "true");
+        vi.resetModules();
+        const fetchMock = vi.fn().mockRejectedValue(new Error("No network"));
+        vi.stubGlobal("fetch", fetchMock);
+        const repo = await import("./adminRepository");
+        const before = await repo.fetchExperiment(demoExperiment.id);
+        const participants = await repo.listExperimentParticipants(before.id);
+        const courses = await repo.listExperimentCourses(before.id);
+        await repo.updateExperimentStatus(before.id, "ARCHIVED");
+        expect(await repo.fetchExperiment(before.id)).toMatchObject({
+            ...before,
+            status: "ARCHIVED",
+            updatedAt: expect.any(String),
+        });
+        expect(await repo.listExperimentParticipants(before.id)).toEqual(
+            participants
+        );
+        expect(await repo.listExperimentCourses(before.id)).toEqual(courses);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
     it("uses the configured API outside demo mode", async () => {
         vi.stubEnv("VITE_ADMIN_DEMO_MODE", "false");
         vi.resetModules();
@@ -72,14 +93,14 @@ describe("admin demo isolation", () => {
         });
         vi.stubGlobal("fetch", fetchMock);
         const repo = await import("./adminRepository");
-        await repo.updateExperimentStatus(demoExperiment.id, "COMPLETED");
+        await repo.updateExperimentStatus(demoExperiment.id, "ARCHIVED");
         expect(fetchMock).toHaveBeenCalledWith(
             expect.stringContaining(
                 `/api/experiments/${demoExperiment.id}/status`
             ),
             expect.objectContaining({
                 method: "PUT",
-                body: JSON.stringify({ status: "COMPLETED" }),
+                body: JSON.stringify({ status: "ARCHIVED" }),
             })
         );
     });

@@ -155,12 +155,15 @@ export function listAllExperiments(): Promise<Experiment[]> {
 }
 
 export function fetchExperiment(
-    experimentId: string
+    experimentId: string,
+    signal?: AbortSignal
 ): Promise<ExperimentDetail> {
     if (isAdminDemoMode) {
         return resolveDemo(demoDetail(getDemoState(experimentId)));
     }
-    return api<ExperimentDetail>(`/api/experiments/${experimentId}`);
+    return api<ExperimentDetail>(`/api/experiments/${experimentId}`, {
+        signal,
+    });
 }
 
 export function createExperiment(
@@ -212,7 +215,8 @@ export function updateExperiment(
 
 export function updateExperimentStatus(
     experimentId: string,
-    status: ExperimentStatus
+    status: ExperimentStatus,
+    signal?: AbortSignal
 ): Promise<ExperimentDetail> {
     if (isAdminDemoMode) {
         const state = getDemoState(experimentId);
@@ -226,6 +230,7 @@ export function updateExperimentStatus(
     return api<ExperimentDetail>(`/api/experiments/${experimentId}/status`, {
         method: "PUT",
         body: JSON.stringify({ status }),
+        signal,
     });
 }
 

@@ -1,4 +1,9 @@
-import { isSimulationState, type SimulationState } from "./presentation";
+import {
+    validCCMStates,
+    type CCMSimulationStates,
+    isSimulationState,
+    type SimulationState,
+} from "./presentation";
 import type {
     CourseAnswers,
     SubmittedAnswerResponse,
@@ -12,6 +17,8 @@ export type PlayerSession = {
     submissions: SubmittedAnswerResponse[];
     startedAt: string;
     simulationState?: SimulationState;
+    ccmSimulationStates?: CCMSimulationStates;
+    dismissedNotices?: string[];
 };
 // Local navigation/answer recovery only. Never used as server progress or access permission.
 export function readPlayerSession(
@@ -45,6 +52,13 @@ export function readPlayerSession(
             ) ||
             (s.simulationState !== undefined &&
                 !isSimulationState(s.simulationState)) ||
+            (s.ccmSimulationStates !== undefined &&
+                !validCCMStates(s.ccmSimulationStates)) ||
+            (s.dismissedNotices !== undefined &&
+                (!Array.isArray(s.dismissedNotices) ||
+                    !s.dismissedNotices.every(
+                        (x: unknown) => typeof x === "string"
+                    ))) ||
             typeof s.startedAt !== "string"
         )
             return;

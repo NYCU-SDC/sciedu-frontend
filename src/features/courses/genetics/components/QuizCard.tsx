@@ -17,6 +17,7 @@ type Props = {
     isLoading: boolean;
     error: string | null;
     answer: string;
+    textChoices?: string[];
     disabled?: boolean;
     validationError?: string;
     onAnswerChange: (answer: string) => void;
@@ -29,6 +30,7 @@ export default function QuizCard({
     isLoading,
     error,
     answer,
+    textChoices,
     disabled = false,
     validationError,
     onAnswerChange,
@@ -56,6 +58,23 @@ export default function QuizCard({
             );
         }
 
+        if (question.data?.type === "TEXT" && textChoices) {
+            return (
+                <RadioGroup.Root
+                    aria-label={question.data.content}
+                    value={answer}
+                    onValueChange={onAnswerChange}
+                    disabled={disabled || reviewMode}
+                    aria-invalid={Boolean(validationError)}
+                >
+                    {textChoices.map((option) => (
+                        <RadioGroup.Item key={option} value={option}>
+                            {option}
+                        </RadioGroup.Item>
+                    ))}
+                </RadioGroup.Root>
+            );
+        }
         if (question.data?.type === "TEXT") {
             return (
                 <TextArea

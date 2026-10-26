@@ -1,3 +1,6 @@
+import CCMSimulation from "../../player/CCMSimulation";
+import type { CCMSimulationStates } from "../../player/presentation";
+import type { AnswerRow } from "../../player/answerReferences";
 import Simulation from "../../player/Simulation";
 import type { SimulationState } from "../../player/presentation";
 import { Button, Skeleton } from "@radix-ui/themes";
@@ -31,6 +34,9 @@ type Props = {
     isActive?: boolean;
     previousAnswer?: string;
     simulationState?: SimulationState;
+    ccmSimulationStates?: CCMSimulationStates;
+    onCCMSimulationChange?: (states: CCMSimulationStates) => void;
+    answerRows?: AnswerRow[];
     onSimulationChange?: (state: SimulationState) => void;
     answers: CourseAnswers;
     isCompleted: boolean;
@@ -115,6 +121,9 @@ export default function Material({
     isActive = true,
     previousAnswer,
     simulationState,
+    ccmSimulationStates,
+    onCCMSimulationChange,
+    answerRows,
     onSimulationChange,
 }: Props) {
     const req = data.request as MaterialPage;
@@ -191,6 +200,11 @@ export default function Material({
                 className={`${styles.overviewContent} ${noChat ? styles.withoutChat : ""}`}
             >
                 <section className={styles.courseSection}>
+                    {req.presentation?.mentalSet && (
+                        <p className={styles.previewLabel}>
+                            Mental Set {req.presentation.mentalSet}
+                        </p>
+                    )}
                     <div className={styles.readingRow}>
                         <div className={styles.courseDescriptionWrapper}>
                             <ExpandButton
@@ -210,18 +224,36 @@ export default function Material({
                             </div>
                         </div>
                         {req.presentation?.simulationId ? (
-                            isActive && (
+                            isActive &&
+                            (req.presentation.simulationId ===
+                            "dark-room-v1" ? (
                                 <Simulation
-                                    id={req.presentation.simulationId}
+                                    id="dark-room-v1"
                                     state={simulationState}
                                     onChange={onSimulationChange}
                                 />
-                            )
+                            ) : (
+                                <CCMSimulation
+                                    id={req.presentation.simulationId}
+                                    state={
+                                        ccmSimulationStates?.[
+                                            req.presentation.simulationId
+                                        ]
+                                    }
+                                    onChange={(state) =>
+                                        onCCMSimulationChange?.({
+                                            [req.presentation!.simulationId!]:
+                                                state,
+                                        })
+                                    }
+                                />
+                            ))
                         ) : (
                             <div className={styles.visualPanel}>
                                 {req.presentation?.preview && (
                                     <p className={styles.previewLabel}>
-                                        靜態示意圖・互動模擬於第三頁開放
+                                        {req.presentation.previewLabel ??
+                                            "靜態示意圖・互動模擬於第三頁開放"}
                                     </p>
                                 )}
                                 <MaterialImageGallery
@@ -243,6 +275,33 @@ export default function Material({
                             </p>
                         </section>
                     )}
+                    {answerRows && (
+                        <section
+                            className={styles.previousAnswer}
+                            aria-label="本次學習回答整理"
+                        >
+                            <h2>本次學習回答整理</h2>
+                            <table className={styles.answerTable}>
+                                <thead>
+                                    <tr>
+                                        <th>步驟／問題</th>
+                                        <th>你的回答</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {answerRows.map((row, i) => (
+                                        <tr key={i}>
+                                            <th scope="row">{row.label}</th>
+                                            <td>
+                                                <small>{row.status}</small>
+                                                <p>{row.answer}</p>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </section>
+                    )}
                     {req.questionSections.length > 0 && (
                         <div className={styles.questionList}>
                             {req.questionSections.map((section, index) => {
@@ -259,6 +318,11 @@ export default function Material({
                                             ),
                                             data: questionQuery.data,
                                         }}
+                                        textChoices={
+                                            req.presentation?.textChoices?.[
+                                                index
+                                            ]
+                                        }
                                         isLoading={questionQuery.isLoading}
                                         error={
                                             questionQuery.isError
@@ -295,7 +359,16 @@ export default function Material({
                     )}
                 </section>
                 <aside className={styles.chatSidebar}>
-                    {!noChat && chat && <CourseChat controller={chat} />}
+                    {!noChat && chat && (
+                        <CourseChat
+                            controller={chat}
+                            hint={
+                                req.presentation?.stage.startsWith("ccm-")
+                                    ? "與 CCM 老師討論你的想法"
+                                    : undefined
+                            }
+                        />
+                    )}
                     {submissionError && !reviewMode && (
                         <p
                             className={FooterStyles.submissionMessage}

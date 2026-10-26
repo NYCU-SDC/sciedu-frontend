@@ -194,3 +194,24 @@ it("does not opt ordinary courses into the new context or preset", async () => {
         "help"
     );
 });
+
+it("CCM uses its preset and separate simulations without leaking dark-room controls", async () => {
+    const data = structuredClone(input());
+    data.definition.code = "ccm-heart-and-blood";
+    const extended = {
+        ...data,
+        simulations: {
+            "ccm-heart-v1": { position: 2, speed: 0.65 },
+            "ccm-marrow-v1": { position: 3, speed: 1 },
+        },
+    };
+    const parsed = decodeMaterialMessage(
+        await prepareMaterialMessage("比較我的觀察", extended)
+    )!;
+    expect(parsed.context.preset).toBe("ccm-agent-test-tw");
+    expect(parsed.context.snapshot.simulations).toEqual(extended.simulations);
+    expect(parsed.context.snapshot.simulation).toBeUndefined();
+    expect(parsed.context.snapshot.page.descriptions).toEqual([
+        "hidden description",
+    ]);
+});

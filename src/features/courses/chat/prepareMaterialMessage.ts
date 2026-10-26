@@ -1,7 +1,7 @@
 import { api } from "../../../shared/utils/api";
 import {
-    ARGUMENTATION_CODE,
-    ARGUMENTATION_PRESET,
+    CCM_CODE,
+    materialPreset,
     encodeMaterialMessage,
     type MaterialContext,
 } from "../../../shared/network/materialChat";
@@ -13,7 +13,10 @@ import type {
     QuestionResponse,
     SubmittedAnswerResponse,
 } from "../genetics/types/types";
-import type { SimulationState } from "../player/presentation";
+import type {
+    SimulationState,
+    CCMSimulationStates,
+} from "../player/presentation";
 
 type Input = {
     definition: CourseDefinition;
@@ -22,16 +25,25 @@ type Input = {
     answersByPage: Record<number, CourseAnswers>;
     submissions: SubmittedAnswerResponse[];
     simulation: SimulationState;
+    simulations?: CCMSimulationStates;
 };
 
 export async function prepareMaterialMessage(
     text: string,
     input: Input
 ): Promise<string> {
-    if (input.definition.code !== ARGUMENTATION_CODE) return text;
+    const preset = materialPreset(input.definition.code);
+    if (!preset) return text;
     // Capture synchronous learner state before awaiting content, so one send is one snapshot.
-    const { definition, page, scope, answersByPage, submissions, simulation } =
-        structuredClone(input);
+    const {
+        definition,
+        page,
+        scope,
+        answersByPage,
+        submissions,
+        simulation,
+        simulations,
+    } = structuredClone(input);
     if (
         !scope?.account ||
         scope.courseId !== definition.id ||
@@ -120,7 +132,7 @@ export async function prepareMaterialMessage(
     ]);
     const context: MaterialContext = {
         version: 1,
-        preset: ARGUMENTATION_PRESET,
+        preset,
         snapshot: {
             capturedAt,
             course: {
@@ -137,7 +149,11 @@ export async function prepareMaterialMessage(
                 descriptions,
             },
             questions,
-            ...(page.request.presentation.simulationId ? { simulation } : {}),
+            ...(definition.code === CCM_CODE
+                ? { simulations: simulations ?? {} }
+                : page.request.presentation.simulationId
+                  ? { simulation }
+                  : {}),
         },
     };
     const message = encodeMaterialMessage(text, context);

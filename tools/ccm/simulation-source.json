@@ -1,0 +1,21 @@
+[
+    {
+        "source": "q1-heart-pump-simulation_心臟輸送_20261014.html",
+        "sourceSha256": "15385f79784cb3fbb735c4016b2a4750ecf59f0ff1bd5b875c889819451f3826",
+        "output": "public/simulations/ccm/v1/heart.html",
+        "outputSha256": "98b799976037d0d46a51594367e70ea21e46c8b642f345869e6f46be99087079",
+        "embeddedAssetSha256": [
+            "182f6b4e821169eef8ef1ddbc295b9b2b888e80dd4ed88666b9d2ce8a44b606d",
+            "75c0cd2767dc9fae395d9d4b534d95b0f08ea80bde99dfc7919e547e6dd4c38e"
+        ]
+    },
+    {
+        "source": "q1-bone-marrow-simulation_血球生成_20261013.html",
+        "sourceSha256": "4fb06503e1c5bc7ea71c866b003e464cb5a26ffb2672b35524706f70336863c9",
+        "output": "public/simulations/ccm/v1/marrow.html",
+        "outputSha256": "f9983e0124e87c45d98f543f273abb0903d7e9ace8c85a5079372f4122f3c84a",
+        "embeddedAssetSha256": [
+            "78888a68800e1fe7fe738837a3b6e4d86f729a31a70e3226ceec105346fbd8e9"
+        ]
+    }
+]

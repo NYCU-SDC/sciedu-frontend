@@ -8,9 +8,10 @@ import styles from "./CourseChat.module.css";
 
 type Props = {
     controller: CourseChatController;
+    hint?: string;
 };
 
-export default function CourseChat({ controller }: Props) {
+export default function CourseChat({ controller, hint }: Props) {
     const {
         chat,
         title,
@@ -96,6 +97,7 @@ export default function CourseChat({ controller }: Props) {
             />
             <div className={styles.dock}>
                 <Composer
+                    hint={hint}
                     value={draft}
                     onChange={setDraft}
                     onSubmit={handleSend}

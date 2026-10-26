@@ -13,6 +13,7 @@ type Props = {
     disabled?: boolean;
     placeholder?: string;
     autoFocus?: boolean;
+    hint?: string;
 };
 
 export default function Composer({
@@ -24,6 +25,7 @@ export default function Composer({
     disabled = false,
     placeholder = "想問什麼問題？",
     autoFocus = false,
+    hint = "由國中自然教科書輔助回答",
 }: Props) {
     const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -68,9 +70,7 @@ export default function Composer({
             />
             <div className={styles.bar}>
                 <div className={styles.left}>
-                    <span className={styles.hint}>
-                        由國中自然教科書輔助回答
-                    </span>
+                    <span className={styles.hint}>{hint}</span>
                 </div>
                 {busy ? (
                     <button

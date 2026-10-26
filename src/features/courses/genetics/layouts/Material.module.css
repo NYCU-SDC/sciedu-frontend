@@ -229,3 +229,24 @@
         flex: none;
     }
 }
+
+.answerTable {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+.answerTable th,
+.answerTable td {
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #c8ded8;
+    padding: 0.75rem;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.answerTable th:first-child {
+    width: 35%;
+}
+.answerTable small {
+    color: #586c68;
+}

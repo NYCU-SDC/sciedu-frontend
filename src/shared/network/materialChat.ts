@@ -1,11 +1,21 @@
+import type { CCMSimulationStates } from "../../features/courses/player/presentation";
 /** Frontend envelope inside the existing Chat API's content string, not a new API field. */
 export const ARGUMENTATION_CODE = "scientific-argumentation-dark-room";
 export const ARGUMENTATION_PRESET = "augmentation_teacher_and_peer";
+export const CCM_CODE = "ccm-heart-and-blood";
+export const CCM_PRESET = "ccm-agent-test-tw";
+export function materialPreset(code?: string) {
+    return code === ARGUMENTATION_CODE
+        ? ARGUMENTATION_PRESET
+        : code === CCM_CODE
+          ? CCM_PRESET
+          : undefined;
+}
 const MARKER = "[SCIEDU_MATERIAL_CONTEXT_V1]";
 const END = "[/SCIEDU_MATERIAL_CONTEXT_V1]";
 export type MaterialContext = {
     version: 1;
-    preset: typeof ARGUMENTATION_PRESET;
+    preset: typeof ARGUMENTATION_PRESET | typeof CCM_PRESET;
     snapshot: {
         capturedAt: string;
         course: { id: string; code: string; title: string };
@@ -30,6 +40,7 @@ export type MaterialContext = {
                 submission: "confirmed_in_this_session" | "unknown";
             };
         }[];
+        simulations?: CCMSimulationStates;
         simulation?: { led: boolean; partition: boolean };
     };
 };
@@ -53,8 +64,8 @@ export function decodeMaterialMessage(
         const s = context?.snapshot;
         if (
             context?.version !== 1 ||
-            context.preset !== ARGUMENTATION_PRESET ||
-            s?.course?.code !== ARGUMENTATION_CODE ||
+            !materialPreset(s?.course?.code) ||
+            context.preset !== materialPreset(s?.course?.code) ||
             typeof s.course.id !== "string" ||
             typeof s.course.title !== "string" ||
             typeof s.experimentId !== "string" ||

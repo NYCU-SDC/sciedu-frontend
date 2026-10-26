@@ -10,3 +10,8 @@ package-lock.json
 yarn.lock
 # Preserve supplied simulation asset bytes.
 public/simulations/dark-room/v1/assets/
+
+public/simulations/ccm/v1/
+# Source mapping and deterministic generated content
+tools/ccm/manifest.json
+tools/ccm/simulation-source.json

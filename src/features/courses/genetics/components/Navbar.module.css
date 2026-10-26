@@ -239,7 +239,9 @@
 }
 
 .stepText {
-    max-width: 8rem;
+    max-width: 100%;
+    width: 8rem;
+    padding-inline: 0.25rem;
     overflow: hidden;
     font-size: 0.75rem;
     text-overflow: ellipsis;

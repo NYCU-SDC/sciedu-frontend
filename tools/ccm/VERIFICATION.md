@@ -16,10 +16,12 @@
 | 上傳安全                 | 通過（模擬 API） | 25 tests：100 個資源、查重、身分／環境、斷線、401、未知 POST、進度恢復、發布查核                                                  |
 | Dev 實際 preset          | 設定已核對       | ccm-agent-test-tw → agents/ccm-system-tw-20261013；RAG/subagents 關閉。未修改設定                                                 |
 | Langfuse prompt 最新版本 | 尚未驗證         | 無 Langfuse 登入；不宣稱使用最新草稿或已強制實作六層診斷                                                                          |
-| Dev 教材資料             | 待上傳核對       | 發布結果以後續上傳報告為準，不代表 Dev 播放器已部署此分支                                                                         |
+| Dev 教材資料             | 通過             | 已發布 `8cdcc816-7e40-456b-957f-c868734edcf1`；100 個建立請求回傳 201，260 個核對／發布請求回傳 200；全部內容一致                 |
 | PR 預覽部署              | 待 CI            | 待建立 PR 後記錄                                                                                                                  |
 | 真實學生／LLM 完整流程   | 尚未驗證         | 本輪未建立實驗或指派學生。需管理者指派後，用 PR 預覽站驗收真實作答、Summary/PENDING 及 LLM 品質                                   |
 
 本機證據保存於 SciEdu 工作目錄 `integration/ccm-evidence-20261027/`，包括桌面／窄螢幕截圖、通知截圖、12 題 completion、合成 Chat 請求快照及測試日誌。這些都是本機合成學生資料，不能作為真實 Dev 學生驗收證據。
 
 既有限制：跨裝置或遺失本機紀錄時，既有後端沒有用來恢復所有已提交答案的查詢入口；409 無法確認仍保守阻擋，不視為成功。圖說雖不渲染在正文，仍是可讀的前端參考資料，不是機密資料。LLM 可能在回覆引用圖說；前端不保證其教學策略或診斷正確性。
+
+Dev 發布摘要見 [dev-publication.json](dev-publication.json)。對應新 PR [#64](https://github.com/NYCU-SDC/sciedu-frontend/pull/64)，預覽入口為 `https://pr-64.sciedu.sdc.nycu.club/course/8cdcc816-7e40-456b-957f-c868734edcf1`。資料發布與前端部署是獨立結果；未指派帳號不能據此判定學生流程已可用。

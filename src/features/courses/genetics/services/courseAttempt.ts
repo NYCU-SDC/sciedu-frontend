@@ -1,3 +1,4 @@
+import { backendEnvironment } from "../../../../shared/network/materialChat";
 import type { CourseAnswers, SubmittedAnswerResponse } from "../types/types";
 
 import {
@@ -52,7 +53,7 @@ function isAnswersByPage(
 }
 
 function storageKey(courseId: string, userEmail: string, experimentId: string) {
-    return `${COURSE_ATTEMPT_PREFIX}${encodeURIComponent(userEmail)}:${encodeURIComponent(experimentId)}:${courseId}`;
+    return `${COURSE_ATTEMPT_PREFIX}${encodeURIComponent(backendEnvironment())}:${encodeURIComponent(userEmail)}:${encodeURIComponent(experimentId)}:${courseId}`;
 }
 
 function isCourseAttempt(

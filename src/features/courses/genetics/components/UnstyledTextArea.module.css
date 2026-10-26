@@ -1,6 +1,8 @@
 .textInput {
     height: 100%; /* fill up quiz-content */
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     border: none;
     resize: none;
     background-color: transparent;
@@ -9,6 +11,10 @@
 
 .textInput > textarea {
     padding: 0;
+    min-width: 0;
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .textInput:focus {

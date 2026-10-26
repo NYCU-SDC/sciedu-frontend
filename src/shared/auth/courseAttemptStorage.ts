@@ -1,17 +1,20 @@
+import { backendEnvironment } from "../network/materialChat";
 export const COURSE_ATTEMPT_PREFIX = "sciedu-course-attempt:";
-const SESSION_KEY = "sciedu-course-attempt-session";
+const sessionKey = () =>
+    "sciedu-course-attempt-session:" + backendEnvironment();
 let fallbackSessionId = crypto.randomUUID();
 const revokedSessions = new Set<string>();
 
 export function getAttemptSessionId(): string {
     try {
-        const stored = sessionStorage.getItem(SESSION_KEY);
-        if (stored && !revokedSessions.has(stored)) return stored;
-        sessionStorage.setItem(SESSION_KEY, fallbackSessionId);
+        const stored = sessionStorage.getItem(sessionKey());
+        if (stored && !revokedSessions.has(`${backendEnvironment()}|${stored}`))
+            return `${backendEnvironment()}|${stored}`;
+        sessionStorage.setItem(sessionKey(), fallbackSessionId);
     } catch {
         /* Route state still works when storage is blocked. */
     }
-    return fallbackSessionId;
+    return `${backendEnvironment()}|${fallbackSessionId}`;
 }
 
 /** Remove only course attempt data; invalidate old history state as well. */
@@ -25,7 +28,7 @@ export function clearCourseAttemptStorage() {
         for (const key of keys)
             if (key?.startsWith(COURSE_ATTEMPT_PREFIX))
                 sessionStorage.removeItem(key);
-        sessionStorage.setItem(SESSION_KEY, fallbackSessionId);
+        sessionStorage.setItem(sessionKey(), fallbackSessionId);
     } catch {
         /* In-memory session rotation still invalidates navigation state. */
     }

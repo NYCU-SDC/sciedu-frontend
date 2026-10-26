@@ -1,0 +1,25 @@
+{
+    "sourceDirectory": "科學論證_網頁設計/simulation",
+    "unchangedAssets": {
+        "Reflector.js": "57110762fc4d529f942560d5b41f1ddda727270a7890c92955aa0d3dff0a19aa",
+        "THREE-LICENSE.txt": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
+        "three.min.js": "170c6789f43217c96b3170f4b42fafe135de7f7cd48497a4218f9757ee1d49fa",
+        "topics_01_10.js": "f9bd49fa3473c2638ce6379aa11ab6f34edb30643eb87ee7ded5b43cda615053",
+        "lab.css": "c15f5bb2182c13372499b7040ae4ad01f6c0d0e508026ab57cb83fb725b1ddc4",
+        "topic01.css": "abc33765286136372bd507a798baf668ebd93b425e9945b5dfce0fbcbb7e4f83"
+    },
+    "adapterChanges": [
+        "index.html: add bridge.js and embed.css",
+        "bridge.js: validated parent messaging for LED and partition",
+        "embed.css: fit existing UI panel",
+        "index.html: omit visible model-limit note; descriptions remain in hidden course metadata"
+    ],
+    "patchedAssets": {
+        "lab.js": {
+            "sourceSha256": "2c40ea80ffb13139c44408f30c8d35e08220a89fe1b95ee1285ac1127477027b",
+            "sha256": "ab13af52be70a736bce147ab6d8e33226a7a067b7a79553ab770b3e4a2c0cd38",
+            "patch": "orbit.phi+(e.clientY-drag.y)*.006 -> orbit.phi-(e.clientY-drag.y)*.006",
+            "reason": "Match vertical camera drag to horizontal object rotation convention"
+        }
+    }
+}

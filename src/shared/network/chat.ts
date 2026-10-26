@@ -1,3 +1,4 @@
+import { decodeMaterialMessage, materialChatTitle } from "./materialChat";
 import { api } from "../utils/api";
 import type {
     GetChatResponse,
@@ -28,6 +29,14 @@ const NIL_UUID = "00000000-0000-0000-0000-000000000000";
  * empty string or the nil UUID rather than omitting the field.
  */
 function normalizeMessage(message: Message): Message {
+    const decoded =
+        message.role === "user" ? decodeMaterialMessage(message.content) : null;
+    if (decoded)
+        message = {
+            ...message,
+            content: decoded.text,
+            materialContext: decoded.context,
+        };
     if (message.previousID && message.previousID !== NIL_UUID) {
         return message;
     }
@@ -67,7 +76,11 @@ export async function createMessage(
         return (await mock()).createMockMessage(chatID, content, previousID);
     const response = await api<CreateMessageResponse>(`/api/chat/${chatID}`, {
         method: "POST",
-        body: JSON.stringify({ content, previousID, preset }),
+        body: JSON.stringify({
+            content,
+            previousID,
+            preset: decodeMaterialMessage(content)?.context.preset ?? preset,
+        }),
     });
     return { ...response, message: normalizeMessage(response.message) };
 }
@@ -78,7 +91,11 @@ export async function getChat(chatID: string): Promise<GetChatResponse> {
     const response = await api<GetChatResponse>(`/api/chat/${chatID}`, {
         method: "GET",
     });
-    return { ...response, messages: response.messages.map(normalizeMessage) };
+    return {
+        ...response,
+        title: materialChatTitle(response.title ?? ""),
+        messages: response.messages.map(normalizeMessage),
+    };
 }
 
 /** GET /api/chat — paginated list of the user's chats. */
@@ -91,9 +108,16 @@ export async function listChats(
         page: String(page),
         pageSize: String(pageSize),
     });
-    return api<ListChatsResponse>(`/api/chat?${params}`, {
+    const response = await api<ListChatsResponse>(`/api/chat?${params}`, {
         method: "GET",
     });
+    return {
+        ...response,
+        items: response.items.map((item) => ({
+            ...item,
+            title: materialChatTitle(item.title),
+        })),
+    };
 }
 
 /** DELETE /api/chat/:chatId. */

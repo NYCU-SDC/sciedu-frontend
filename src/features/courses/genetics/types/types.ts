@@ -1,3 +1,4 @@
+import type { PagePresentation } from "../../player/presentation";
 export type MaterialQuestionSection = {
     title: string;
     questionContent: QuestionResponse;
@@ -73,6 +74,7 @@ export type MaterialType = {
 };
 
 export type MaterialPage = {
+    presentation?: PagePresentation;
     type: "material";
     content: {
         imageIds: string[];
@@ -137,6 +139,8 @@ export type CourseContent = (QuestionsType | MaterialType | OverviewType) & {
 };
 
 export type CoursePageRequest = {
+    /** Hidden importer descriptions, never rendered as student body text. */
+    contextTextIds?: string[];
     pageId?: string;
     pageIndex: number;
     request: MaterialPage | OverviewPage | QuestionPage;

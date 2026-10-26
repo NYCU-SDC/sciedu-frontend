@@ -1,0 +1,2 @@
+# Preserve supplied simulation files byte-for-byte (including original CRLF/EOF).
+public/simulations/dark-room/v1/assets/* -text -whitespace

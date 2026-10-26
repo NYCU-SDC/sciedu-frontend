@@ -1,3 +1,6 @@
+import { prepareMaterialMessage } from "../chat/prepareMaterialMessage";
+import { backendEnvironment } from "../../../shared/network/materialChat";
+import { DEFAULT_SIMULATION_STATE, type SimulationState } from "./presentation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "@posthog/react";
@@ -32,8 +35,13 @@ import type {
 import type { CourseChatScope } from "../../../shared/auth/courseChatStorage";
 
 type PageContentProps = {
+    prepareMessage?: (text: string) => Promise<string>;
     data: CoursePageRequest;
     chat: CourseChatController;
+    isActive: boolean;
+    previousAnswer?: string;
+    simulationState: SimulationState;
+    onSimulationChange: (state: SimulationState) => void;
     answers: CourseAnswers;
     isCompleted: boolean;
     onNext: () => void;
@@ -54,17 +62,44 @@ function CoursePage({
     chatScope?: CourseChatScope;
     chatTitle: string;
 }) {
-    // Each mounted page owns its chat session and retains it during navigation.
-    const chat = useCourseChatController(chatScope, chatTitle, isActive);
+    const noChat =
+        props.data.request.type === "material" &&
+        props.data.request.presentation?.chatEnabled === false;
     return (
         <section
             className={styles.pageSlot}
             hidden={!isActive}
             aria-hidden={!isActive}
         >
-            <PageContent {...props} chat={chat} />
+            {noChat ? (
+                <Material {...props} isActive={isActive} />
+            ) : (
+                <PageWithChat
+                    {...props}
+                    isActive={isActive}
+                    chatScope={chatScope}
+                    chatTitle={chatTitle}
+                />
+            )}
         </section>
     );
+}
+
+function PageWithChat({
+    chatScope,
+    chatTitle,
+    ...props
+}: Omit<PageContentProps, "chat"> & {
+    chatScope?: CourseChatScope;
+    chatTitle: string;
+}) {
+    const chat = useCourseChatController(
+        chatScope,
+        chatTitle,
+        props.isActive,
+        props.prepareMessage
+    );
+    return <PageContent {...props} chat={chat} />;
 }
 
 function PageContent(props: PageContentProps) {
@@ -117,6 +152,7 @@ export default function CoursePlayer({
         !reviewMode && chatScope
             ? PLAYER_SESSION_PREFIX +
               JSON.stringify([
+                  backendEnvironment(),
                   chatScope.account,
                   chatScope.experimentId,
                   chatScope.courseId,
@@ -144,6 +180,9 @@ export default function CoursePlayer({
     const [answersByPage, setAnswersByPage] = useState<
         Record<number, CourseAnswers>
     >(restored?.answersByPage ?? initialAnswers);
+    const [simulationState, setSimulationState] = useState<SimulationState>(
+        restored?.simulationState ?? DEFAULT_SIMULATION_STATE
+    );
     const submissionsRef = useRef<SubmittedAnswerResponse[]>(
         restored?.submissions ?? []
     );
@@ -177,6 +216,7 @@ export default function CoursePlayer({
             answersByPage,
             submissions: submissionsRef.current,
             startedAt: startedAtRef.current,
+            simulationState,
         });
     }, [
         storageKey,
@@ -185,6 +225,7 @@ export default function CoursePlayer({
         highestUnlockedIndex,
         completedQuestionPages,
         answersByPage,
+        simulationState,
     ]);
 
     useEffect(() => {
@@ -299,7 +340,13 @@ export default function CoursePlayer({
                 />
                 {pageRequests.slice(0, unlockedIndex + 1).map((page, index) => (
                     <CoursePage
-                        key={page.pageId ?? page.pageIndex}
+                        key={JSON.stringify([
+                            backendEnvironment(),
+                            chatScope?.account,
+                            chatScope?.experimentId,
+                            definition.id,
+                            page.pageId ?? page.pageIndex,
+                        ])}
                         isActive={index === currentIndex}
                         chatScope={
                             chatScope
@@ -312,6 +359,37 @@ export default function CoursePlayer({
                                 : undefined
                         }
                         chatTitle={`${definition.title} · ${page.secondaryTitle}`}
+                        prepareMessage={(text) =>
+                            prepareMaterialMessage(text, {
+                                definition,
+                                page,
+                                scope: chatScope
+                                    ? {
+                                          ...chatScope,
+                                          pageId:
+                                              page.pageId ??
+                                              `legacy:${page.pageIndex}`,
+                                      }
+                                    : undefined,
+                                answersByPage,
+                                submissions: submissionsRef.current,
+                                simulation: simulationState,
+                            })
+                        }
+                        simulationState={simulationState}
+                        onSimulationChange={setSimulationState}
+                        previousAnswer={
+                            page.request.type === "material" &&
+                            page.request.presentation
+                                ?.previousAnswerPageIndex !== undefined
+                                ? Object.values(
+                                      answersByPage[
+                                          page.request.presentation
+                                              .previousAnswerPageIndex
+                                      ] ?? {}
+                                  ).join("\n\n")
+                                : undefined
+                        }
                         data={page}
                         answers={answersByPage[page.pageIndex] ?? {}}
                         isCompleted={completedQuestionPages.has(page.pageIndex)}

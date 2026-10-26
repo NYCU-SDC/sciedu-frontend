@@ -1,3 +1,4 @@
+import type { PagePresentation } from "../../player/presentation";
 import type { CoursePageRequest } from "../types/types";
 
 export type PageBlock = {
@@ -16,17 +17,28 @@ export type PageDetail = {
     blocks: PageBlock[];
 };
 
-/** Ordered blocks have no layout metadata. Media pages use the importer
+/** Versioned presentation metadata selects the material layout without requiring media.
+ * Ordered legacy blocks have no layout metadata. Media pages use the importer
  * convention; question-only and text-only pages preserve content in one column.
  * Only the material importer reserves TEXT order 200 for hidden LLM context.
  */
 export function mapPageBlocksToCoursePage(
     page: PageDetail,
-    pageIndex: number
+    pageIndex: number,
+    presentation?: PagePresentation
 ): CoursePageRequest {
-    const blocks = [...page.blocks].sort(
-        (a, b) => a.displayOrder - b.displayOrder
-    );
+    const blocks = page.blocks
+        .filter(
+            (block) =>
+                !(
+                    block.type === "TEXT" &&
+                    (block.displayOrder === 201 ||
+                        (block.displayOrder === 200 &&
+                            (presentation ||
+                                page.blocks.some((b) => b.type === "MEDIA"))))
+                )
+        )
+        .sort((a, b) => a.displayOrder - b.displayOrder);
     const base = {
         pageId: page.id,
         pageIndex,
@@ -34,7 +46,7 @@ export function mapPageBlocksToCoursePage(
         secondaryTitle: page.title,
     };
     const media = blocks.filter((block) => block.type === "MEDIA");
-    if (media.length === 0) {
+    if (media.length === 0 && !presentation) {
         const questions = blocks.filter((block) => block.type === "QUESTION");
         if (questions.length === 0) {
             const texts = blocks.filter((block) => block.type === "TEXT");
@@ -86,6 +98,8 @@ export function mapPageBlocksToCoursePage(
         throw new Error(
             `教材頁「${page.title}」缺少 displayOrder 0 的教材文字`
         );
+    if (presentation?.preview && media.length === 0)
+        throw new Error(`教材頁「${page.title}」缺少靜態預覽圖`);
     const questionSections = blocks
         .filter(
             (block) =>
@@ -125,6 +139,7 @@ export function mapPageBlocksToCoursePage(
         ...base,
         request: {
             type: "material",
+            presentation,
             content: {
                 imageIds: media.map((block) => block.resourceId),
                 descriptionId: description.resourceId,

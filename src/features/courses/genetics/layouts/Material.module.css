@@ -183,3 +183,49 @@
         height: 32rem;
     }
 }
+
+.visualPanel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+.visualPanel .imageContainer {
+    flex: 1;
+}
+.previewLabel {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
+    color: var(--neutral-700);
+}
+.previousAnswer {
+    background: white;
+    border: 2px solid var(--color-genetics-brand-teal);
+    border-radius: 1rem;
+    padding: 0.75rem;
+    max-height: 12rem;
+    overflow: auto;
+}
+.previousAnswer h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+.previousAnswer p {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 0;
+}
+.withoutChat {
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.withoutChat .chatSidebar {
+    flex: none;
+    height: auto;
+    align-items: flex-end;
+}
+@media (max-width: 63.999rem) {
+    .visualPanel .imageContainer {
+        flex: none;
+    }
+}

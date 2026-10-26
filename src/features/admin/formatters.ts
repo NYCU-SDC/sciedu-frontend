@@ -51,3 +51,9 @@ export function formatShortDateTime(value: string) {
         hour12: false,
     }).format(new Date(value));
 }
+
+export function archiveActionLabel(status: ExperimentStatus) {
+    if (status === "ACTIVE") return "提前結束並封存";
+    if (status === "COMPLETED") return "封存實驗";
+    return "取消並封存";
+}

@@ -20,12 +20,15 @@ import { toast } from "sonner";
 
 import { useDocumentTitle } from "../../../shared/hooks";
 import { ApiError } from "../../../shared/utils/api";
+import ArchiveExperimentModal from "../components/ArchiveExperimentModal";
+import { useExperimentArchive } from "../hooks/useExperimentArchive";
 import AddParticipantModal from "../components/AddParticipantModal";
 import AdminLayout from "../components/AdminLayout";
 import AdminPage from "../components/AdminPage";
 import AdminPageHeader from "../components/AdminPageHeader";
 import AdminPageState from "../components/AdminPageState";
 import {
+    archiveActionLabel,
     experimentStatusLabels,
     formatDateTime,
     formatShortDateTime,
@@ -64,6 +67,9 @@ export default function ExperimentDetailPage() {
     const [search, setSearch] = useState("");
     const [role, setRole] = useState<UserRole | null>(null);
     const [isAddingStudents, setAddingStudents] = useState(false);
+    const [archiveOpened, setArchiveOpened] = useState(false);
+    const archive = useExperimentArchive(experimentId);
+    const archiveLocked = archive.isPending || archive.needsVerification;
 
     const experimentQuery = useQuery({
         queryKey: ["admin", "experiments", experimentId, "detail"],
@@ -153,6 +159,12 @@ export default function ExperimentDetailPage() {
 
     return (
         <AdminLayout>
+            <ArchiveExperimentModal
+                experiment={experiment}
+                opened={archiveOpened}
+                onClose={() => setArchiveOpened(false)}
+                archive={archive}
+            />
             <AdminPage>
                 <AdminPageHeader
                     title={experiment.name}
@@ -171,6 +183,7 @@ export default function ExperimentDetailPage() {
                         <Group gap="sm">
                             {experiment.status === "ACTIVE" && (
                                 <Button
+                                    disabled={archiveLocked}
                                     onClick={() =>
                                         navigate(
                                             `/admin/experiments/${experimentId}/edit`
@@ -183,6 +196,7 @@ export default function ExperimentDetailPage() {
                             {experiment.status === "DRAFT" && (
                                 <Button
                                     variant="default"
+                                    disabled={archiveLocked}
                                     onClick={() =>
                                         navigate(
                                             `/admin/experiments/${experimentId}/edit`
@@ -195,6 +209,7 @@ export default function ExperimentDetailPage() {
                             {experiment.status === "SCHEDULED" && (
                                 <Button
                                     variant="default"
+                                    disabled={archiveLocked}
                                     onClick={() =>
                                         navigate(
                                             `/admin/experiments/${experimentId}/edit`
@@ -207,7 +222,9 @@ export default function ExperimentDetailPage() {
                             {experiment.status === "DRAFT" && (
                                 <Button
                                     loading={statusMutation.isPending}
-                                    disabled={!hasPublishedCourse}
+                                    disabled={
+                                        !hasPublishedCourse || archiveLocked
+                                    }
                                     title={
                                         !hasPublishedCourse
                                             ? "排程前至少需要一份已發布教材"
@@ -223,7 +240,9 @@ export default function ExperimentDetailPage() {
                             {experiment.status === "SCHEDULED" && (
                                 <Button
                                     loading={statusMutation.isPending}
-                                    disabled={!hasPublishedCourse}
+                                    disabled={
+                                        !hasPublishedCourse || archiveLocked
+                                    }
                                     onClick={() => {
                                         if (
                                             window.confirm(
@@ -236,19 +255,21 @@ export default function ExperimentDetailPage() {
                                     啟用實驗
                                 </Button>
                             )}
-                            {experiment.status === "COMPLETED" && (
+                            {(experiment.status !== "ARCHIVED" ||
+                                archive.needsVerification) && (
                                 <Button
-                                    loading={statusMutation.isPending}
-                                    onClick={() => {
-                                        if (
-                                            window.confirm(
-                                                "確定要封存這場實驗嗎？"
-                                            )
-                                        )
-                                            statusMutation.mutate("ARCHIVED");
-                                    }}
+                                    color="red"
+                                    variant="outline"
+                                    disabled={
+                                        statusMutation.isPending ||
+                                        removeMutation.isPending ||
+                                        archive.isPending
+                                    }
+                                    onClick={() => setArchiveOpened(true)}
                                 >
-                                    封存實驗
+                                    {archive.needsVerification
+                                        ? "查核封存狀態"
+                                        : archiveActionLabel(experiment.status)}
                                 </Button>
                             )}
                         </Group>
@@ -336,6 +357,7 @@ export default function ExperimentDetailPage() {
                                 ) && (
                                     <Button
                                         variant="default"
+                                        disabled={archiveLocked}
                                         onClick={() =>
                                             navigate(
                                                 `/admin/experiments/${experimentId}/edit`
@@ -597,6 +619,7 @@ export default function ExperimentDetailPage() {
                                                 aria-hidden="true"
                                             />
                                         }
+                                        disabled={archiveLocked}
                                         onClick={() => setAddingStudents(true)}
                                     >
                                         加入人員
@@ -681,7 +704,8 @@ export default function ExperimentDetailPage() {
                                                                             />
                                                                         }
                                                                         disabled={
-                                                                            removeMutation.isPending
+                                                                            removeMutation.isPending ||
+                                                                            archiveLocked
                                                                         }
                                                                         onClick={() => {
                                                                             if (

@@ -1,3 +1,5 @@
+import { useExperimentClock } from "../../experience/useExperimentClock";
+import { displayStatus } from "../../experience/experimentExperience";
 import { Alert, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { archiveActionLabel } from "../formatters";
 import type { ExperimentDetail } from "../types";
@@ -14,7 +16,11 @@ export default function ArchiveExperimentModal({
     onClose: () => void;
     archive: ReturnType<typeof useExperimentArchive>;
 }) {
-    const label = archiveActionLabel(experiment.status);
+    const now = useExperimentClock([experiment]);
+    const label = archiveActionLabel(
+        experiment.status,
+        displayStatus(experiment, now) === "ENDED"
+    );
     return (
         <Modal
             opened={opened}

@@ -1,3 +1,8 @@
+import {
+    readPersistent,
+    writePersistent,
+    clearPersistent,
+} from "../../features/experience/persistentStorage";
 import { backendEnvironment } from "../network/materialChat";
 export type CourseChatScope = {
     account: string;
@@ -5,6 +10,7 @@ export type CourseChatScope = {
     courseId: string;
     pageId: string;
     profile?: string;
+    roundId?: string;
 };
 export const COURSE_CHAT_PREFIX = "sciedu-course-chat:v1:";
 export function courseChatKey(scope: CourseChatScope) {
@@ -16,6 +22,7 @@ export function courseChatKey(scope: CourseChatScope) {
             scope.experimentId,
             scope.courseId,
             scope.pageId,
+            ...(scope.roundId ? ["practice", scope.roundId] : []),
             ...(scope.profile ? [scope.profile] : []),
         ])
     );
@@ -23,7 +30,7 @@ export function courseChatKey(scope: CourseChatScope) {
 export function readCourseChat(scope?: CourseChatScope): string | null {
     if (!scope?.account) return null;
     try {
-        const id = sessionStorage.getItem(courseChatKey(scope));
+        const id = readPersistent(courseChatKey(scope));
         return id &&
             /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
                 id
@@ -41,17 +48,20 @@ export function saveCourseChat(
     if (!scope?.account) return;
     try {
         const key = courseChatKey(scope);
-        if (id) sessionStorage.setItem(key, id);
-        else sessionStorage.removeItem(key);
+        if (id) writePersistent(key, id);
+        else {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        }
     } catch {
-        /* Memory-only chat remains usable. */
+        throw new Error(
+            "無法保存教材聊天室關聯，請確認瀏覽器儲存空間後重新載入結果。"
+        );
     }
 }
 export function clearCourseChatStorage() {
     try {
-        for (const key of Object.keys(sessionStorage))
-            if (key.startsWith(COURSE_CHAT_PREFIX))
-                sessionStorage.removeItem(key);
+        clearPersistent(COURSE_CHAT_PREFIX);
     } catch {
         /* No storage available. */
     }

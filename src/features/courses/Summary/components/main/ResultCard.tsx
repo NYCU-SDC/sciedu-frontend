@@ -70,6 +70,7 @@ type Props = {
     failedCount?: number;
     unavailableCount?: number;
     isLoading?: boolean;
+    isRefreshing?: boolean;
     duration: string;
     onDetailClick?: () => void;
     onRetryResults?: () => void;
@@ -86,6 +87,7 @@ export default function ResultCard({
     failedCount = 0,
     unavailableCount = 0,
     isLoading = false,
+    isRefreshing = false,
     duration,
     onDetailClick,
     onRetryResults,
@@ -174,7 +176,7 @@ export default function ResultCard({
                             mt="sm"
                             variant="subtle"
                             color="brandTeal"
-                            disabled={isLoading}
+                            loading={isRefreshing}
                             onClick={onRetryResults}
                         >
                             重新載入評分
@@ -216,7 +218,9 @@ export default function ResultCard({
                                 ? "未公開"
                                 : isLoading
                                   ? "—"
-                                  : `${correctCount} 題`
+                                  : correctCount + wrongCount === 0
+                                    ? "尚無評分"
+                                    : `${correctCount} 題`
                         }
                     />
                     <ScoreRow
@@ -227,7 +231,9 @@ export default function ResultCard({
                                 ? "未公開"
                                 : isLoading
                                   ? "—"
-                                  : `${wrongCount} 題`
+                                  : correctCount + wrongCount === 0
+                                    ? "尚無評分"
+                                    : `${wrongCount} 題`
                         }
                     />
                     {pendingCount > 0 && (
@@ -244,11 +250,18 @@ export default function ResultCard({
                             value={`${hiddenCount} 題`}
                         />
                     )}
-                    {failedCount + unavailableCount > 0 && (
+                    {failedCount > 0 && (
+                        <ScoreRow
+                            icon={<StatusDot color="#b42318" />}
+                            label="評分失敗"
+                            value={`${failedCount} 題`}
+                        />
+                    )}
+                    {unavailableCount > 0 && (
                         <ScoreRow
                             icon={<StatusDot color="#b42318" />}
                             label="暫時無法取得評分"
-                            value={`${failedCount + unavailableCount} 題`}
+                            value={`${unavailableCount} 題`}
                         />
                     )}
                     <ScoreRow

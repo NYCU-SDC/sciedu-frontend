@@ -1,6 +1,12 @@
+import {
+    parseExperience,
+    encodeExperience,
+    type ExperienceMode,
+} from "../../experience/experimentExperience";
 import type { EditableExperimentPayload, ExperimentDetail } from "../types";
 
 export type ExperimentDraft = {
+    mode?: ExperienceMode;
     name: string;
     description: string;
     startsAt: string;
@@ -30,6 +36,8 @@ export function retryLabel(
 }
 
 export function feedbackSummary(draft: ExperimentDraft) {
+    if (draft.mode === "practice")
+        return "有效實驗時段內不限次數；答案僅存本機，不計正式成績，AI 使用真實服務。";
     return `${draft.showScore ? "學生可查看分數與答對答錯" : "學生不可查看分數與答對答錯"}，${draft.showExplanations ? "顯示評分說明" : "不顯示評分說明"}；${releaseLabels[draft.release]}。${retryLabel(draft)}。${draft.allowRetry && draft.release !== "never" ? "正確答案公開後仍可在次數上限內重新作答。" : ""}`;
 }
 
@@ -39,7 +47,8 @@ export function experimentToDraft(
 ): ExperimentDraft {
     return {
         name: original.name,
-        description: original.description ?? "",
+        description: parseExperience(original.description).description,
+        mode: parseExperience(original.description).mode,
         startsAt: toTaipeiInputValue(original.scheduledStartAt),
         endsAt: toTaipeiInputValue(original.scheduledEndAt),
         maxAttempts: String(original.configuration.maxAttempts),
@@ -94,12 +103,16 @@ export function buildExperimentPayload(
             configuration: { ...original.configuration },
         };
     }
+    const originalMode = parseExperience(original?.description);
     return {
         name: draft.name === original?.name ? original.name : draft.name.trim(),
         description:
-            draft.description === (original?.description ?? "")
-                ? original?.description
-                : draft.description.trim(),
+            original &&
+            originalMode.valid &&
+            draft.description === originalMode.description &&
+            (draft.mode ?? "standard") === originalMode.mode
+                ? original.description
+                : encodeExperience(draft.description, draft.mode),
         scheduledStartAt: timestamp(draft.startsAt, original?.scheduledStartAt),
         scheduledEndAt: timestamp(draft.endsAt, original?.scheduledEndAt),
         configuration: {

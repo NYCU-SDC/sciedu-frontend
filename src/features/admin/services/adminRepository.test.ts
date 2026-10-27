@@ -105,3 +105,49 @@ describe("admin demo isolation", () => {
         );
     });
 });
+
+it("loads every matching API page before client-side time classification", async () => {
+    vi.stubEnv("VITE_ADMIN_DEMO_MODE", "false");
+    vi.resetModules();
+    const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({
+                items: [{ ...demoExperiment, id: "expired" }],
+                totalPages: 2,
+            }),
+        })
+        .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({
+                items: [
+                    {
+                        ...demoExperiment,
+                        id: "upcoming",
+                        scheduledEndAt: "2100-01-01T00:00:00Z",
+                    },
+                ],
+                totalPages: 2,
+            }),
+        });
+    vi.stubGlobal("fetch", fetchMock);
+    const repo = await import("./adminRepository");
+    const all = await repo.listAllExperiments({
+        search: "test",
+        scheduledFrom: "2020-01-01T00:00:00Z",
+    });
+    expect(all.map((e) => e.id)).toEqual(["expired", "upcoming"]);
+    expect(
+        fetchMock.mock.calls.map(([url]) =>
+            new URL(url, "https://fixture.test").searchParams.get("page")
+        )
+    ).toEqual(["1", "2"]);
+    for (const [url] of fetchMock.mock.calls) {
+        expect(url).toContain("search=test");
+        expect(url).not.toContain("status=");
+        expect(url).toContain("scheduledFrom=");
+    }
+});

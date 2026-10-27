@@ -25,7 +25,10 @@ const state: PlayerSession = {
     ],
     startedAt: "now",
 };
-beforeEach(() => sessionStorage.clear());
+beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+});
 it("restores the visited page and submission IDs together, avoiding resubmission after reload", () => {
     writePlayerSession(key, "revision", state);
     expect(readPlayerSession(key, "revision", 3)).toEqual(state);

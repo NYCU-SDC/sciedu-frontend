@@ -24,33 +24,26 @@ vi.mock("../services/adminRepository", () => ({
         createdAt: "2026-09-01T00:00:00Z",
         updatedAt: "2026-09-01T00:00:00Z",
     }),
-    listExperiments: vi.fn().mockResolvedValue({
-        items: [
-            {
-                id: "experiment-1",
-                name: "可操作實驗",
-                scheduledStartAt: "2026-09-10T01:00:00Z",
-                scheduledEndAt: "2026-09-10T08:00:00Z",
-                status: "DRAFT",
-                configuration: {
-                    maxAttempts: 1,
-                    allowRetry: false,
-                    showScore: true,
-                    showExplanations: false,
-                    gradingMode: "AUTOMATIC",
-                    correctAnswerReleaseMode: "AFTER_COURSE_COMPLETION",
-                },
-                createdBy: "user-1",
-                createdAt: "2026-09-01T00:00:00Z",
-                updatedAt: "2026-09-01T00:00:00Z",
+    listAllExperiments: vi.fn().mockResolvedValue([
+        {
+            id: "experiment-1",
+            name: "可操作實驗",
+            scheduledStartAt: "2026-09-10T01:00:00Z",
+            scheduledEndAt: "2026-09-10T08:00:00Z",
+            status: "DRAFT",
+            configuration: {
+                maxAttempts: 1,
+                allowRetry: false,
+                showScore: true,
+                showExplanations: false,
+                gradingMode: "AUTOMATIC",
+                correctAnswerReleaseMode: "AFTER_COURSE_COMPLETION",
             },
-        ],
-        totalPages: 1,
-        totalItems: 1,
-        currentPage: 1,
-        pageSize: 20,
-        hasNextPage: false,
-    }),
+            createdBy: "user-1",
+            createdAt: "2026-09-01T00:00:00Z",
+            updatedAt: "2026-09-01T00:00:00Z",
+        },
+    ]),
 }));
 
 function LocationProbe() {

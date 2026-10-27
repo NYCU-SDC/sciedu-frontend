@@ -2,20 +2,24 @@ import { ArrowRight } from "lucide-react";
 import { Button, Card, Text, Title } from "@mantine/core";
 
 type Props = {
+    practice?: boolean;
     title: string;
     description?: string;
     onContinue?: () => void;
+    onRestart?: () => void;
 };
 
 export default function MaterialCard({
+    practice,
     title,
     description,
     onContinue,
+    onRestart,
 }: Props) {
     return (
         <Card
             radius="16px"
-            h="257px"
+            mih="257px"
             style={{
                 display: "flex",
                 flexDirection: "column",
@@ -29,7 +33,7 @@ export default function MaterialCard({
             }}
         >
             <Text fz="14px" lh="19px" fw={400} c="#00856e">
-                已發布
+                {practice ? "無限練習 · 本機保存" : "已發布"}
             </Text>
             <Title order={3} fz="32px" lh="43px" fw={700} c="#000000">
                 {title}
@@ -62,8 +66,13 @@ export default function MaterialCard({
                     },
                 }}
             >
-                開啟教材
+                {practice ? "繼續練習" : "開啟教材"}
             </Button>
+            {practice && (
+                <Button variant="subtle" onClick={onRestart}>
+                    重新練習
+                </Button>
+            )}
         </Card>
     );
 }

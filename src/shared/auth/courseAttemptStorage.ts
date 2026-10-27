@@ -1,16 +1,21 @@
+import {
+    readPersistent,
+    writePersistent,
+    clearPersistent,
+} from "../../features/experience/persistentStorage";
 import { backendEnvironment } from "../network/materialChat";
 export const COURSE_ATTEMPT_PREFIX = "sciedu-course-attempt:";
-const sessionKey = () =>
+export const attemptSessionKey = () =>
     "sciedu-course-attempt-session:" + backendEnvironment();
 let fallbackSessionId = crypto.randomUUID();
 const revokedSessions = new Set<string>();
 
 export function getAttemptSessionId(): string {
     try {
-        const stored = sessionStorage.getItem(sessionKey());
+        const stored = readPersistent(attemptSessionKey());
         if (stored && !revokedSessions.has(`${backendEnvironment()}|${stored}`))
             return `${backendEnvironment()}|${stored}`;
-        sessionStorage.setItem(sessionKey(), fallbackSessionId);
+        writePersistent(attemptSessionKey(), fallbackSessionId);
     } catch {
         /* Route state still works when storage is blocked. */
     }
@@ -22,13 +27,8 @@ export function clearCourseAttemptStorage() {
     revokedSessions.add(getAttemptSessionId());
     fallbackSessionId = crypto.randomUUID();
     try {
-        const keys = Array.from({ length: sessionStorage.length }, (_, i) =>
-            sessionStorage.key(i)
-        );
-        for (const key of keys)
-            if (key?.startsWith(COURSE_ATTEMPT_PREFIX))
-                sessionStorage.removeItem(key);
-        sessionStorage.setItem(sessionKey(), fallbackSessionId);
+        clearPersistent(COURSE_ATTEMPT_PREFIX);
+        writePersistent(attemptSessionKey(), fallbackSessionId);
     } catch {
         /* In-memory session rotation still invalidates navigation state. */
     }

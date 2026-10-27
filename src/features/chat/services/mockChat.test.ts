@@ -11,6 +11,7 @@ import {
 import type { ChatEvent } from "../types/sse";
 beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     vi.useFakeTimers();
 });
 afterEach(() => vi.useRealTimers());

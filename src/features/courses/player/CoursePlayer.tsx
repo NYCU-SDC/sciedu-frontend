@@ -1,3 +1,8 @@
+import {
+    LearningSessionContext,
+    type SubmissionState,
+} from "../../experience/LearningSessionContext";
+import { Link } from "react-router";
 import CourseContentModal from "../genetics/components/CourseContentModal";
 import {
     CCM_NOTICE,
@@ -19,6 +24,7 @@ import { useNavigate } from "react-router";
 
 import {
     PLAYER_SESSION_PREFIX,
+    type PlayerSession,
     readPlayerSession,
     writePlayerSession,
 } from "./playerSession";
@@ -138,6 +144,8 @@ function PageContent(props: PageContentProps) {
 }
 
 export type CoursePlayerProps = {
+    practice?: boolean;
+    onRestart?: () => void;
     definition: CourseDefinition;
     chatScope?: Omit<CourseChatScope, "pageId">;
     reviewMode?: boolean;
@@ -147,6 +155,8 @@ export type CoursePlayerProps = {
 };
 
 export type CourseCompletion = {
+    practice?: boolean;
+    roundId?: string;
     answersByPage: Record<number, CourseAnswers>;
     submissions: SubmittedAnswerResponse[];
     startedAt: string;
@@ -156,6 +166,8 @@ export type CourseCompletion = {
 /** A reusable player for either API-backed or locally defined courses. */
 export default function CoursePlayer({
     definition,
+    practice = false,
+    onRestart,
     chatScope,
     reviewMode = false,
     reviews = {},
@@ -170,6 +182,7 @@ export default function CoursePlayer({
                   chatScope.account,
                   chatScope.experimentId,
                   chatScope.courseId,
+                  ...(practice ? ["practice", chatScope.roundId] : []),
               ])
             : null;
     const revision = JSON.stringify(
@@ -205,6 +218,13 @@ export default function CoursePlayer({
     const [dismissedNotices, setDismissedNotices] = useState<string[]>(
         restored?.dismissedNotices ?? []
     );
+    const [storageError, setStorageError] = useState<string | null>(null);
+    const [operations, setOperations] = useState<
+        Record<string, SubmissionState>
+    >(restored?.operations ?? {});
+    const operationsRef = useRef<Record<string, SubmissionState>>(
+        restored?.operations ?? {}
+    );
     const [confirmedAnswers, setConfirmedAnswers] = useState<
         SubmittedAnswerResponse[]
     >(restored?.submissions ?? []);
@@ -215,6 +235,13 @@ export default function CoursePlayer({
         restored?.startedAt ?? new Date().toISOString()
     );
     const containerRef = useRef<HTMLDivElement>(null);
+    const mounted = useRef(true);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (containerRef.current) containerRef.current.scrollTop = 0;
@@ -233,18 +260,37 @@ export default function CoursePlayer({
     const currentPage = pageRequests[currentIndex];
 
     useDocumentTitle(definition.title);
+    const persist = (patch: Partial<PlayerSession> = {}) => {
+        try {
+            writePlayerSession(storageKey, revision, {
+                currentIndex,
+                highestUnlockedIndex,
+                completed: [...completedQuestionPages],
+                answersByPage,
+                submissions: submissionsRef.current,
+                startedAt: startedAtRef.current,
+                simulationState,
+                ccmSimulationStates,
+                dismissedNotices,
+                operations: operationsRef.current,
+                ...patch,
+            });
+            setStorageError(null);
+        } catch (error) {
+            setStorageError((error as Error).message);
+            throw error;
+        }
+    };
     useEffect(() => {
-        writePlayerSession(storageKey, revision, {
-            currentIndex,
-            highestUnlockedIndex,
-            completed: [...completedQuestionPages],
-            answersByPage,
-            submissions: submissionsRef.current,
-            startedAt: startedAtRef.current,
-            simulationState,
-            ccmSimulationStates,
-            dismissedNotices,
-        });
+        // Persist reports storage failures in UI; this effect intentionally synchronizes the checkpoint.
+        try {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            persist();
+        } catch {
+            /* Visible error; user may retry without leaving. */
+        }
+        // persist captures the state explicitly listed below.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         storageKey,
         revision,
@@ -255,6 +301,7 @@ export default function CoursePlayer({
         simulationState,
         ccmSimulationStates,
         dismissedNotices,
+        confirmedAnswers,
     ]);
 
     useEffect(() => {
@@ -273,6 +320,7 @@ export default function CoursePlayer({
     }
 
     const handleNext = () => {
+        if (!mounted.current) return;
         if (currentIndex === pageRequests.length - 1) {
             if (!reviewMode && onComplete) {
                 onComplete({
@@ -340,168 +388,265 @@ export default function CoursePlayer({
     const currentYear = new Date().getFullYear();
 
     return (
-        <div
-            ref={containerRef}
-            className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""} ${currentPage.request.type === "material" ? styles.responsiveMaterial : ""}`}
+        <LearningSessionContext.Provider
+            value={{
+                practice,
+                submissions: confirmedAnswers,
+                operations,
+                beforeSubmit: (id) => {
+                    if (!mounted.current)
+                        throw new Error("教材已離開，停止送出");
+                    if (storageError) throw new Error(storageError);
+                    const before = operationsRef.current;
+                    operationsRef.current = { ...before, [id]: "pending" };
+                    try {
+                        persist();
+                        setOperations(operationsRef.current);
+                    } catch (error) {
+                        operationsRef.current = before;
+                        throw error;
+                    }
+                },
+                rejected: (id, known) => {
+                    if (!mounted.current) return;
+                    const next = { ...operationsRef.current };
+                    if (known) delete next[id];
+                    else next[id] = "unknown";
+                    operationsRef.current = next;
+                    setOperations(next);
+                    persist();
+                },
+            }}
         >
-            {currentPage.request.type === "material" &&
-                currentPage.request.presentation?.notice && (
-                    <CourseContentModal
-                        opened={
-                            !reviewMode &&
-                            currentPage.request.type === "material" &&
-                            currentPage.request.presentation?.notice ===
-                                "ccm-linear-test" &&
-                            !dismissedNotices.includes("ccm-linear-test")
-                        }
-                        title="Mental Set 2"
-                        onClose={() =>
-                            setDismissedNotices((previous) => [
-                                ...previous,
-                                "ccm-linear-test",
-                            ])
-                        }
-                    >
-                        <p>{CCM_NOTICE}</p>
-                    </CourseContentModal>
-                )}
-            <div className={styles.mobileBlocker}>
-                <div className={styles.blockerIcon}>
-                    <div className={styles.phoneShape}>
-                        <div className={styles.phoneLine} />
-                    </div>
-                </div>
-                <h2>本教材尚未支援用手機觀看</h2>
-                <p>
-                    教材皆為特定螢幕比例排版
-                    <br />
-                    請於平板/電腦螢幕上檢視此教材
-                </p>
-            </div>
-            <div className={styles.courseWrapper}>
-                <Navbar
-                    activeTitles={currentPage.activeNavbarTitles}
-                    activeStep={currentIndex}
-                    highestUnlockedStep={unlockedIndex}
-                    secondaryTitle={currentPage.secondaryTitle}
-                    onStepChange={handleStepChange}
-                    navigation={definition.navigation}
-                    stepLabels={pageRequests.map((page) => page.secondaryTitle)}
-                />
-                {pageRequests.slice(0, unlockedIndex + 1).map((page, index) => (
-                    <CoursePage
-                        key={JSON.stringify([
-                            backendEnvironment(),
-                            chatScope?.account,
-                            chatScope?.experimentId,
-                            definition.id,
-                            page.pageId ?? page.pageIndex,
-                        ])}
-                        isActive={index === currentIndex}
-                        chatScope={
-                            chatScope
-                                ? {
-                                      ...chatScope,
-                                      profile:
-                                          definition.code === CCM_CODE
-                                              ? `${CCM_PRESET}:material-context-v2`
-                                              : undefined,
-                                      pageId:
-                                          page.pageId ??
-                                          `legacy:${page.pageIndex}`,
-                                  }
-                                : undefined
-                        }
-                        chatTitle={`${definition.title} · ${page.secondaryTitle}`}
-                        prepareMessage={(text) =>
-                            prepareMaterialMessage(text, {
-                                definition,
-                                page,
-                                scope: chatScope
-                                    ? {
-                                          ...chatScope,
-                                          pageId:
-                                              page.pageId ??
-                                              `legacy:${page.pageIndex}`,
-                                      }
-                                    : undefined,
-                                answersByPage,
-                                submissions: submissionsRef.current,
-                                simulation: simulationState,
-                                simulations: ccmSimulationStates,
-                            })
-                        }
-                        ccmSimulationStates={ccmSimulationStates}
-                        onCCMSimulationChange={(states) =>
-                            setCCMSimulationStates((previous) => ({
-                                ...previous,
-                                ...states,
-                            }))
-                        }
-                        answerRows={
-                            page.request.type === "material" &&
-                            page.request.presentation?.answerReferences
-                                ? resolveAnswerReferences(
-                                      page.request.presentation
-                                          .answerReferences,
-                                      definition,
-                                      answersByPage,
-                                      confirmedAnswers,
-                                      chatScope?.experimentId
-                                  )
-                                : undefined
-                        }
-                        simulationState={simulationState}
-                        onSimulationChange={setSimulationState}
-                        previousAnswer={
-                            page.request.type === "material" &&
-                            page.request.presentation
-                                ?.previousAnswerPageIndex !== undefined
-                                ? Object.values(
-                                      answersByPage[
-                                          page.request.presentation
-                                              .previousAnswerPageIndex
-                                      ] ?? {}
-                                  ).join("\n\n")
-                                : undefined
-                        }
-                        data={page}
-                        answers={answersByPage[page.pageIndex] ?? {}}
-                        isCompleted={completedQuestionPages.has(page.pageIndex)}
-                        onNext={handlePageComplete}
-                        onAnswerChange={(questionId, answer) =>
-                            setAnswersByPage((previous) => ({
-                                ...previous,
-                                [page.pageIndex]: {
-                                    ...previous[page.pageIndex],
-                                    [questionId]: answer,
-                                },
-                            }))
-                        }
-                        reviewMode={reviewMode}
-                        reviews={reviews}
-                        onAnswersSubmitted={(submitted) => {
-                            const byQuestion = new Map(
-                                submissionsRef.current.map((answer) => [
-                                    answer.questionId,
-                                    answer,
+            <div
+                ref={containerRef}
+                className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""} ${currentPage.request.type === "material" ? styles.responsiveMaterial : ""}`}
+            >
+                {currentPage.request.type === "material" &&
+                    currentPage.request.presentation?.notice && (
+                        <CourseContentModal
+                            opened={
+                                !reviewMode &&
+                                currentPage.request.type === "material" &&
+                                currentPage.request.presentation?.notice ===
+                                    "ccm-linear-test" &&
+                                !dismissedNotices.includes("ccm-linear-test")
+                            }
+                            title="Mental Set 2"
+                            onClose={() =>
+                                setDismissedNotices((previous) => [
+                                    ...previous,
+                                    "ccm-linear-test",
                                 ])
-                            );
-                            submitted.forEach((answer) =>
-                                byQuestion.set(answer.questionId, answer)
-                            );
-                            submissionsRef.current = [...byQuestion.values()];
-                            setConfirmedAnswers(submissionsRef.current);
-                        }}
-                        isLastPage={index === pageRequests.length - 1}
+                            }
+                        >
+                            <p>{CCM_NOTICE}</p>
+                        </CourseContentModal>
+                    )}
+                <div className={styles.mobileBlocker}>
+                    <div className={styles.blockerIcon}>
+                        <div className={styles.phoneShape}>
+                            <div className={styles.phoneLine} />
+                        </div>
+                    </div>
+                    <h2>本教材尚未支援用手機觀看</h2>
+                    <p>
+                        教材皆為特定螢幕比例排版
+                        <br />
+                        請於平板/電腦螢幕上檢視此教材
+                    </p>
+                </div>
+                <div className={styles.courseWrapper}>
+                    <div className={styles.experienceControls}>
+                        <Link to="/">← 返回首頁</Link>
+                        {practice && <strong>本機練習，不計正式成績</strong>}
+                        {practice && onRestart && (
+                            <button onClick={onRestart}>重新練習</button>
+                        )}
+                    </div>
+                    {storageError && (
+                        <p className={styles.storageWarning} role="alert">
+                            {storageError}{" "}
+                            <button
+                                onClick={() => {
+                                    try {
+                                        persist();
+                                    } catch {
+                                        /* retain error */
+                                    }
+                                }}
+                            >
+                                重試保存
+                            </button>
+                        </p>
+                    )}
+                    <Navbar
+                        activeTitles={currentPage.activeNavbarTitles}
+                        activeStep={currentIndex}
+                        highestUnlockedStep={unlockedIndex}
+                        secondaryTitle={currentPage.secondaryTitle}
+                        onStepChange={handleStepChange}
+                        navigation={definition.navigation}
+                        stepLabels={pageRequests.map(
+                            (page) => page.secondaryTitle
+                        )}
                     />
-                ))}
-                <footer className={styles.copyrightFooter}>
-                    ©{currentYear} Institute of Education, Science Education
-                    division, NYCU. All Rights Reserved
-                </footer>
+                    {pageRequests
+                        .slice(0, unlockedIndex + 1)
+                        .map((page, index) => (
+                            <CoursePage
+                                key={JSON.stringify([
+                                    backendEnvironment(),
+                                    chatScope?.account,
+                                    chatScope?.experimentId,
+                                    definition.id,
+                                    page.pageId ?? page.pageIndex,
+                                ])}
+                                isActive={index === currentIndex}
+                                chatScope={
+                                    chatScope
+                                        ? {
+                                              ...chatScope,
+                                              profile:
+                                                  definition.code === CCM_CODE
+                                                      ? `${CCM_PRESET}:material-context-v2`
+                                                      : undefined,
+                                              pageId:
+                                                  page.pageId ??
+                                                  `legacy:${page.pageIndex}`,
+                                          }
+                                        : undefined
+                                }
+                                chatTitle={`${definition.title} · ${page.secondaryTitle}`}
+                                prepareMessage={(text) =>
+                                    prepareMaterialMessage(text, {
+                                        definition,
+                                        page,
+                                        scope: chatScope
+                                            ? {
+                                                  ...chatScope,
+                                                  pageId:
+                                                      page.pageId ??
+                                                      `legacy:${page.pageIndex}`,
+                                              }
+                                            : undefined,
+                                        answersByPage,
+                                        practice,
+                                        submissions: submissionsRef.current,
+                                        simulation: simulationState,
+                                        simulations: ccmSimulationStates,
+                                    })
+                                }
+                                ccmSimulationStates={ccmSimulationStates}
+                                onCCMSimulationChange={(states) =>
+                                    setCCMSimulationStates((previous) => ({
+                                        ...previous,
+                                        ...states,
+                                    }))
+                                }
+                                answerRows={
+                                    page.request.type === "material" &&
+                                    page.request.presentation?.answerReferences
+                                        ? resolveAnswerReferences(
+                                              page.request.presentation
+                                                  .answerReferences,
+                                              definition,
+                                              answersByPage,
+                                              confirmedAnswers,
+                                              chatScope?.experimentId,
+                                              practice
+                                          )
+                                        : undefined
+                                }
+                                simulationState={simulationState}
+                                onSimulationChange={setSimulationState}
+                                previousAnswer={
+                                    page.request.type === "material" &&
+                                    page.request.presentation
+                                        ?.previousAnswerPageIndex !== undefined
+                                        ? Object.values(
+                                              answersByPage[
+                                                  page.request.presentation
+                                                      .previousAnswerPageIndex
+                                              ] ?? {}
+                                          ).join("\n\n")
+                                        : undefined
+                                }
+                                data={page}
+                                answers={answersByPage[page.pageIndex] ?? {}}
+                                isCompleted={completedQuestionPages.has(
+                                    page.pageIndex
+                                )}
+                                onNext={() => {
+                                    try {
+                                        persist();
+                                        handlePageComplete();
+                                    } catch (error) {
+                                        setStorageError(
+                                            error instanceof Error
+                                                ? error.message
+                                                : "無法保存完成紀錄"
+                                        );
+                                    }
+                                }}
+                                onAnswerChange={(questionId, answer) => {
+                                    const next = {
+                                        ...answersByPage,
+                                        [page.pageIndex]: {
+                                            ...answersByPage[page.pageIndex],
+                                            [questionId]: answer,
+                                        },
+                                    };
+                                    setAnswersByPage(next);
+                                    try {
+                                        persist({ answersByPage: next });
+                                    } catch {
+                                        /* keep input in memory */
+                                    }
+                                }}
+                                reviewMode={reviewMode}
+                                reviews={reviews}
+                                onAnswersSubmitted={(submitted) => {
+                                    if (!mounted.current) return;
+                                    const byQuestion = new Map(
+                                        submissionsRef.current.map((answer) => [
+                                            answer.questionId,
+                                            answer,
+                                        ])
+                                    );
+                                    submitted.forEach((answer) =>
+                                        byQuestion.set(
+                                            answer.questionId,
+                                            answer
+                                        )
+                                    );
+                                    submissionsRef.current = [
+                                        ...byQuestion.values(),
+                                    ];
+                                    const operations = {
+                                        ...operationsRef.current,
+                                    };
+                                    submitted.forEach(
+                                        (a) => delete operations[a.questionId]
+                                    );
+                                    operationsRef.current = operations;
+                                    setOperations(operations);
+                                    setConfirmedAnswers(submissionsRef.current);
+                                    persist({
+                                        submissions: submissionsRef.current,
+                                        operations,
+                                    });
+                                }}
+                                isLastPage={index === pageRequests.length - 1}
+                            />
+                        ))}
+                    <footer className={styles.copyrightFooter}>
+                        ©{currentYear} Institute of Education, Science Education
+                        division, NYCU. All Rights Reserved
+                    </footer>
+                </div>
             </div>
-        </div>
+        </LearningSessionContext.Provider>
     );
 }
 

@@ -1,3 +1,4 @@
+import { parseExperience } from "../../../../experience/experimentExperience";
 import { useNavigate } from "react-router";
 
 import type { Course, CurrentExperiment } from "../../../types";
@@ -35,7 +36,9 @@ export default function Library({ experiment, courses }: Props) {
                 <CurrentTaskCard
                     eyebrow="目前進行中的實驗"
                     title={experiment.name}
-                    description={experiment.description}
+                    description={
+                        parseExperience(experiment.description).description
+                    }
                     buttonLabel="瀏覽實驗教材"
                     onContinue={() => navigate("/courses/library")}
                 />

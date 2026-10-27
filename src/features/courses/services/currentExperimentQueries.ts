@@ -1,3 +1,5 @@
+import { isWithinSchedule } from "../../experience/experimentExperience";
+import { useExperimentClock } from "../../experience/useExperimentClock";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../shared/auth";
 import { ApiError } from "../../../shared/utils/api";
@@ -26,9 +28,11 @@ export function useCurrentExperimentQuery() {
 export function useCurrentExperimentCourses() {
     const query = useCurrentExperimentQuery();
     const current = query.data;
+    const now = useExperimentClock(current ? [current.experiment] : []);
+    const active = current && isWithinSchedule(current.experiment, now);
     return {
-        experiment: current?.experiment ?? null,
-        courses: current?.experiment.status === "ACTIVE" ? current.courses : [],
+        experiment: active ? current.experiment : null,
+        courses: active ? current.courses : [],
         error: query.error,
         isPending: query.isPending,
         refetch: query.refetch,

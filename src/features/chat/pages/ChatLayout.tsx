@@ -57,7 +57,7 @@ export default function ChatLayout({ basePath = "" }: { basePath?: string }) {
 
     const handleNewChat = () => {
         closeOnMobile();
-        navigate(`${basePath}/`);
+        navigate(basePath ? `${basePath}/` : "/chat");
     };
 
     const handleDelete = async (target: ChatSummary) => {
@@ -69,7 +69,8 @@ export default function ChatLayout({ basePath = "" }: { basePath?: string }) {
                 queryKey: CHAT_HISTORY_QUERY_KEY,
             });
             toast.success("已刪除對話");
-            if (target.id === chatID) navigate(`${basePath}/`);
+            if (target.id === chatID)
+                navigate(basePath ? `${basePath}/` : "/chat");
         } catch (error) {
             toast.error(
                 `刪除對話失敗: ${

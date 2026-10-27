@@ -8,9 +8,9 @@ afterEach(() => {
     vi.useRealTimers();
     vi.resetAllMocks();
 });
-describe("answer result polling", () => {
+describe("manual result refresh", () => {
     it.each(["GRADED", "FAILED"] as const)(
-        "refreshes pending results and stops at %s",
+        "does not poll PENDING; manual refresh obtains %s",
         async (status) => {
             vi.useFakeTimers();
             vi.mocked(fetchAnswerResult)
@@ -45,6 +45,11 @@ describe("answer result polling", () => {
                     "PENDING"
                 );
                 await vi.advanceTimersByTimeAsync(2000);
+                expect(fetchAnswerResult).toHaveBeenCalledTimes(1);
+                expect(observer.getCurrentResult().data?.status).toBe(
+                    "PENDING"
+                );
+                await observer.refetch();
                 expect(observer.getCurrentResult().data?.status).toBe(status);
                 await vi.advanceTimersByTimeAsync(6000);
                 expect(fetchAnswerResult).toHaveBeenCalledTimes(2);

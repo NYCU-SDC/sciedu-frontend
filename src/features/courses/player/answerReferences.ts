@@ -10,7 +10,8 @@ export function resolveAnswerReferences(
     definition: CourseDefinition,
     answers: Record<number, CourseAnswers>,
     submissions: SubmittedAnswerResponse[],
-    experimentId?: string
+    experimentId?: string,
+    practice = false
 ): AnswerRow[] {
     return refs.map((ref) => {
         const page = definition.pages.find(
@@ -33,7 +34,9 @@ export function resolveAnswerReferences(
             status: submitted
                 ? "已確認提交"
                 : draft
-                  ? "本次紀錄（提交狀態未確認）"
+                  ? practice
+                      ? "本機練習答案"
+                      : "本次紀錄（提交狀態未確認）"
                   : "尚未取得",
         };
     });

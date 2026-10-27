@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { Button, Divider, Text, Title } from "@mantine/core";
 
 import { useAuth } from "../../../../shared/auth";
@@ -10,19 +11,22 @@ export default function Header() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                flexWrap: "nowrap",
+                flexWrap: "wrap",
                 gap: "24px",
                 padding: "16px 26px",
                 backgroundColor: "var(--mantine-color-brandTeal-5)",
                 borderRadius: "1rem",
             }}
         >
+            <Link to="/" style={{ color: "inherit", whiteSpace: "nowrap" }}>
+                ← 返回首頁
+            </Link>
             <div
                 style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "24px",
-                    flexWrap: "nowrap",
+                    flexWrap: "wrap",
                     minWidth: 0,
                 }}
             >

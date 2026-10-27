@@ -1,3 +1,9 @@
+import CourseRun from "../../experience/CourseRun";
+import {
+    parseExperience,
+    isWithinSchedule,
+} from "../../experience/experimentExperience";
+import { useExperimentClock } from "../../experience/useExperimentClock";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import {
     useLocation,
@@ -9,10 +15,7 @@ import CurrentExperimentState from "../components/CurrentExperimentState";
 import { SectionTitles } from "../../../assets/NavbarContent";
 import { useAuth } from "../../../shared/auth";
 import { getAttemptSessionId } from "../../../shared/auth/courseAttemptStorage";
-import CoursePlayer, {
-    CourseStatus,
-    type CourseCompletion,
-} from "../player/CoursePlayer";
+import { CourseStatus, type CourseCompletion } from "../player/CoursePlayer";
 import { coursePageRequests } from "./assets/courseResource";
 import {
     fetchCourseDefinition,
@@ -52,9 +55,15 @@ export default function GeneticsCourse() {
     const reviewMode = params.get("mode") === "review";
     const current = useAttemptExperiment();
     const experimentId = current.data?.experiment.id ?? "";
+    const now = useExperimentClock(
+        current.data ? [current.data.experiment] : []
+    );
+    const experience = parseExperience(current.data?.experiment.description);
     const eligible =
-        current.data?.experiment.status === "ACTIVE" &&
-        (!isCourseUuid(courseId) ||
+        current.data &&
+        isWithinSchedule(current.data.experiment, now) &&
+        experience.valid &&
+        ((experience.mode !== "practice" && !isCourseUuid(courseId)) ||
             current.data.courses.some(
                 (course) =>
                     course.id === courseId && course.status === "PUBLISHED"
@@ -69,18 +78,21 @@ export default function GeneticsCourse() {
               courseId,
               session?.email ?? "",
               experimentId,
-              (location.state as { attempt?: unknown } | null)?.attempt
+              (location.state as { attempt?: unknown } | null)?.attempt,
+              experience.mode
           )
         : null;
     const resultQueries = useQueries({
-        queries: (eligible ? (attempt?.submissions ?? []) : []).map(
-            (submission) =>
-                answerResultQueryOptions(
-                    session?.email ?? "",
-                    submission.questionId,
-                    submission.id,
-                    experimentId
-                )
+        queries: (eligible && !attempt?.practice
+            ? (attempt?.submissions ?? [])
+            : []
+        ).map((submission) =>
+            answerResultQueryOptions(
+                session?.email ?? "",
+                submission.questionId,
+                submission.id,
+                experimentId
+            )
         ),
     });
     const reviews: CourseReviews = {};
@@ -116,6 +128,13 @@ export default function GeneticsCourse() {
         current.data.experiment.status !== "ACTIVE"
     )
         return <CurrentExperimentState kind="no-experiment" />;
+    if (!experience.valid)
+        return (
+            <CourseStatus
+                message="實驗的練習設定無法辨識，請管理者確認後再開始。"
+                isError
+            />
+        );
     if (!eligible)
         return (
             <main>
@@ -178,7 +197,8 @@ export default function GeneticsCourse() {
                     重新取得評分結果
                 </button>
             )}
-            <CoursePlayer
+            <CourseRun
+                practice={experience.mode === "practice"}
                 key={`${session?.email}-${experimentId}-${courseId}-${reviewMode}`}
                 definition={definition}
                 chatScope={
@@ -187,6 +207,7 @@ export default function GeneticsCourse() {
                               account: session.email,
                               experimentId,
                               courseId: definition.id,
+                              roundId: attempt?.roundId,
                           }
                         : undefined
                 }

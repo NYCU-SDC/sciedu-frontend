@@ -31,7 +31,12 @@ vi.mock("../../../shared/auth", () => ({
 vi.mock("./services/useAttemptExperiment", () => ({
     useAttemptExperiment: () => ({
         data: {
-            experiment: { id: fixtures.experimentId, status: "ACTIVE" },
+            experiment: {
+                id: fixtures.experimentId,
+                status: "ACTIVE",
+                scheduledStartAt: "2020-01-01T00:00:00Z",
+                scheduledEndAt: "2100-01-01T00:00:00Z",
+            },
             courses: [
                 {
                     id: "10000000-0000-4000-8000-000000000001",
@@ -62,6 +67,9 @@ vi.mock("./services/fetchCourseDefinition", () => ({
             },
         })),
     }),
+}));
+vi.mock("../../experience/useLearningLock", () => ({
+    useLearningLock: () => ({ acquired: true }),
 }));
 vi.mock("@posthog/react", () => ({ usePostHog: () => ({ capture: vi.fn() }) }));
 vi.mock("../../../shared/hooks", () => ({ useDocumentTitle: vi.fn() }));

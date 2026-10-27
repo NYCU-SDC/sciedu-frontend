@@ -1,3 +1,4 @@
+import { parseExperience } from "../../experience/experimentExperience";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Badge,
@@ -52,6 +53,7 @@ const defaultExperimentDate = toTaipeiInputValue(
 const initialDraft: Draft = {
     name: "",
     description: "",
+    mode: "standard",
     startsAt: `${defaultExperimentDate}T09:00`,
     endsAt: `${defaultExperimentDate}T16:00`,
     maxAttempts: "1",
@@ -417,6 +419,43 @@ export default function CreateExperimentPage() {
                                             : undefined
                                     }
                                 />
+                                <div>
+                                    <label htmlFor="experience-mode">
+                                        實驗模式
+                                    </label>
+                                    <select
+                                        id="experience-mode"
+                                        disabled={isActive || isReadOnly}
+                                        value={draft.mode ?? "standard"}
+                                        onChange={(e) =>
+                                            setField(
+                                                "mode",
+                                                e.target.value as
+                                                    | "standard"
+                                                    | "practice"
+                                            )
+                                        }
+                                    >
+                                        <option value="standard">
+                                            一般實驗
+                                        </option>
+                                        <option value="practice">
+                                            無限練習
+                                        </option>
+                                    </select>
+                                    <p>
+                                        無限練習：有效時段內可重新開始，答案僅存本機、不計正式成績；每輪使用新的
+                                        AI 對話。
+                                    </p>
+                                    {experimentQuery.data &&
+                                        !parseExperience(
+                                            experimentQuery.data.description
+                                        ).valid && (
+                                            <p role="alert">
+                                                既有模式標記無法辨識，請在尚未啟用時確認模式並重新儲存。
+                                            </p>
+                                        )}
+                                </div>
                                 <Textarea
                                     disabled={isActive || isReadOnly}
                                     label="實驗說明"
@@ -516,180 +555,221 @@ export default function CreateExperimentPage() {
                             <p className={styles.muted}>
                                 設定學生的作答方式，以及完成教材後可以看到的資訊。
                             </p>
-                            <Stack className={styles.formFields}>
-                                <div className={styles.settingBlock}>
-                                    <strong>評分方式 *</strong>
-                                    <small>
-                                        新實驗使用自動評分，既有評分方式不會被修改。
-                                    </small>
-                                    <Radio.Group
-                                        value={
-                                            experimentQuery.data?.configuration
-                                                .gradingMode ?? "AUTOMATIC"
-                                        }
-                                    >
-                                        <div className={styles.choiceGrid}>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    value="AUTOMATIC"
-                                                    label="自動評分"
-                                                    readOnly
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled
-                                                    value="MANUAL"
-                                                    label="人工評分（即將推出）"
-                                                />
-                                            </label>
-                                        </div>
-                                    </Radio.Group>
-                                </div>
-                                <div className={styles.settingBlock}>
-                                    <strong>重新作答 *</strong>
-                                    <small>
-                                        設定學生完成後是否能重新挑戰教材。
-                                    </small>
-                                    <Radio.Group
-                                        value={
-                                            (!draft.allowRetry &&
-                                                draft.maxAttempts === "1") ||
-                                            (draft.allowRetry &&
-                                                ["2", "3"].includes(
-                                                    draft.maxAttempts
-                                                ))
-                                                ? draft.maxAttempts
-                                                : "existing"
-                                        }
-                                        onChange={(value) =>
-                                            setDraft((current) => ({
-                                                ...current,
-                                                maxAttempts: value,
-                                                allowRetry: Number(value) > 1,
-                                            }))
-                                        }
-                                    >
-                                        <div className={styles.choiceGrid}>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="1"
-                                                    label="不允許重新作答（共 1 次）"
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="2"
-                                                    label="可重新作答 1 次（共 2 次）"
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="3"
-                                                    label="可重新作答 2 次（共 3 次）"
-                                                />
-                                            </label>
-                                            {((!draft.allowRetry &&
-                                                draft.maxAttempts !== "1") ||
-                                                (draft.allowRetry &&
-                                                    !["2", "3"].includes(
-                                                        draft.maxAttempts
-                                                    ))) && (
-                                                <Radio
-                                                    value="existing"
-                                                    label={`沿用既有設定：${retryLabel(draft)}`}
-                                                    disabled
-                                                />
-                                            )}
-                                        </div>
-                                    </Radio.Group>
-                                </div>
-                                <div className={styles.settingBlock}>
-                                    <strong>學生可查看的回饋</strong>
-                                    <small>
-                                        分數、評分說明與正確答案分別控制，互不連動。尚未完成批改時顯示「待批改」。
-                                    </small>
-                                    <Checkbox
-                                        label="顯示分數與答對答錯"
-                                        checked={draft.showScore}
-                                        disabled={isActive || isReadOnly}
-                                        onChange={(event) =>
-                                            setField(
-                                                "showScore",
-                                                event.currentTarget.checked
-                                            )
-                                        }
-                                    />
-                                    <Checkbox
-                                        label="顯示評分說明"
-                                        checked={draft.showExplanations}
-                                        disabled={isActive || isReadOnly}
-                                        onChange={(event) =>
-                                            setField(
-                                                "showExplanations",
-                                                event.currentTarget.checked
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div className={styles.settingBlock}>
-                                    <strong>正確答案公開時機 *</strong>
-                                    <small>
-                                        須完成該頁或整份教材的必要作答；瀏覽頁面、進入最後一頁或實驗結束皆不代表完成。
-                                    </small>
-                                    <Radio.Group
-                                        value={draft.release}
-                                        onChange={(value) =>
-                                            setField(
-                                                "release",
-                                                value as Draft["release"]
-                                            )
-                                        }
-                                    >
-                                        <div className={styles.choiceGrid}>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="page"
-                                                    label="本頁提交成功後"
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="course"
-                                                    label="整份教材完成後"
-                                                />
-                                            </label>
-                                            <label className={styles.choice}>
-                                                <Radio
-                                                    disabled={
-                                                        isActive || isReadOnly
-                                                    }
-                                                    value="never"
-                                                    label="不公開正確答案"
-                                                />
-                                            </label>
-                                        </div>
-                                    </Radio.Group>
-                                </div>
-                                <p role="status" aria-label="教學設定摘要">
-                                    {feedbackSummary(draft)}
+                            {draft.mode === "practice" && (
+                                <p role="status">
+                                    本機練習不提交正式答案、不計成績，亦不受重新作答次數限制。以下評分與公開設定僅保留為一般實驗設定，不套用於練習。
                                 </p>
-                            </Stack>
+                            )}
+                            <fieldset
+                                disabled={draft.mode === "practice"}
+                                style={{
+                                    border: 0,
+                                    padding: 0,
+                                    margin: 0,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <Stack className={styles.formFields}>
+                                    <div className={styles.settingBlock}>
+                                        <strong>評分方式 *</strong>
+                                        <small>
+                                            新實驗使用自動評分，既有評分方式不會被修改。
+                                        </small>
+                                        <Radio.Group
+                                            value={
+                                                experimentQuery.data
+                                                    ?.configuration
+                                                    .gradingMode ?? "AUTOMATIC"
+                                            }
+                                        >
+                                            <div className={styles.choiceGrid}>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        value="AUTOMATIC"
+                                                        label="自動評分"
+                                                        readOnly
+                                                    />
+                                                </label>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled
+                                                        value="MANUAL"
+                                                        label="人工評分（即將推出）"
+                                                    />
+                                                </label>
+                                            </div>
+                                        </Radio.Group>
+                                    </div>
+                                    <div className={styles.settingBlock}>
+                                        <strong>重新作答 *</strong>
+                                        <small>
+                                            設定學生完成後是否能重新挑戰教材。
+                                        </small>
+                                        <Radio.Group
+                                            value={
+                                                (!draft.allowRetry &&
+                                                    draft.maxAttempts ===
+                                                        "1") ||
+                                                (draft.allowRetry &&
+                                                    ["2", "3"].includes(
+                                                        draft.maxAttempts
+                                                    ))
+                                                    ? draft.maxAttempts
+                                                    : "existing"
+                                            }
+                                            onChange={(value) =>
+                                                setDraft((current) => ({
+                                                    ...current,
+                                                    maxAttempts: value,
+                                                    allowRetry:
+                                                        Number(value) > 1,
+                                                }))
+                                            }
+                                        >
+                                            <div className={styles.choiceGrid}>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled={
+                                                            isActive ||
+                                                            isReadOnly
+                                                        }
+                                                        value="1"
+                                                        label="不允許重新作答（共 1 次）"
+                                                    />
+                                                </label>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled={
+                                                            isActive ||
+                                                            isReadOnly
+                                                        }
+                                                        value="2"
+                                                        label="可重新作答 1 次（共 2 次）"
+                                                    />
+                                                </label>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled={
+                                                            isActive ||
+                                                            isReadOnly
+                                                        }
+                                                        value="3"
+                                                        label="可重新作答 2 次（共 3 次）"
+                                                    />
+                                                </label>
+                                                {((!draft.allowRetry &&
+                                                    draft.maxAttempts !==
+                                                        "1") ||
+                                                    (draft.allowRetry &&
+                                                        !["2", "3"].includes(
+                                                            draft.maxAttempts
+                                                        ))) && (
+                                                    <Radio
+                                                        value="existing"
+                                                        label={`沿用既有設定：${retryLabel(draft)}`}
+                                                        disabled
+                                                    />
+                                                )}
+                                            </div>
+                                        </Radio.Group>
+                                    </div>
+                                    <div className={styles.settingBlock}>
+                                        <strong>學生可查看的回饋</strong>
+                                        <small>
+                                            分數、評分說明與正確答案分別控制，互不連動。尚未完成批改時顯示「待批改」。
+                                        </small>
+                                        <Checkbox
+                                            label="顯示分數與答對答錯"
+                                            checked={draft.showScore}
+                                            disabled={isActive || isReadOnly}
+                                            onChange={(event) =>
+                                                setField(
+                                                    "showScore",
+                                                    event.currentTarget.checked
+                                                )
+                                            }
+                                        />
+                                        <Checkbox
+                                            label="顯示評分說明"
+                                            checked={draft.showExplanations}
+                                            disabled={isActive || isReadOnly}
+                                            onChange={(event) =>
+                                                setField(
+                                                    "showExplanations",
+                                                    event.currentTarget.checked
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className={styles.settingBlock}>
+                                        <strong>正確答案公開時機 *</strong>
+                                        <small>
+                                            須完成該頁或整份教材的必要作答；瀏覽頁面、進入最後一頁或實驗結束皆不代表完成。
+                                        </small>
+                                        <Radio.Group
+                                            value={draft.release}
+                                            onChange={(value) =>
+                                                setField(
+                                                    "release",
+                                                    value as Draft["release"]
+                                                )
+                                            }
+                                        >
+                                            <div className={styles.choiceGrid}>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled={
+                                                            isActive ||
+                                                            isReadOnly
+                                                        }
+                                                        value="page"
+                                                        label="本頁提交成功後"
+                                                    />
+                                                </label>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled={
+                                                            isActive ||
+                                                            isReadOnly
+                                                        }
+                                                        value="course"
+                                                        label="整份教材完成後"
+                                                    />
+                                                </label>
+                                                <label
+                                                    className={styles.choice}
+                                                >
+                                                    <Radio
+                                                        disabled={
+                                                            isActive ||
+                                                            isReadOnly
+                                                        }
+                                                        value="never"
+                                                        label="不公開正確答案"
+                                                    />
+                                                </label>
+                                            </div>
+                                        </Radio.Group>
+                                    </div>
+                                    <p role="status" aria-label="教學設定摘要">
+                                        {feedbackSummary(draft)}
+                                    </p>
+                                </Stack>
+                            </fieldset>
                         </Card>
                         <Card
                             className={`${styles.card} ${styles.helpCard} ${styles.teachingHelp}`}
@@ -892,36 +972,50 @@ export default function CreateExperimentPage() {
                                     <div className={styles.settingRow}>
                                         <span>評分方式</span>
                                         <strong>
-                                            {experimentQuery.data?.configuration
-                                                .gradingMode === "MANUAL"
-                                                ? "人工評分"
-                                                : "自動評分"}
+                                            {draft.mode === "practice"
+                                                ? "本機練習，不計成績"
+                                                : experimentQuery.data
+                                                        ?.configuration
+                                                        .gradingMode ===
+                                                    "MANUAL"
+                                                  ? "人工評分"
+                                                  : "自動評分"}
                                         </strong>
                                     </div>
                                     <div className={styles.settingRow}>
                                         <span>重新作答</span>
-                                        <strong>{retryLabel(draft)}</strong>
+                                        <strong>
+                                            {draft.mode === "practice"
+                                                ? "有效時段內不限次數"
+                                                : retryLabel(draft)}
+                                        </strong>
                                     </div>
                                     <div className={styles.settingRow}>
                                         <span>分數與答對答錯</span>
                                         <strong>
-                                            {draft.showScore
-                                                ? "顯示"
-                                                : "不顯示"}
+                                            {draft.mode === "practice"
+                                                ? "不計成績"
+                                                : draft.showScore
+                                                  ? "顯示"
+                                                  : "不顯示"}
                                         </strong>
                                     </div>
                                     <div className={styles.settingRow}>
                                         <span>評分說明</span>
                                         <strong>
-                                            {draft.showExplanations
-                                                ? "顯示"
-                                                : "不顯示"}
+                                            {draft.mode === "practice"
+                                                ? "不適用"
+                                                : draft.showExplanations
+                                                  ? "顯示"
+                                                  : "不顯示"}
                                         </strong>
                                     </div>
                                     <div className={styles.settingRow}>
                                         <span>正確答案</span>
                                         <strong>
-                                            {releaseLabels[draft.release]}
+                                            {draft.mode === "practice"
+                                                ? "不適用"
+                                                : releaseLabels[draft.release]}
                                         </strong>
                                     </div>
                                 </div>

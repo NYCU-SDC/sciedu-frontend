@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
@@ -138,6 +139,17 @@ export default function Sidebar({
                     </button>
                 </div>
 
+                <Link
+                    to="/"
+                    style={{
+                        color: "inherit",
+                        textDecoration: "none",
+                        padding: "8px 12px",
+                        display: "block",
+                    }}
+                >
+                    ← 返回首頁
+                </Link>
                 <button
                     type="button"
                     className={styles.newchat}

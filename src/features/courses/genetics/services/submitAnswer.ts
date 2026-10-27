@@ -19,6 +19,7 @@ export async function submitAnswer(
         `/api/questions/${questionId}/answers`,
         {
             method: "POST",
+            signal: AbortSignal.timeout(30_000),
             body: JSON.stringify(payload),
         }
     );

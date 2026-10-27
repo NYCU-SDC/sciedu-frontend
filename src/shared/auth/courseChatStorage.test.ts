@@ -18,7 +18,10 @@ const scope: CourseChatScope = {
     pageId: "p",
 };
 const id = "9f7af112-b684-4a6a-ad05-d967c1278eaa";
-beforeEach(() => sessionStorage.clear());
+beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+});
 it("restores only the same account, experiment, course and stable page", () => {
     saveCourseChat(scope, id);
     expect(readCourseChat({ ...scope })).toBe(id);

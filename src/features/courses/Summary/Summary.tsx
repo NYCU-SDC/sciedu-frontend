@@ -1,3 +1,4 @@
+import { parseExperience } from "../../experience/experimentExperience";
 import { Box, Button, Text, Title } from "@mantine/core";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -18,6 +19,7 @@ export default function Summary() {
     const { session } = useAuth();
     const current = useAttemptExperiment();
     const experimentId = current.data?.experiment.id ?? "";
+    const mode = parseExperience(current.data?.experiment.description).mode;
     const navigationAttempt = (location.state as { attempt?: unknown } | null)
         ?.attempt;
     const courseId = searchParams.get("courseId") ?? null;
@@ -28,26 +30,29 @@ export default function Summary() {
                       courseId,
                       session.email,
                       experimentId,
-                      navigationAttempt
+                      navigationAttempt,
+                      mode
                   )
                 : null,
-        [courseId, navigationAttempt, session, experimentId]
+        [courseId, navigationAttempt, session, experimentId, mode]
     );
     const resultQueries = useQueries({
-        queries: (attempt?.submissions ?? []).map((submission) =>
-            answerResultQueryOptions(
-                session?.email ?? "",
-                submission.questionId,
-                submission.id,
-                experimentId
-            )
+        queries: (attempt?.practice ? [] : (attempt?.submissions ?? [])).map(
+            (submission) =>
+                answerResultQueryOptions(
+                    session?.email ?? "",
+                    submission.questionId,
+                    submission.id,
+                    experimentId
+                )
         ),
     });
     const results = resultQueries.flatMap((query) =>
         query.data ? [query.data] : []
     );
     const summary = summarizeAnswerResults(results);
-    const isLoading = resultQueries.some((query) => query.isFetching);
+    const isLoading = resultQueries.some((query) => query.isPending);
+    const isRefreshing = resultQueries.some((query) => query.isFetching);
     const answeredQuestionCount = new Set(
         Object.values(attempt?.answersByPage ?? {}).flatMap((answers) =>
             Object.entries(answers)
@@ -55,9 +60,13 @@ export default function Summary() {
                 .map(([id]) => id)
         )
     ).size;
-    const unavailableCount =
-        resultQueries.filter((query) => query.isError).length +
-        Math.max(0, answeredQuestionCount - (attempt?.submissions.length ?? 0));
+    const unavailableCount = attempt?.practice
+        ? 0
+        : resultQueries.filter((query) => query.isError).length +
+          Math.max(
+              0,
+              answeredQuestionCount - (attempt?.submissions.length ?? 0)
+          );
 
     if (current.isPending)
         return (
@@ -122,43 +131,96 @@ export default function Summary() {
             >
                 <StatusBar title={attempt.courseTitle} />
                 <Box px="10px">
-                    <ResultCard
-                        title="教材已完成！"
-                        materialTitle={attempt.courseTitle}
-                        description={
-                            isLoading
-                                ? "正在取得正式評分結果…"
-                                : results.length === 0 && unavailableCount === 0
-                                  ? "本次作答沒有可顯示的評分結果"
-                                  : "可返回教材查看每一題的作答與評分狀態"
-                        }
-                        correctCount={summary.correctCount}
-                        wrongCount={summary.wrongCount}
-                        pendingCount={summary.pendingCount}
-                        hiddenCount={summary.hiddenCount}
-                        failedCount={summary.failedCount}
-                        unavailableCount={unavailableCount}
-                        isLoading={isLoading}
-                        duration={formatDuration(
-                            attempt.startedAt,
-                            attempt.completedAt
-                        )}
-                        onDetailClick={() =>
-                            navigate(
-                                `/course/${encodeURIComponent(attempt.courseId)}?mode=review`,
-                                { state: { attempt } }
-                            )
-                        }
-                        onRetryResults={
-                            resultQueries.length > 0
-                                ? () => {
-                                      resultQueries.forEach((query) => {
-                                          void query.refetch();
-                                      });
-                                  }
-                                : undefined
-                        }
-                    />
+                    {attempt.practice && (
+                        <Box bg="white" p="xl" style={{ borderRadius: 16 }}>
+                            <Title order={2}>本輪練習已完成</Title>
+                            <Text>
+                                本機練習，不計正式成績。答案已保存在這個瀏覽器。
+                            </Text>
+                            <Text>
+                                作答時間：
+                                {formatDuration(
+                                    attempt.startedAt,
+                                    attempt.completedAt
+                                )}
+                            </Text>
+                            <Button
+                                mt="md"
+                                onClick={() =>
+                                    navigate(
+                                        `/course/${encodeURIComponent(attempt.courseId)}`
+                                    )
+                                }
+                            >
+                                繼續練習
+                            </Button>
+                            <Button
+                                mt="md"
+                                variant="light"
+                                onClick={() =>
+                                    navigate(
+                                        `/course/${encodeURIComponent(attempt.courseId)}`,
+                                        { state: { confirmRestart: true } }
+                                    )
+                                }
+                            >
+                                重新練習
+                            </Button>
+                            <Button
+                                mt="md"
+                                variant="subtle"
+                                onClick={() =>
+                                    navigate(
+                                        `/course/${encodeURIComponent(attempt.courseId)}?mode=review`,
+                                        { state: { attempt } }
+                                    )
+                                }
+                            >
+                                查看本輪答案
+                            </Button>
+                        </Box>
+                    )}
+                    {!attempt.practice && (
+                        <ResultCard
+                            title="教材已完成！"
+                            materialTitle={attempt.courseTitle}
+                            description={
+                                isLoading
+                                    ? "正在取得正式評分結果…"
+                                    : results.length === 0 &&
+                                        unavailableCount === 0
+                                      ? "本次作答沒有可顯示的評分結果"
+                                      : "可返回教材查看每一題的作答與評分狀態"
+                            }
+                            correctCount={summary.correctCount}
+                            wrongCount={summary.wrongCount}
+                            pendingCount={summary.pendingCount}
+                            hiddenCount={summary.hiddenCount}
+                            failedCount={summary.failedCount}
+                            unavailableCount={unavailableCount}
+                            isLoading={isLoading}
+                            isRefreshing={isRefreshing}
+                            duration={formatDuration(
+                                attempt.startedAt,
+                                attempt.completedAt
+                            )}
+                            onDetailClick={() =>
+                                navigate(
+                                    `/course/${encodeURIComponent(attempt.courseId)}?mode=review`,
+                                    { state: { attempt } }
+                                )
+                            }
+                            onRetryResults={
+                                resultQueries.length > 0
+                                    ? () => {
+                                          resultQueries.forEach((query) => {
+                                              void query.refetch();
+                                          });
+                                      }
+                                    : undefined
+                            }
+                        />
+                    )}
                 </Box>
             </Box>
         </Box>

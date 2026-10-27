@@ -1,3 +1,7 @@
+import {
+    CCM_CODE,
+    materialPreset,
+} from "../../../../shared/network/materialChat";
 import { parsePresentation } from "../../player/presentation";
 import { api } from "../../../../shared/utils/api";
 import type { CourseDefinition, CourseNavigation } from "../types/types";
@@ -54,6 +58,10 @@ export async function fetchCourseDefinition(
             if (configs.length > 1)
                 throw new Error("教材頁面設定重複，請聯絡管理者。");
             const config = configs[0];
+            if (course.code === CCM_CODE && !config)
+                throw new Error(
+                    "CCM 教材缺少頁面設定，請聯絡管理者；無法以一般教材模式開啟。"
+                );
             const presentation = config
                 ? parsePresentation(
                       (
@@ -65,7 +73,15 @@ export async function fetchCourseDefinition(
                   )
                 : undefined;
             const mapped = mapPageBlocksToCoursePage(page, index, presentation);
-            if (course.code === "scientific-argumentation-dark-room") {
+            if (presentation && mapped.request.type === "material") {
+                for (const index of Object.keys(
+                    presentation.textChoices ?? {}
+                )) {
+                    if (Number(index) >= mapped.request.questionSections.length)
+                        throw new Error("教材選項設定指向不存在的題目");
+                }
+            }
+            if (materialPreset(course.code)) {
                 mapped.contextTextIds = page.blocks
                     .filter((b) => b.type === "TEXT" && b.displayOrder === 200)
                     .map((b) => b.resourceId);
@@ -74,6 +90,18 @@ export async function fetchCourseDefinition(
         })
     );
 
+    for (const page of mappedPages) {
+        if (page.request.type !== "material") continue;
+        for (const reference of page.request.presentation?.answerReferences ??
+            []) {
+            const target = mappedPages[reference.pageIndex];
+            if (
+                target?.request.type !== "material" ||
+                !target.request.questionSections[reference.questionIndex]
+            )
+                throw new Error("教材回答表格引用了不存在的題目");
+        }
+    }
     return {
         id: course.id,
         code: course.code,

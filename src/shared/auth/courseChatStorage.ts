@@ -4,6 +4,7 @@ export type CourseChatScope = {
     experimentId: string;
     courseId: string;
     pageId: string;
+    profile?: string;
 };
 export const COURSE_CHAT_PREFIX = "sciedu-course-chat:v1:";
 export function courseChatKey(scope: CourseChatScope) {
@@ -15,6 +16,7 @@ export function courseChatKey(scope: CourseChatScope) {
             scope.experimentId,
             scope.courseId,
             scope.pageId,
+            ...(scope.profile ? [scope.profile] : []),
         ])
     );
 }

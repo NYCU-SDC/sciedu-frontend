@@ -229,3 +229,103 @@
         flex: none;
     }
 }
+
+.answerTable {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+.answerTable th,
+.answerTable td {
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #c8ded8;
+    padding: 0.75rem;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.answerTable th:first-child {
+    width: 35%;
+}
+.answerTable small {
+    color: #586c68;
+}
+
+/* CCM groups the step, question and visual into one reading card, as in the source slides. */
+.combinedSection {
+    overflow-y: auto;
+}
+.combinedContent {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    border: 2px solid var(--color-genetics-brand-teal);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    background: white;
+    gap: 1rem;
+}
+.combinedContent .courseDescriptionWrapper {
+    flex: none;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+}
+.combinedContent .courseDescription {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 2rem;
+}
+.combinedContent h2 {
+    font-size: clamp(1.1rem, 1.4vw, 1.5rem);
+    line-height: 1.5;
+    margin: 0 0 1rem;
+    color: var(--color-neutral-700);
+}
+.combinedContent blockquote {
+    margin: 0;
+    color: #667b87;
+}
+.combinedContent .courseDescription p {
+    margin: 0;
+    font-size: 1rem;
+}
+.combinedContent .imageContainer {
+    border: 0;
+    border-radius: 0;
+    height: clamp(18rem, 44vh, 32rem);
+    flex: none;
+}
+.combinedSection .questionList {
+    flex: none;
+    flex-direction: column;
+    overflow: visible;
+    gap: 0.75rem;
+}
+.combinedSection .questionList > * {
+    flex: none;
+    overflow: visible;
+}
+.combinedSection .previousAnswer {
+    flex: none;
+    max-height: none;
+}
+@media (max-width: 63.999rem) {
+    .combinedContent {
+        padding: 0.75rem;
+    }
+    .combinedContent .imageContainer {
+        height: auto;
+    }
+    .combinedContent .imageCell img {
+        height: auto;
+    }
+}
+.combinedSection .questionList textarea {
+    min-height: 5.5rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: #f1f7f7;
+    resize: vertical;
+}

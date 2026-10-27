@@ -1,5 +1,16 @@
+import CourseContentModal from "../genetics/components/CourseContentModal";
+import {
+    CCM_NOTICE,
+    DEFAULT_CCM_STATES,
+    type CCMSimulationStates,
+} from "./presentation";
+import { resolveAnswerReferences, type AnswerRow } from "./answerReferences";
 import { prepareMaterialMessage } from "../chat/prepareMaterialMessage";
-import { backendEnvironment } from "../../../shared/network/materialChat";
+import {
+    backendEnvironment,
+    CCM_CODE,
+    CCM_PRESET,
+} from "../../../shared/network/materialChat";
 import { DEFAULT_SIMULATION_STATE, type SimulationState } from "./presentation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,6 +52,9 @@ type PageContentProps = {
     isActive: boolean;
     previousAnswer?: string;
     simulationState: SimulationState;
+    ccmSimulationStates: CCMSimulationStates;
+    onCCMSimulationChange: (states: CCMSimulationStates) => void;
+    answerRows?: AnswerRow[];
     onSimulationChange: (state: SimulationState) => void;
     answers: CourseAnswers;
     isCompleted: boolean;
@@ -183,6 +197,17 @@ export default function CoursePlayer({
     const [simulationState, setSimulationState] = useState<SimulationState>(
         restored?.simulationState ?? DEFAULT_SIMULATION_STATE
     );
+    const [ccmSimulationStates, setCCMSimulationStates] =
+        useState<CCMSimulationStates>({
+            ...DEFAULT_CCM_STATES,
+            ...restored?.ccmSimulationStates,
+        });
+    const [dismissedNotices, setDismissedNotices] = useState<string[]>(
+        restored?.dismissedNotices ?? []
+    );
+    const [confirmedAnswers, setConfirmedAnswers] = useState<
+        SubmittedAnswerResponse[]
+    >(restored?.submissions ?? []);
     const submissionsRef = useRef<SubmittedAnswerResponse[]>(
         restored?.submissions ?? []
     );
@@ -217,6 +242,8 @@ export default function CoursePlayer({
             submissions: submissionsRef.current,
             startedAt: startedAtRef.current,
             simulationState,
+            ccmSimulationStates,
+            dismissedNotices,
         });
     }, [
         storageKey,
@@ -226,6 +253,8 @@ export default function CoursePlayer({
         completedQuestionPages,
         answersByPage,
         simulationState,
+        ccmSimulationStates,
+        dismissedNotices,
     ]);
 
     useEffect(() => {
@@ -315,6 +344,27 @@ export default function CoursePlayer({
             ref={containerRef}
             className={`${styles.courseContainer} ${currentIndex === 0 ? styles.hasGradient : ""} ${currentPage.request.type === "material" ? styles.responsiveMaterial : ""}`}
         >
+            {currentPage.request.type === "material" &&
+                currentPage.request.presentation?.notice && (
+                    <CourseContentModal
+                        opened={
+                            !reviewMode &&
+                            currentPage.request.type === "material" &&
+                            currentPage.request.presentation?.notice ===
+                                "ccm-linear-test" &&
+                            !dismissedNotices.includes("ccm-linear-test")
+                        }
+                        title="Mental Set 2"
+                        onClose={() =>
+                            setDismissedNotices((previous) => [
+                                ...previous,
+                                "ccm-linear-test",
+                            ])
+                        }
+                    >
+                        <p>{CCM_NOTICE}</p>
+                    </CourseContentModal>
+                )}
             <div className={styles.mobileBlocker}>
                 <div className={styles.blockerIcon}>
                     <div className={styles.phoneShape}>
@@ -352,6 +402,10 @@ export default function CoursePlayer({
                             chatScope
                                 ? {
                                       ...chatScope,
+                                      profile:
+                                          definition.code === CCM_CODE
+                                              ? `${CCM_PRESET}:material-context-v2`
+                                              : undefined,
                                       pageId:
                                           page.pageId ??
                                           `legacy:${page.pageIndex}`,
@@ -374,7 +428,28 @@ export default function CoursePlayer({
                                 answersByPage,
                                 submissions: submissionsRef.current,
                                 simulation: simulationState,
+                                simulations: ccmSimulationStates,
                             })
+                        }
+                        ccmSimulationStates={ccmSimulationStates}
+                        onCCMSimulationChange={(states) =>
+                            setCCMSimulationStates((previous) => ({
+                                ...previous,
+                                ...states,
+                            }))
+                        }
+                        answerRows={
+                            page.request.type === "material" &&
+                            page.request.presentation?.answerReferences
+                                ? resolveAnswerReferences(
+                                      page.request.presentation
+                                          .answerReferences,
+                                      definition,
+                                      answersByPage,
+                                      confirmedAnswers,
+                                      chatScope?.experimentId
+                                  )
+                                : undefined
                         }
                         simulationState={simulationState}
                         onSimulationChange={setSimulationState}
@@ -416,6 +491,7 @@ export default function CoursePlayer({
                                 byQuestion.set(answer.questionId, answer)
                             );
                             submissionsRef.current = [...byQuestion.values()];
+                            setConfirmedAnswers(submissionsRef.current);
                         }}
                         isLastPage={index === pageRequests.length - 1}
                     />

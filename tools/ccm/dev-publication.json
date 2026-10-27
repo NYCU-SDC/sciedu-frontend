@@ -1,0 +1,39 @@
+{
+    "sourceCommit": "f7dbfde8d6ed9005d6333ba0b6f1c8e3be7120a2",
+    "backend": "https://dev.sciedu.sdc.nycu.club",
+    "courseCode": "ccm-heart-and-blood",
+    "courseId": "8cdcc816-7e40-456b-957f-c868734edcf1",
+    "courseUrl": "https://dev.sciedu.sdc.nycu.club/course/8cdcc816-7e40-456b-957f-c868734edcf1",
+    "counts": {
+        "courses": 1,
+        "pages": 7,
+        "texts": 33,
+        "media": 1,
+        "questions": 12,
+        "blocks": 46,
+        "total": 100
+    },
+    "checks": [
+        {
+            "check": "內嵌教材與圖片",
+            "result": "PASS"
+        },
+        {
+            "check": "完整教材內容／圖片雜湊／順序／設定",
+            "result": "PASS"
+        },
+        {
+            "check": "發布與可選教材清單",
+            "result": "PASS"
+        }
+    ],
+    "publication": {
+        "status": "PUBLISHED",
+        "verifiedAt": "2026-10-26T18:55:37.283Z"
+    },
+    "notVerified": ["學生實驗指派與作答", "真實 Chat／preset 執行結果"],
+    "httpStatusCounts": {
+        "200": 260,
+        "201": 100
+    }
+}

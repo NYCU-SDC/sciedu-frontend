@@ -32,3 +32,6 @@ CLAUDE.md
 
 # Python material extraction caches
 __pycache__/
+
+# Generated one-time CCM console bundle
+tools/ccm/build/

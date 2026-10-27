@@ -194,3 +194,58 @@ it("does not opt ordinary courses into the new context or preset", async () => {
         "help"
     );
 });
+
+it("CCM uses its preset and separate simulations without leaking dark-room controls", async () => {
+    const data = structuredClone(input());
+    data.definition.code = "ccm-heart-and-blood";
+    const extended = {
+        ...data,
+        simulations: {
+            "ccm-heart-v1": { position: 2, speed: 0.65 },
+            "ccm-marrow-v1": { position: 3, speed: 1 },
+        },
+    };
+    const parsed = decodeMaterialMessage(
+        await prepareMaterialMessage("比較我的觀察", extended)
+    )!;
+    expect(parsed.context.preset).toBe("ccm-agent-test-tw");
+    expect(parsed.context.snapshot.simulations).toEqual(extended.simulations);
+    expect(parsed.context.snapshot.simulation).toBeUndefined();
+    expect(parsed.context.snapshot.page.descriptions).toEqual([
+        "hidden description",
+    ]);
+});
+it("CCM discussion includes other pages' original figure captions and Mental Sets, or stops if any page fails", async () => {
+    const data = structuredClone(input());
+    data.definition.code = "ccm-heart-and-blood";
+    if (data.page.request.type !== "material") throw Error("test fixture");
+    data.page.request.presentation!.mentalSet = 2;
+    const first = structuredClone(data.page);
+    first.pageId = "first";
+    first.contextTextIds = ["first-caption"];
+    if (first.request.type !== "material") throw Error("test fixture");
+    first.request.presentation!.mentalSet = 1;
+    first.request.presentation!.chatEnabled = false;
+    first.request.content.descriptionId = "first-body";
+    first.request.questionSections = [];
+    data.definition.pages = [first, data.page];
+    const original = vi.mocked(api).getMockImplementation()!;
+    vi.mocked(api).mockImplementation(async (path, options) => {
+        if (path.endsWith("first-caption"))
+            return { content: "心臟剖面：右心房、心室與血流方向" } as never;
+        return original(path, options);
+    });
+    const snap = decodeMaterialMessage(
+        await prepareMaterialMessage("第一頁的圖片是什麼？", data)
+    )!.context.snapshot;
+    expect(snap.page.mentalSet).toBe(2);
+    expect(snap.materialPages?.[0]).toMatchObject({
+        id: "first",
+        mentalSet: 1,
+        descriptions: ["心臟剖面：右心房、心室與血流方向"],
+    });
+    vi.mocked(api).mockImplementation(async () => {
+        throw Error("403");
+    });
+    await expect(prepareMaterialMessage("help", data)).rejects.toThrow("403");
+});

@@ -1,7 +1,7 @@
 import { api } from "../../../shared/utils/api";
 import {
-    ARGUMENTATION_CODE,
-    ARGUMENTATION_PRESET,
+    CCM_CODE,
+    materialPreset,
     encodeMaterialMessage,
     type MaterialContext,
 } from "../../../shared/network/materialChat";
@@ -13,7 +13,10 @@ import type {
     QuestionResponse,
     SubmittedAnswerResponse,
 } from "../genetics/types/types";
-import type { SimulationState } from "../player/presentation";
+import type {
+    SimulationState,
+    CCMSimulationStates,
+} from "../player/presentation";
 
 type Input = {
     definition: CourseDefinition;
@@ -22,16 +25,25 @@ type Input = {
     answersByPage: Record<number, CourseAnswers>;
     submissions: SubmittedAnswerResponse[];
     simulation: SimulationState;
+    simulations?: CCMSimulationStates;
 };
 
 export async function prepareMaterialMessage(
     text: string,
     input: Input
 ): Promise<string> {
-    if (input.definition.code !== ARGUMENTATION_CODE) return text;
+    const preset = materialPreset(input.definition.code);
+    if (!preset) return text;
     // Capture synchronous learner state before awaiting content, so one send is one snapshot.
-    const { definition, page, scope, answersByPage, submissions, simulation } =
-        structuredClone(input);
+    const {
+        definition,
+        page,
+        scope,
+        answersByPage,
+        submissions,
+        simulation,
+        simulations,
+    } = structuredClone(input);
     if (
         !scope?.account ||
         scope.courseId !== definition.id ||
@@ -45,15 +57,20 @@ export async function prepareMaterialMessage(
     )
         throw new Error("此頁不提供教材討論。");
     const capturedAt = new Date().toISOString();
-    const readText = async (id: string) => {
+    const readTextUncached = async (id: string) => {
         const data = await api<{ content: string }>(`/api/content/text/${id}`);
         if (typeof data.content !== "string")
             throw new Error("教材文字載入不完整，請重試。");
         return data.content;
     };
+    const textCache = new Map<string, Promise<string>>();
+    const readText = (id: string) => {
+        if (!textCache.has(id)) textCache.set(id, readTextUncached(id));
+        return textCache.get(id)!;
+    };
     if (!page.contextTextIds?.length)
         throw new Error("教材缺少圖說與模擬說明，無法建立完整討論內容。");
-    const [body, descriptions, questions] = await Promise.all([
+    const [body, descriptions, questions, materialPages] = await Promise.all([
         readText(page.request.content.descriptionId),
         Promise.all(page.contextTextIds.map(readText)),
         Promise.all(
@@ -117,10 +134,33 @@ export async function prepareMaterialMessage(
                     : []
             )
         ),
+        definition.code === CCM_CODE
+            ? Promise.all(
+                  definition.pages.map(async (p) => {
+                      if (
+                          p.request.type !== "material" ||
+                          !p.request.presentation ||
+                          !p.contextTextIds?.length
+                      )
+                          throw new Error("教材分頁說明不完整，尚未送出討論。");
+                      return {
+                          id: p.pageId ?? String(p.pageIndex),
+                          title: p.secondaryTitle,
+                          stage: p.request.presentation.stage,
+                          mentalSet: p.request.presentation.mentalSet,
+                          simulationId: p.request.presentation.simulationId,
+                          body: await readText(p.request.content.descriptionId),
+                          descriptions: await Promise.all(
+                              p.contextTextIds.map(readText)
+                          ),
+                      };
+                  })
+              )
+            : undefined,
     ]);
     const context: MaterialContext = {
         version: 1,
-        preset: ARGUMENTATION_PRESET,
+        preset,
         snapshot: {
             capturedAt,
             course: {
@@ -135,9 +175,15 @@ export async function prepareMaterialMessage(
                 stage: page.request.presentation.stage,
                 body,
                 descriptions,
+                mentalSet: page.request.presentation.mentalSet,
             },
             questions,
-            ...(page.request.presentation.simulationId ? { simulation } : {}),
+            ...(materialPages ? { materialPages } : {}),
+            ...(definition.code === CCM_CODE
+                ? { simulations: simulations ?? {} }
+                : page.request.presentation.simulationId
+                  ? { simulation }
+                  : {}),
         },
     };
     const message = encodeMaterialMessage(text, context);

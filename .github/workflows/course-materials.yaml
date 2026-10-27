@@ -5,6 +5,7 @@ on:
         paths:
             - "tools/course-materials/**"
             - "tools/argumentation/**"
+            - "tools/ccm/**"
             - "public/simulations/**"
             - ".github/workflows/course-materials.yaml"
     push:
@@ -13,6 +14,7 @@ on:
         paths:
             - "tools/course-materials/**"
             - "tools/argumentation/**"
+            - "tools/ccm/**"
             - "public/simulations/**"
             - ".github/workflows/course-materials.yaml"
 
@@ -43,3 +45,9 @@ jobs:
 
             - name: Run draft upload safety tests
               run: node --test tools/argumentation/test_*.mjs
+
+            - name: Validate CCM materials and upload safety
+              run: |
+                  python3 tools/ccm/validate.py
+                  python3 tools/ccm/build_upload.py
+                  node --test tools/ccm/test_*.mjs

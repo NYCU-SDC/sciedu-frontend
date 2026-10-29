@@ -1,0 +1,281 @@
+{
+    "environment": "loopback fixture only, synthetic account",
+    "beforeRequestCount": 336,
+    "afterRequestCount": 402,
+    "requestsDuringNavigation": [
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-2-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/chat/89a00d86-a87f-4bcd-a83c-f2f32635c71a"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-3-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-3-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-3-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-3-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-title-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-4-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-4-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-4-question-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/experiments/current"
+        },
+        {
+            "method": "GET",
+            "path": "/api/experiments/current"
+        },
+        {
+            "method": "GET",
+            "path": "/api/courses/10000000-0000-4000-8000-000000000001/pages"
+        },
+        {
+            "method": "GET",
+            "path": "/api/courses/10000000-0000-4000-8000-000000000001"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-0-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-0-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-0-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-0-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-1-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-1-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-1-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-0-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-1-title-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-1-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-1-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-1-question-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-2-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-3-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-3-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-body"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-title-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-title-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-title-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-4-question-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-4-question-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/questions/ccm-4-question-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-0"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-1"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-2"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-3"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-4"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-5"
+        },
+        {
+            "method": "GET",
+            "path": "/api/pages/ccm-6"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-0-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-1-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-2-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-3-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-4-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-5-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/content/text/ccm-6-presentation"
+        },
+        {
+            "method": "GET",
+            "path": "/api/auth/session"
+        },
+        {
+            "method": "GET",
+            "path": "/api/chat"
+        },
+        {
+            "method": "GET",
+            "path": "/api/chat"
+        },
+        {
+            "method": "GET",
+            "path": "/api/users/me"
+        }
+    ],
+    "newChatPosts": 0,
+    "answerPosts": 0,
+    "recoveredPage": "CCM 04 心臟概念重建後作答",
+    "recoveredDraft": "導覽續作驗收：心臟將血液推送至全身。",
+    "desktopHeaderPillHeight": 51,
+    "mobileHeaderPillHeight": 44,
+    "chatHomeAndNewButtonSize": {
+        "width": 247,
+        "height": 44
+    }
+}

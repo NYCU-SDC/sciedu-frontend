@@ -101,7 +101,7 @@ export default function MaterialLibrary() {
         <Box
             mih="100vh"
             bg="#eef3f1"
-            p="48px 40px"
+            p={{ base: "16px 12px", sm: "48px 40px" }}
             style={{ display: "flex", flexDirection: "column" }}
         >
             <Header />

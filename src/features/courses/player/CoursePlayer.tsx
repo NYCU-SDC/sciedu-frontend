@@ -458,7 +458,7 @@ export default function CoursePlayer({
                 </div>
                 <div className={styles.courseWrapper}>
                     <div className={styles.experienceControls}>
-                        <Link to="/">← 返回首頁</Link>
+                        <Link to="/courses">← 返回教材首頁</Link>
                         {practice && <strong>本機練習，不計正式成績</strong>}
                         {practice && onRestart && (
                             <button onClick={onRestart}>重新練習</button>

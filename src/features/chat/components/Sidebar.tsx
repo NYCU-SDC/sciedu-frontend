@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import {
+    ArrowLeft,
     LogOut,
     MoreHorizontal,
     PanelLeft,
@@ -141,14 +142,11 @@ export default function Sidebar({
 
                 <Link
                     to="/"
-                    style={{
-                        color: "inherit",
-                        textDecoration: "none",
-                        padding: "8px 12px",
-                        display: "block",
-                    }}
+                    className={styles.newchat}
+                    onClick={mobile ? onClose : undefined}
                 >
-                    ← 返回首頁
+                    <ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />
+                    <span>返回首頁</span>
                 </Link>
                 <button
                     type="button"

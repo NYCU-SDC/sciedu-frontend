@@ -4,7 +4,7 @@
 
 ## 使用方式
 
-1. 登入後 `/` 為首頁。依部署模式顯示教材、實驗管理、AI 聊天；管理入口只提供 ADMIN／EXPERIMENTER。新聊天在 `/chat`，既有 `/chat/:chatID` 保持有效。
+1. 登入後 `/` 為首頁。依部署模式顯示教材、實驗管理、AI 聊天；管理入口只提供 ADMIN／EXPERIMENTER。新聊天在 `/chat`，既有 `/chat/:chatID` 保持有效。教材閱讀與 Summary 先返回 `/courses`；教材首頁／書櫃可再返回平台首頁。
 2. 管理者新增專用測試實驗，在基本設定選「無限練習」。設定有效時段、指派教材與學生，再啟用。一般實驗仍是預設；ACTIVE 後不可切換模式。
 3. 練習仍需目前有效的實驗與教材指派。教材頁顯示「本機練習，不計正式成績」。題目必填驗證保留，答案不送正式答案 API、不產生假答案 ID、不呼叫評分 API。
 4. 教材列表、播放器及完成頁可「繼續練習／重新練習」。重新練習先確認，重置本輪答案、進度、simulation、Mental Set 通知及頁面聊天室。遠端舊對話不刪除。
@@ -84,3 +84,18 @@ python3 tools/experience/serve.py
 - 模式標記是現有欄位上的前端約定，跨裝置正式進度、attempt API、完整評分與歷次練習管理不在此 PR。
 - build 有既有的大型 bundle 提醒，非編譯失敗；本輪不改打包／部署策略。
 - 合併部署後：以專用測試學生指派新練習實驗，確認國網首頁、CCM／SciArgu 真實 preset、三輪新對話、到期阻擋、登出清理。正式實驗請另用專用測試資料驗證，不重用老師既有研究答案。
+
+## 2026-10-29：返回導覽與 navbar 調整
+
+- 教材閱讀與 Summary 的返回入口統一為「返回教材首頁」→ `/courses`；教材首頁與書櫃保留「返回首頁」→ `/`。
+- 三個教材頁首共用 navbar：SciEdu／原頁面標題靠左，返回按鈕與學生模式同組；Summary 保留登出。返回按鈕與模式標示共用膠囊外觀，高度桌面 51px、窄螢幕 44px。
+- LLM 側欄的返回首頁與新對話共用樣式，實測桌面皆為 247×44px。窄螢幕返回時關閉側欄，支援鍵盤 Enter 與可見焦點。
+- 本機瀏覽器驗證：CCM 第四頁輸入草稿 → 返回教材首頁 → 再進入，頁面及草稿保留。Summary 也能以鍵盤回到教材首頁；聊天返回平台首頁沒有新增聊天 POST。
+- 重跑 217 個既有前端測試通過，型別、lint、格式與 production build 通過。本輪未新增 API 或更動學習資料格式。
+- navbar 已在 1440px 桌面、390px 窄螢幕確認；Summary 另外檢查 320px 的操作群組沒有超出 navbar。Summary 窄螢幕截圖僅呈現本輪調整的 navbar，下方既有成果卡排版不在本輪修改範圍。
+
+調整前：[教材閱讀](material-testing-evidence/practice-desktop.png)、[Summary](material-testing-evidence/summary-pending.png)。
+
+調整後：[教材首頁桌面](material-testing-evidence/navigation-courses-desktop.png)、[窄螢幕](material-testing-evidence/navigation-courses-mobile.png)、[教材閱讀](material-testing-evidence/navigation-player-desktop.png)、[Summary 桌面](material-testing-evidence/navigation-summary-desktop.png)、[Summary 窄螢幕 navbar](material-testing-evidence/navigation-summary-mobile.png)、[聊天桌面](material-testing-evidence/navigation-chat-desktop.png)、[聊天窄螢幕](material-testing-evidence/navigation-chat-mobile.png)。
+
+[本次導覽網路紀錄與尺寸核對](material-testing-evidence/navigation-network.json)。上述皆為本機 fixture，尚未宣稱國網實際資料流程已通過。

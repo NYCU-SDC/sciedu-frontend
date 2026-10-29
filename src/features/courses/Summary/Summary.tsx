@@ -86,7 +86,7 @@ export default function Summary() {
             <Box
                 mih="100vh"
                 bg="#f0f6f4"
-                p="48px 40px"
+                p={{ base: "16px 12px", sm: "48px 40px" }}
                 style={{ display: "flex", flexDirection: "column" }}
             >
                 <Header />
@@ -119,7 +119,7 @@ export default function Summary() {
         <Box
             mih="100vh"
             bg="#f0f6f4"
-            p="48px 40px"
+            p={{ base: "16px 12px", sm: "48px 40px" }}
             style={{ display: "flex", flexDirection: "column" }}
         >
             <Header />

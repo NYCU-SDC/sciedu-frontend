@@ -1,3 +1,4 @@
+import PortalHome from "./features/experience/PortalHome";
 import {
     ChatPreview,
     CourseChatPreview,
@@ -35,7 +36,7 @@ const chatRoutes: RouteObject[] = [
         ),
         children: [
             {
-                path: "/",
+                path: "/chat",
                 element: <NewChatPage />,
             },
             {
@@ -210,6 +211,14 @@ export const router = createBrowserRouter([
         element: <AuthProvider />,
         errorElement: <RouteErrorBoundary />,
         children: [
+            {
+                path: "/",
+                element: (
+                    <RequireAuth>
+                        <PortalHome />
+                    </RequireAuth>
+                ),
+            },
             {
                 path: "/login",
                 element: <LoginPage />,

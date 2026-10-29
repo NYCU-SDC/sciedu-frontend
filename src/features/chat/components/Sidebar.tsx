@@ -1,7 +1,9 @@
+import { Link } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import {
+    ArrowLeft,
     LogOut,
     MoreHorizontal,
     PanelLeft,
@@ -138,6 +140,14 @@ export default function Sidebar({
                     </button>
                 </div>
 
+                <Link
+                    to="/"
+                    className={styles.newchat}
+                    onClick={mobile ? onClose : undefined}
+                >
+                    <ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />
+                    <span>返回首頁</span>
+                </Link>
                 <button
                     type="button"
                     className={styles.newchat}

@@ -183,7 +183,7 @@ describe("useAnswerSubmission", () => {
         expect(result.current.submittedQuestionIds).toEqual(
             new Set([choiceQuestion.id])
         );
-        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onSubmitted).toHaveBeenCalledWith([submittedAnswerResponse]);
         expect(onContinue).not.toHaveBeenCalled();
 
         await act(() => result.current.submit());
@@ -194,9 +194,8 @@ describe("useAnswerSubmission", () => {
             [textQuestion.id, "TEXT", "因為等位基因分離"],
             [textQuestion.id, "TEXT", "因為等位基因分離"],
         ]);
-        expect(onSubmitted).toHaveBeenCalledTimes(1);
-        expect(onSubmitted).toHaveBeenCalledWith([
-            submittedAnswerResponse,
+        expect(onSubmitted).toHaveBeenCalledTimes(2);
+        expect(onSubmitted).toHaveBeenNthCalledWith(2, [
             expect.objectContaining({ questionId: textQuestion.id }),
         ]);
         expect(onContinue).toHaveBeenCalledTimes(1);
@@ -254,7 +253,7 @@ describe("useAnswerSubmission", () => {
         expect(result.current.submittedQuestionIds).toEqual(
             new Set([choiceQuestion.id])
         );
-        expect(onSubmitted).not.toHaveBeenCalled();
+        expect(onSubmitted).toHaveBeenCalledWith([submittedAnswerResponse]);
         expect(onContinue).not.toHaveBeenCalled();
     });
 
@@ -314,4 +313,24 @@ describe("useAnswerSubmission", () => {
         expect(onSubmitted).not.toHaveBeenCalled();
         expect(onContinue).toHaveBeenCalledTimes(1);
     });
+});
+
+it("publishes each successful answer even when another answer fails", async () => {
+    vi.mocked(submitAnswer)
+        .mockResolvedValueOnce(submittedAnswerResponse)
+        .mockRejectedValueOnce(new ApiError("denied", 403));
+    const onSubmitted = vi.fn();
+    const { result } = renderHook(() =>
+        useAnswerSubmission({
+            questions,
+            answers: { "choice-question": "option-a", "text-question": "觀察" },
+            isCompleted: false,
+            onSubmitted,
+            onContinue: vi.fn(),
+        })
+    );
+    await act(async () => {
+        await result.current.submit();
+    });
+    expect(onSubmitted).toHaveBeenCalledWith([submittedAnswerResponse]);
 });

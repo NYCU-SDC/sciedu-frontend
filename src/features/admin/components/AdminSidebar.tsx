@@ -1,5 +1,6 @@
 import { Avatar, UnstyledButton } from "@mantine/core";
 import {
+    Home,
     BookOpen,
     CheckCircle2,
     FlaskConical,
@@ -29,6 +30,7 @@ type NavigationItem = {
 };
 
 const navigationItems: NavigationItem[] = [
+    { label: "返回首頁", icon: Home, path: "/" },
     { label: "總覽", icon: Search, section: "overview", path: "/admin" },
     {
         label: "實驗管理",

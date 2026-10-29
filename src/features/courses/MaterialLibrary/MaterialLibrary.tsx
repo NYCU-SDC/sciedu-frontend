@@ -1,3 +1,4 @@
+import { parseExperience } from "../../experience/experimentExperience";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -68,8 +69,17 @@ export default function MaterialLibrary() {
                         <MaterialCard
                             key={course.id}
                             title={course.title}
+                            practice={
+                                parseExperience(experiment.description).mode ===
+                                "practice"
+                            }
                             description={course.description}
                             onContinue={() => navigate(`/course/${course.id}`)}
+                            onRestart={() =>
+                                navigate(`/course/${course.id}`, {
+                                    state: { confirmRestart: true },
+                                })
+                            }
                         />
                     ))}
                 </SimpleGrid>
@@ -91,7 +101,7 @@ export default function MaterialLibrary() {
         <Box
             mih="100vh"
             bg="#eef3f1"
-            p="48px 40px"
+            p={{ base: "16px 12px", sm: "48px 40px" }}
             style={{ display: "flex", flexDirection: "column" }}
         >
             <Header />

@@ -1,3 +1,5 @@
+import { useContext } from "react";
+import { LearningSessionContext } from "../../../experience/LearningSessionContext";
 import { RadioGroup, Skeleton, TextArea } from "@radix-ui/themes";
 import { useState } from "react";
 import type { AnswerReviewState, QuestionResponse } from "../types/types";
@@ -37,6 +39,7 @@ export default function QuizCard({
     reviewMode = false,
     review,
 }: Props) {
+    const learning = useContext(LearningSessionContext);
     const [expanded, setExpanded] = useState(false);
 
     const answerField = (inModal = false) => {
@@ -117,7 +120,7 @@ export default function QuizCard({
             }
             <div className={styles.titleRow}>
                 <h3>{question.title}</h3>
-                {reviewMode && (
+                {reviewMode && !learning?.practice && (
                     <AnswerResultBadge
                         result={review?.result}
                         isLoading={review?.isLoading}
@@ -132,7 +135,7 @@ export default function QuizCard({
                 <>
                     <p>{question.data?.content}</p>
                     {answerField()}
-                    {reviewMode && (
+                    {reviewMode && !learning?.practice && (
                         <p className={styles.emptyReview}>
                             目前 API 未提供評分說明與正確答案。
                         </p>
@@ -153,7 +156,7 @@ export default function QuizCard({
                     <p>{question.data?.content}</p>
                     {answerField(true)}
                 </div>
-                {reviewMode && (
+                {reviewMode && !learning?.practice && (
                     <AnswerResultBadge
                         result={review?.result}
                         isLoading={review?.isLoading}

@@ -1,3 +1,8 @@
+import { currentPracticeRound } from "../../../experience/practiceRound";
+import {
+    readPersistent,
+    writePersistent,
+} from "../../../experience/persistentStorage";
 import { backendEnvironment } from "../../../../shared/network/materialChat";
 import type { CourseAnswers, SubmittedAnswerResponse } from "../types/types";
 
@@ -12,6 +17,8 @@ export type CourseAttempt = {
     userEmail: string;
     experimentId: string;
     sessionId: string;
+    practice?: boolean;
+    roundId?: string;
     startedAt: string;
     completedAt: string;
     answersByPage: Record<number, CourseAnswers>;
@@ -52,8 +59,13 @@ function isAnswersByPage(
     );
 }
 
-function storageKey(courseId: string, userEmail: string, experimentId: string) {
-    return `${COURSE_ATTEMPT_PREFIX}${encodeURIComponent(backendEnvironment())}:${encodeURIComponent(userEmail)}:${encodeURIComponent(experimentId)}:${courseId}`;
+function storageKey(
+    courseId: string,
+    userEmail: string,
+    experimentId: string,
+    roundId?: string
+) {
+    return `${COURSE_ATTEMPT_PREFIX}${encodeURIComponent(backendEnvironment())}:${encodeURIComponent(userEmail)}:${encodeURIComponent(experimentId)}:${courseId}${roundId ? `:practice:${roundId}` : ""}`;
 }
 
 function isCourseAttempt(
@@ -68,6 +80,10 @@ function isCourseAttempt(
         value.userEmail === userEmail &&
         value.experimentId === experimentId &&
         value.sessionId === getAttemptSessionId() &&
+        (!value.practice ||
+            (typeof value.roundId === "string" &&
+                value.roundId ===
+                    currentPracticeRound(userEmail, experimentId, courseId))) &&
         typeof value.courseTitle === "string" &&
         typeof value.startedAt === "string" &&
         typeof value.completedAt === "string" &&
@@ -91,16 +107,17 @@ export function saveCourseAttempt(attempt: CourseAttempt) {
     )
         return;
     try {
-        sessionStorage.setItem(
+        writePersistent(
             storageKey(
                 attempt.courseId,
                 attempt.userEmail,
-                attempt.experimentId
+                attempt.experimentId,
+                attempt.practice ? attempt.roundId : undefined
             ),
             JSON.stringify(attempt)
         );
     } catch {
-        // Navigation state still carries the attempt when storage is unavailable.
+        throw new Error("無法保存完成紀錄，請勿關閉頁面，稍後重試。");
     }
 }
 
@@ -108,18 +125,34 @@ export function loadCourseAttempt(
     courseId: string,
     userEmail: string,
     experimentId: string,
-    navigationAttempt?: unknown
+    navigationAttempt?: unknown,
+    mode: "standard" | "practice" = "standard"
 ): CourseAttempt | null {
     if (!userEmail || !experimentId) return null;
-    if (isCourseAttempt(navigationAttempt, courseId, userEmail, experimentId))
+    if (
+        isCourseAttempt(navigationAttempt, courseId, userEmail, experimentId) &&
+        Boolean(navigationAttempt.practice) === (mode === "practice")
+    )
         return navigationAttempt;
     try {
-        const raw = sessionStorage.getItem(
-            storageKey(courseId, userEmail, experimentId)
+        const raw = readPersistent(
+            storageKey(
+                courseId,
+                userEmail,
+                experimentId,
+                mode === "practice"
+                    ? (currentPracticeRound(
+                          userEmail,
+                          experimentId,
+                          courseId
+                      ) ?? "missing")
+                    : undefined
+            )
         );
         if (!raw) return null;
         const parsed: unknown = JSON.parse(raw);
-        return isCourseAttempt(parsed, courseId, userEmail, experimentId)
+        return isCourseAttempt(parsed, courseId, userEmail, experimentId) &&
+            Boolean(parsed.practice) === (mode === "practice")
             ? parsed
             : null;
     } catch {

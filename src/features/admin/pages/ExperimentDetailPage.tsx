@@ -1,3 +1,9 @@
+import {
+    displayStatus,
+    displayLabels,
+    parseExperience,
+} from "../../experience/experimentExperience";
+import { useExperimentClock } from "../../experience/useExperimentClock";
 import { useMemo, useState } from "react";
 import {
     ActionIcon,
@@ -76,6 +82,9 @@ export default function ExperimentDetailPage() {
         queryFn: () => fetchExperiment(experimentId),
         enabled: Boolean(experimentId),
     });
+    const now = useExperimentClock(
+        experimentQuery.data ? [experimentQuery.data] : []
+    );
     const coursesQuery = useQuery({
         queryKey: ["admin", "experiments", experimentId, "courses"],
         queryFn: () => listExperimentCourses(experimentId),
@@ -151,9 +160,11 @@ export default function ExperimentDetailPage() {
         ({ course }) => course.status === "PUBLISHED"
     );
     const statusColor =
-        experiment.status === "ACTIVE"
+        displayStatus(experiment, now) === "ACTIVE"
             ? "teal"
-            : experiment.status === "SCHEDULED"
+            : ["SCHEDULED", "NOT_STARTED"].includes(
+                    displayStatus(experiment, now)
+                )
               ? "cyan"
               : "gray";
 
@@ -176,7 +187,7 @@ export default function ExperimentDetailPage() {
                             color={statusColor}
                             variant="light"
                         >
-                            {experimentStatusLabels[experiment.status]}
+                            {displayLabels[displayStatus(experiment, now)]}
                         </Badge>
                     }
                     actions={
@@ -269,7 +280,11 @@ export default function ExperimentDetailPage() {
                                 >
                                     {archive.needsVerification
                                         ? "查核封存狀態"
-                                        : archiveActionLabel(experiment.status)}
+                                        : archiveActionLabel(
+                                              experiment.status,
+                                              displayStatus(experiment, now) ===
+                                                  "ENDED"
+                                          )}
                                 </Button>
                             )}
                         </Group>
@@ -309,6 +324,12 @@ export default function ExperimentDetailPage() {
                     </div>
                 </Card>
 
+                <p>
+                    後端狀態：{experimentStatusLabels[experiment.status]} ·{" "}
+                    {parseExperience(experiment.description).mode === "practice"
+                        ? "無限練習（本機，不計正式成績）"
+                        : "一般實驗"}
+                </p>
                 <Card className={`${styles.card} ${styles.tabs}`} radius="lg">
                     <Tabs
                         value={tab}
@@ -376,7 +397,8 @@ export default function ExperimentDetailPage() {
                                 <div className={styles.settingRow}>
                                     <span>實驗說明</span>
                                     <strong>
-                                        {experiment.description || "—"}
+                                        {parseExperience(experiment.description)
+                                            .description || "—"}
                                     </strong>
                                 </div>
                                 <div className={styles.settingRow}>
@@ -412,10 +434,13 @@ export default function ExperimentDetailPage() {
                                         )}
                                     </span>
                                     <strong>
-                                        {experiment.configuration
-                                            .gradingMode === "AUTOMATIC"
-                                            ? "自動評分"
-                                            : "人工評分"}
+                                        {parseExperience(experiment.description)
+                                            .mode === "practice"
+                                            ? "本機練習，不計成績"
+                                            : experiment.configuration
+                                                    .gradingMode === "AUTOMATIC"
+                                              ? "自動評分"
+                                              : "人工評分"}
                                     </strong>
                                 </div>
                                 <div className={styles.settingRow}>
@@ -428,9 +453,13 @@ export default function ExperimentDetailPage() {
                                         )}
                                     </span>
                                     <strong>
-                                        {experiment.configuration.allowRetry
-                                            ? `允許・最多 ${experiment.configuration.maxAttempts} 次`
-                                            : "不允許"}
+                                        {parseExperience(experiment.description)
+                                            .mode === "practice"
+                                            ? "有效時段內不限次數"
+                                            : experiment.configuration
+                                                    .allowRetry
+                                              ? `允許・最多 ${experiment.configuration.maxAttempts} 次`
+                                              : "不允許"}
                                     </strong>
                                 </div>
                                 <div className={styles.settingRow}>
@@ -443,12 +472,16 @@ export default function ExperimentDetailPage() {
                                         )}
                                     </span>
                                     <strong>
-                                        {experiment.configuration
-                                            .showExplanations
-                                            ? "顯示分數與詳解"
-                                            : experiment.configuration.showScore
-                                              ? "只顯示分數"
-                                              : "不顯示"}
+                                        {parseExperience(experiment.description)
+                                            .mode === "practice"
+                                            ? "本輪作答與耗時"
+                                            : experiment.configuration
+                                                    .showExplanations
+                                              ? "顯示分數與詳解"
+                                              : experiment.configuration
+                                                      .showScore
+                                                ? "只顯示分數"
+                                                : "不顯示"}
                                     </strong>
                                 </div>
                                 <div className={styles.settingRow}>
@@ -461,12 +494,13 @@ export default function ExperimentDetailPage() {
                                         )}
                                     </span>
                                     <strong>
-                                        {
-                                            releaseLabels[
-                                                experiment.configuration
-                                                    .correctAnswerReleaseMode
-                                            ]
-                                        }
+                                        {parseExperience(experiment.description)
+                                            .mode === "practice"
+                                            ? "練習不提供正式評分與正解"
+                                            : releaseLabels[
+                                                  experiment.configuration
+                                                      .correctAnswerReleaseMode
+                                              ]}
                                     </strong>
                                 </div>
                             </div>
@@ -476,7 +510,7 @@ export default function ExperimentDetailPage() {
                             radius="lg"
                         >
                             <Title order={2} className={styles.sectionTitle}>
-                                {experimentStatusLabels[experiment.status]}
+                                {displayLabels[displayStatus(experiment, now)]}
                                 的實驗
                             </Title>
                             <p className={styles.muted}>

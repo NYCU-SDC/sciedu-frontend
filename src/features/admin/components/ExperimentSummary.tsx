@@ -1,7 +1,13 @@
+import {
+    displayStatus,
+    displayLabels,
+    parseExperience,
+} from "../../experience/experimentExperience";
+import { useExperimentClock } from "../../experience/useExperimentClock";
 import { Badge, Card, Select, Text, Title } from "@mantine/core";
 import { CalendarDays } from "lucide-react";
 
-import { experimentStatusLabels, formatDateTime } from "../formatters";
+import { formatDateTime } from "../formatters";
 import type { Experiment, ExperimentDetail } from "../types";
 import styles from "../pages/AdminDashboardPage.module.css";
 
@@ -18,6 +24,7 @@ export default function ExperimentSummary({
     activeExperimentId,
     onExperimentChange,
 }: Props) {
+    const now = useExperimentClock([experiment]);
     const experimentRange = `${formatDateTime(
         experiment.scheduledStartAt
     )}－${formatDateTime(experiment.scheduledEndAt)}`;
@@ -34,7 +41,7 @@ export default function ExperimentSummary({
                     <div className={styles.experimentTitleRow}>
                         <Title order={2}>{experiment.name}</Title>
                         <Badge color="orange" variant="light" radius="xl">
-                            {experimentStatusLabels[experiment.status]}
+                            {displayLabels[displayStatus(experiment, now)]}
                         </Badge>
                     </div>
                     <Text
@@ -42,7 +49,8 @@ export default function ExperimentSummary({
                         size="sm"
                         className={styles.experimentDescription}
                     >
-                        {experiment.description || "尚未提供實驗說明"}
+                        {parseExperience(experiment.description).description ||
+                            "尚未提供實驗說明"}
                     </Text>
                     <div className={styles.metadata}>
                         <span>

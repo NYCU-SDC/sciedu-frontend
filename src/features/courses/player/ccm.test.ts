@@ -16,7 +16,10 @@ import {
     encodeMaterialMessage,
 } from "../../../shared/network/materialChat";
 import manifest from "../../../../tools/ccm/manifest.json";
-beforeEach(() => sessionStorage.clear());
+beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+});
 it("maps seven sequential pages, only two chats and twelve TEXT responses", () => {
     expect(manifest.pages).toHaveLength(7);
     expect(manifest.pages.flatMap((p) => p.questions)).toHaveLength(12);

@@ -1,4 +1,9 @@
 import {
+    readPersistent,
+    writePersistent,
+    clearPersistent,
+} from "../../experience/persistentStorage";
+import {
     validCCMStates,
     type CCMSimulationStates,
     isSimulationState,
@@ -10,6 +15,7 @@ import type {
 } from "../genetics/types/types";
 export const PLAYER_SESSION_PREFIX = "sciedu-course-player:v1:";
 export type PlayerSession = {
+    operations?: Record<string, "pending" | "unknown">;
     currentIndex: number;
     highestUnlockedIndex: number;
     completed: number[];
@@ -28,7 +34,7 @@ export function readPlayerSession(
 ): PlayerSession | undefined {
     if (!key) return;
     try {
-        const record = JSON.parse(sessionStorage.getItem(key) ?? "null");
+        const record = JSON.parse(readPersistent(key) ?? "null");
         const s = record?.state;
         const index = (i: unknown) =>
             typeof i === "number" &&
@@ -50,6 +56,13 @@ export function readPlayerSession(
                 (a: SubmittedAnswerResponse) =>
                     typeof a.id === "string" && typeof a.questionId === "string"
             ) ||
+            (s.operations !== undefined &&
+                (!s.operations ||
+                    typeof s.operations !== "object" ||
+                    Array.isArray(s.operations) ||
+                    !Object.values(s.operations).every(
+                        (v) => v === "pending" || v === "unknown"
+                    ))) ||
             (s.simulationState !== undefined &&
                 !isSimulationState(s.simulationState)) ||
             (s.ccmSimulationStates !== undefined &&
@@ -74,16 +87,16 @@ export function writePlayerSession(
 ) {
     if (key)
         try {
-            sessionStorage.setItem(key, JSON.stringify({ revision, state }));
+            writePersistent(key, JSON.stringify({ revision, state }));
         } catch {
-            /* In-memory flow remains usable. */
+            throw new Error(
+                "無法保存進度，請確認瀏覽器儲存空間後重試；請勿關閉頁面。"
+            );
         }
 }
 export function clearPlayerSessions() {
     try {
-        for (const key of Object.keys(sessionStorage))
-            if (key.startsWith(PLAYER_SESSION_PREFIX))
-                sessionStorage.removeItem(key);
+        clearPersistent(PLAYER_SESSION_PREFIX);
     } catch {
         /* unavailable */
     }

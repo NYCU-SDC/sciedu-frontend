@@ -36,6 +36,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     vi.clearAllMocks();
     client = new QueryClient({
         defaultOptions: { queries: { retry: false, gcTime: 0 } },

@@ -20,6 +20,7 @@ export default function CourseContentModal({
             opened={opened}
             onClose={onClose}
             title={title}
+            closeButtonProps={{ "aria-label": "關閉" }}
             centered
             size="xl"
             radius="lg"

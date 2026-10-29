@@ -1,3 +1,5 @@
+import { useExperimentClock } from "../../experience/useExperimentClock";
+import { displayStatus } from "../../experience/experimentExperience";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -58,14 +60,18 @@ export default function AdminDashboardPage() {
     const [courseOrder, setCourseOrder] = useState<"asc" | "desc">("asc");
     const [page, setPage] = useState(1);
     const [isParticipantModalOpen, setParticipantModalOpen] = useState(false);
-    const [loadedAt] = useState(() => Date.now());
 
     const experimentsQuery = useQuery({
         queryKey: ["admin", "experiments", "list"],
-        queryFn: listAllExperiments,
+        queryFn: () => listAllExperiments(),
     });
 
-    const experiments = experimentsQuery.data ?? [];
+    const loadedAt = useExperimentClock(experimentsQuery.data ?? []);
+    const experiments = [...(experimentsQuery.data ?? [])].sort(
+        (a, b) =>
+            Number(displayStatus(b, loadedAt) === "ACTIVE") -
+            Number(displayStatus(a, loadedAt) === "ACTIVE")
+    );
     const activeExperimentId = experiments.some(
         (experiment) => experiment.id === selectedExperimentId
     )

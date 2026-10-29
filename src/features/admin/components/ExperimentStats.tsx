@@ -1,3 +1,4 @@
+import { parseExperience } from "../../experience/experimentExperience";
 import { Card } from "@mantine/core";
 
 import { formatDateTime, gradingModeLabels } from "../formatters";
@@ -32,7 +33,11 @@ export default function ExperimentStats({ experiment, remainingDays }: Props) {
             <Card component="article" radius="lg" withBorder>
                 <h3>評分模式</h3>
                 <strong>
-                    {gradingModeLabels[experiment.configuration.gradingMode]}
+                    {parseExperience(experiment.description).mode === "practice"
+                        ? "本機練習，不計成績"
+                        : gradingModeLabels[
+                              experiment.configuration.gradingMode
+                          ]}
                 </strong>
                 <p>依本場實驗設定顯示</p>
             </Card>

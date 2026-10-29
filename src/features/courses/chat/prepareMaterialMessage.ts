@@ -19,6 +19,7 @@ import type {
 } from "../player/presentation";
 
 type Input = {
+    practice?: boolean;
     definition: CourseDefinition;
     page: CoursePageRequest;
     scope?: CourseChatScope;
@@ -43,6 +44,7 @@ export async function prepareMaterialMessage(
         submissions,
         simulation,
         simulations,
+        practice,
     } = structuredClone(input);
     if (
         !scope?.account ||
@@ -98,18 +100,22 @@ export async function prepareMaterialMessage(
                               confirmed?.selectedOptionId;
                           const answer: MaterialContext["snapshot"]["questions"][number]["answer"] =
                               {
-                                  state:
-                                      submitted !== undefined
-                                          ? "submitted"
-                                          : draft?.trim()
-                                            ? "draft"
-                                            : Object.hasOwn(values, q.id)
-                                              ? "unanswered"
-                                              : "unknown",
-                                  submission:
-                                      submitted !== undefined
-                                          ? "confirmed_in_this_session"
-                                          : "unknown",
+                                  state: practice
+                                      ? draft?.trim()
+                                          ? "practice"
+                                          : "unanswered"
+                                      : submitted !== undefined
+                                        ? "submitted"
+                                        : draft?.trim()
+                                          ? "draft"
+                                          : Object.hasOwn(values, q.id)
+                                            ? "unanswered"
+                                            : "unknown",
+                                  submission: practice
+                                      ? "local_practice"
+                                      : submitted !== undefined
+                                        ? "confirmed_in_this_session"
+                                        : "unknown",
                                   ...(draft !== undefined ? { draft } : {}),
                                   ...(submitted !== undefined
                                       ? { submitted }
@@ -163,6 +169,9 @@ export async function prepareMaterialMessage(
         preset,
         snapshot: {
             capturedAt,
+            ...(practice
+                ? { mode: "practice" as const, roundId: scope.roundId }
+                : {}),
             course: {
                 id: definition.id,
                 code: definition.code,

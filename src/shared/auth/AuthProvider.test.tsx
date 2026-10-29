@@ -39,6 +39,7 @@ afterEach(() => {
     cleanup();
     vi.resetAllMocks();
     sessionStorage.clear();
+    localStorage.clear();
 });
 describe("logout attempt cleanup", () => {
     it.each([true, false])(

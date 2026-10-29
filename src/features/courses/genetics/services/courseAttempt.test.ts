@@ -38,6 +38,7 @@ beforeEach(() => {
 afterEach(() => {
     vi.restoreAllMocks();
     sessionStorage.clear();
+    localStorage.clear();
 });
 const load = (
     email = attempt.userEmail,
@@ -89,7 +90,7 @@ describe("attempt ownership and logout", () => {
             throw new DOMException("Blocked");
         });
         attempt.sessionId = getAttemptSessionId();
-        expect(() => saveCourseAttempt(attempt)).not.toThrow();
+        expect(() => saveCourseAttempt(attempt)).toThrow("無法保存完成紀錄");
         expect(load(attempt.userEmail, "e1", attempt)).toEqual(attempt);
         clearCourseAttemptStorage();
         expect(load(attempt.userEmail, "e1", attempt)).toBeNull();
@@ -130,4 +131,50 @@ it("does not restore attempts or navigation state from a different backend", () 
     vi.stubEnv("VITE_BACKEND_BASE_URL", "https://dev.example");
     expect(load()).toEqual(attempt);
     vi.unstubAllEnvs();
+});
+
+it("practice summary is isolated from formal attempts and revoked when a new round begins", async () => {
+    const { practiceRoundKey } =
+        await import("../../../experience/practiceRound");
+    const roundKey = practiceRoundKey(attempt.userEmail, "e1", "genetics");
+    localStorage.setItem(roundKey, "round-one");
+    const practice = {
+        ...attempt,
+        practice: true,
+        roundId: "round-one",
+        submissions: [],
+    };
+    saveCourseAttempt(attempt);
+    saveCourseAttempt(practice);
+    expect(load()).toEqual(attempt);
+    expect(
+        loadCourseAttempt(
+            "genetics",
+            attempt.userEmail,
+            "e1",
+            undefined,
+            "practice"
+        )
+    ).toEqual(practice);
+    sessionStorage.clear();
+    expect(
+        loadCourseAttempt(
+            "genetics",
+            attempt.userEmail,
+            "e1",
+            undefined,
+            "practice"
+        )
+    ).toEqual(practice);
+    localStorage.setItem(roundKey, "round-two");
+    expect(
+        loadCourseAttempt(
+            "genetics",
+            attempt.userEmail,
+            "e1",
+            practice,
+            "practice"
+        )
+    ).toBeNull();
+    expect(load()).toEqual(attempt);
 });

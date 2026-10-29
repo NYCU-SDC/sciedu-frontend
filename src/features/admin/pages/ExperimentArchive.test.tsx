@@ -58,6 +58,9 @@ beforeAll(() => {
 });
 beforeEach(() => {
     vi.resetAllMocks();
+    vi.spyOn(Date, "now").mockReturnValue(
+        Date.parse(demoExperiment.scheduledStartAt) + 1000
+    );
     current = {
         ...demoExperiment,
         status: "ACTIVE",
@@ -75,7 +78,10 @@ beforeEach(() => {
         }
     );
 });
-afterEach(cleanup);
+afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+});
 function setup(status: ExperimentStatus = "ACTIVE") {
     current.status = status;
     const client = new QueryClient({

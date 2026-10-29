@@ -1,0 +1,16 @@
+{
+    "before": {
+        "capturedAt": "2026-10-27T09:28:07.846565+00:00",
+        "resultReads": 18
+    },
+    "afterIdle": {
+        "capturedAt": "2026-10-27T09:28:35.893904+00:00",
+        "resultReads": 18
+    },
+    "afterManualRefresh": {
+        "capturedAt": "2026-10-27T09:28:51.859540+00:00",
+        "resultReads": 20
+    },
+    "environment": "Loopback fixture, synthetic accounts and answers only",
+    "passed": true
+}

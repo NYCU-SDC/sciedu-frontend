@@ -1,0 +1,314 @@
+[
+    {
+        "method": "GET",
+        "path": "/api/auth/session"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/courses/10000000-0000-4000-8000-000000000002"
+    },
+    {
+        "method": "GET",
+        "path": "/api/courses/10000000-0000-4000-8000-000000000002/pages"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-1"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-2"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-3"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-0-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-1-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-2-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-3-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-0-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-0-title-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-1-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/media/argumentation-1-image-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/media/argumentation-0-image-0"
+    },
+    {
+        "method": "POST",
+        "path": "/api/questions/argumentation-0-question-0/answers"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-1-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-2-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/media/argumentation-1-image-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/auth/session"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/courses/10000000-0000-4000-8000-000000000002"
+    },
+    {
+        "method": "GET",
+        "path": "/api/courses/10000000-0000-4000-8000-000000000002/pages"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-1"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-2"
+    },
+    {
+        "method": "GET",
+        "path": "/api/pages/argumentation-3"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-0-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-1-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-2-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-3-presentation"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-0-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-0-title-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-1-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-2-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/media/argumentation-0-image-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/media/argumentation-1-image-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-1-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/media/argumentation-1-image-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-2-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-2-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-3-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-3-title-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-3-body"
+    },
+    {
+        "method": "GET",
+        "path": "/api/content/text/argumentation-3-title-0"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0"
+    },
+    {
+        "method": "POST",
+        "path": "/api/questions/argumentation-3-question-0/answers"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/experiments/current"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-0-question-0/answers/036fa099-898a-4b5d-8ba7-f18987763170/result"
+    },
+    {
+        "method": "GET",
+        "path": "/api/questions/argumentation-3-question-0/answers/da31eb8d-f553-4cab-8d06-ffcf47361713/result"
+    }
+]

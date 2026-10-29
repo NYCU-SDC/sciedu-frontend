@@ -17,10 +17,10 @@ export function answerResultQueryOptions(
         ],
         queryFn: () => fetchAnswerResult(questionId, answerId),
         enabled: Boolean(userEmail && experimentId),
-        refetchInterval: (query) =>
-            !query.state.error && query.state.data?.status === "PENDING"
-                ? 2000
-                : false,
-        refetchIntervalInBackground: false,
+        refetchInterval: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchOnMount: "always",
+        retry: false,
     });
 }

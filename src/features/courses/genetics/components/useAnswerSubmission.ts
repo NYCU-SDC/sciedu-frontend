@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { LearningSessionContext } from "../../../experience/LearningSessionContext";
+import { useContext, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ApiError } from "../../../../shared/utils/api";
 import { submitAnswer } from "../services/submitAnswer";
@@ -59,6 +60,7 @@ export function useAnswerSubmission({
     onSubmitted,
     onContinue,
 }: Options) {
+    const learning = useContext(LearningSessionContext);
     const [validationErrors, setValidationErrors] = useState<
         Record<string, string>
     >({});
@@ -66,10 +68,11 @@ export function useAnswerSubmission({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submittedQuestionIds, setSubmittedQuestionIds] = useState<
         ReadonlySet<string>
-    >(new Set());
+    >(new Set(learning?.submissions.map((a) => a.questionId) ?? []));
     const isSubmittingRef = useRef(false);
-    const submittedQuestionIdsRef = useRef(new Set<string>());
-    const submittedAnswersRef = useRef<SubmittedAnswerResponse[]>([]);
+    const submittedQuestionIdsRef = useRef(
+        new Set<string>(learning?.submissions.map((a) => a.questionId) ?? [])
+    );
 
     const clearAnswerError = (questionId: string) => {
         setValidationErrors((previousErrors) => {
@@ -135,17 +138,51 @@ export function useAnswerSubmission({
         }
 
         const pendingQuestions = readyQuestions.filter(
-            ({ questionId }) => !submittedQuestionIdsRef.current.has(questionId)
+            ({ questionId }) =>
+                !submittedQuestionIdsRef.current.has(questionId) &&
+                !learning?.submissions.some((a) => a.questionId === questionId)
         );
 
+        if (learning?.practice) {
+            onContinue();
+            return;
+        }
+        if (pendingQuestions.some((q) => learning?.operations[q.questionId])) {
+            setSubmissionError(
+                "前次提交結果尚未確認，為避免重複送出已暫停此頁。已保存的其他答案不受影響，請聯絡管理者。"
+            );
+            return;
+        }
         isSubmittingRef.current = true;
         setIsSubmitting(true);
         setSubmissionError(null);
 
         try {
             const results = await Promise.allSettled(
-                pendingQuestions.map(({ questionId, question, answer }) =>
-                    submitAnswer(questionId, question.type, answer)
+                pendingQuestions.map(
+                    async ({ questionId, question, answer }) => {
+                        learning?.beforeSubmit(questionId);
+                        let response: SubmittedAnswerResponse;
+                        try {
+                            response = await submitAnswer(
+                                questionId,
+                                question.type,
+                                answer
+                            );
+                        } catch (error) {
+                            learning?.rejected(
+                                questionId,
+                                error instanceof ApiError &&
+                                    [400, 401, 403, 404, 422].includes(
+                                        error.status
+                                    )
+                            );
+                            throw error;
+                        }
+                        // Save before waiting for the rest of the page, or allowing navigation.
+                        onSubmitted?.([response]);
+                        return response;
+                    }
                 )
             );
 
@@ -156,7 +193,6 @@ export function useAnswerSubmission({
                     const questionId = pendingQuestions[index].questionId;
                     submittedQuestionIdsRef.current.add(questionId);
                     acceptedQuestionIds.push(questionId);
-                    submittedAnswersRef.current.push(result.value);
                 } else {
                     failedResults.push(result);
                 }
@@ -179,6 +215,19 @@ export function useAnswerSubmission({
                     );
                     return;
                 }
+                if (
+                    learning &&
+                    failedResults.some(
+                        ({ reason }) =>
+                            !(reason instanceof ApiError) ||
+                            ![400, 401, 403, 404, 422].includes(reason.status)
+                    )
+                ) {
+                    setSubmissionError(
+                        `提交或保存結果尚未確認，已暫停自動重送。已確認成功的答案與其他草稿會保留；請先確認儲存提示，若仍無法繼續請聯絡管理者。${failedResults[0].reason instanceof Error ? "（" + failedResults[0].reason.message + "）" : ""}`
+                    );
+                    return;
+                }
                 const firstReason = failedResults[0].reason;
                 const reason =
                     firstReason instanceof Error && firstReason.message
@@ -191,9 +240,6 @@ export function useAnswerSubmission({
             }
 
             toast.success("答案已成功送出", { position: "top-right" });
-            if (submittedAnswersRef.current.length > 0) {
-                onSubmitted?.([...submittedAnswersRef.current]);
-            }
             onContinue();
         } finally {
             isSubmittingRef.current = false;

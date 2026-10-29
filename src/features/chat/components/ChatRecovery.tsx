@@ -57,7 +57,7 @@ export default function ChatRecovery({
                                 重新開始
                             </button>
                         ) : (
-                            <Link to="/">開始新對話</Link>
+                            <Link to="/chat">開始新對話</Link>
                         )
                     ) : (
                         <button

@@ -1,3 +1,10 @@
+import {
+    displayStatus,
+    displayLabels,
+    parseExperience,
+    type DisplayStatus,
+} from "../../experience/experimentExperience";
+import { useExperimentClock } from "../../experience/useExperimentClock";
 import { useState } from "react";
 import {
     Badge,
@@ -17,16 +24,15 @@ import { useDocumentTitle } from "../../../shared/hooks";
 import AdminLayout from "../components/AdminLayout";
 import AdminPage from "../components/AdminPage";
 import AdminPageHeader from "../components/AdminPageHeader";
-import {
-    experimentStatusLabels,
-    formatDateTime,
-    formatShortDateTime,
-} from "../formatters";
-import { listExperiments } from "../services/adminRepository";
-import type { ExperimentStatus } from "../types";
+import { formatDateTime, formatShortDateTime } from "../formatters";
+import { listAllExperiments } from "../services/adminRepository";
+
 import styles from "./ExperimentAdmin.module.css";
 
-const statusColors: Record<ExperimentStatus, string> = {
+const statusColors: Record<DisplayStatus, string> = {
+    ENDED: "gray",
+    NOT_STARTED: "cyan",
+    EXPIRED_SCHEDULE: "gray",
     DRAFT: "gray",
     SCHEDULED: "cyan",
     ACTIVE: "teal",
@@ -58,30 +64,30 @@ export default function ExperimentListPage() {
     useDocumentTitle("實驗管理");
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<ExperimentStatus | null>(null);
+    const [status, setStatus] = useState<DisplayStatus | null>(null);
     const [dateRange, setDateRange] = useState<DateRange | null>(null);
     const [page, setPage] = useState(1);
     const experimentsQuery = useQuery({
-        queryKey: [
-            "admin",
-            "experiments",
-            "management",
-            search,
-            status,
-            dateRange,
-            page,
-        ],
+        queryKey: ["admin", "experiments", "management", search, dateRange],
         queryFn: () =>
-            listExperiments({
-                page,
-                pageSize: 20,
-                search,
-                status: status ?? undefined,
-                ...getScheduledRange(dateRange),
-            }),
+            listAllExperiments({ search, ...getScheduledRange(dateRange) }),
     });
-
-    const experiments = experimentsQuery.data?.items ?? [];
+    const now = useExperimentClock(experimentsQuery.data ?? []);
+    const filtered = (experimentsQuery.data ?? [])
+        .filter((e) => !status || displayStatus(e, now) === status)
+        .sort(
+            (a, b) =>
+                Number(displayStatus(b, now) === "ACTIVE") -
+                    Number(displayStatus(a, now) === "ACTIVE") ||
+                Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
+        );
+    const totalItems = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / 20));
+    const currentPage = Math.min(page, totalPages);
+    const experiments = filtered.slice(
+        (currentPage - 1) * 20,
+        currentPage * 20
+    );
     return (
         <AdminLayout>
             <AdminPage>
@@ -128,10 +134,10 @@ export default function ExperimentListPage() {
                         clearable
                         value={status}
                         onChange={(value) => {
-                            setStatus(value as ExperimentStatus | null);
+                            setStatus(value as DisplayStatus | null);
                             setPage(1);
                         }}
-                        data={Object.entries(experimentStatusLabels).map(
+                        data={Object.entries(displayLabels).map(
                             ([value, label]) => ({ value, label })
                         )}
                     />
@@ -173,9 +179,7 @@ export default function ExperimentListPage() {
                     radius="lg"
                 >
                     <div className={styles.tableTop}>
-                        <strong>
-                            共 {experimentsQuery.data?.totalItems ?? 0} 場實驗
-                        </strong>
+                        <strong>共 {totalItems} 場實驗</strong>
                         <span className={styles.muted}>排序：管理急迫性</span>
                     </div>
                     {experimentsQuery.isPending ? (
@@ -238,6 +242,14 @@ export default function ExperimentListPage() {
                                                     }
                                                 >
                                                     {experiment.name}
+                                                    {parseExperience(
+                                                        experiment.description
+                                                    ).mode === "practice" && (
+                                                        <small>
+                                                            {" "}
+                                                            · 無限練習
+                                                        </small>
+                                                    )}
                                                 </Table.Td>
                                                 <Table.Td>
                                                     <Badge
@@ -246,16 +258,20 @@ export default function ExperimentListPage() {
                                                         }
                                                         color={
                                                             statusColors[
-                                                                experiment
-                                                                    .status
+                                                                displayStatus(
+                                                                    experiment,
+                                                                    now
+                                                                )
                                                             ]
                                                         }
                                                         variant="light"
                                                     >
                                                         {
-                                                            experimentStatusLabels[
-                                                                experiment
-                                                                    .status
+                                                            displayLabels[
+                                                                displayStatus(
+                                                                    experiment,
+                                                                    now
+                                                                )
                                                             ]
                                                         }
                                                     </Badge>
@@ -295,39 +311,31 @@ export default function ExperimentListPage() {
                     )}
                     <footer className={styles.tableFooter}>
                         <span>
-                            顯示 {experiments.length} 筆資料，共{" "}
-                            {experimentsQuery.data?.totalItems ?? 0} 筆
+                            顯示 {experiments.length} 筆資料，共 {totalItems} 筆
                         </span>
                         <Group gap="xs">
                             <Button
                                 variant="default"
                                 size="xs"
                                 disabled={
-                                    page <= 1 || experimentsQuery.isFetching
+                                    currentPage <= 1 ||
+                                    experimentsQuery.isFetching
                                 }
-                                onClick={() =>
-                                    setPage((current) => current - 1)
-                                }
+                                onClick={() => setPage(currentPage - 1)}
                             >
                                 ←
                             </Button>
                             <span>
-                                {experimentsQuery.data?.currentPage ?? page} /{" "}
-                                {Math.max(
-                                    experimentsQuery.data?.totalPages ?? 1,
-                                    1
-                                )}
+                                {currentPage} / {Math.max(totalPages, 1)}
                             </span>
                             <Button
                                 variant="default"
                                 size="xs"
                                 disabled={
-                                    !experimentsQuery.data?.hasNextPage ||
+                                    currentPage >= totalPages ||
                                     experimentsQuery.isFetching
                                 }
-                                onClick={() =>
-                                    setPage((current) => current + 1)
-                                }
+                                onClick={() => setPage(currentPage + 1)}
                             >
                                 →
                             </Button>

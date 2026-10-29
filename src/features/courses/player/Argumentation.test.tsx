@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import { MantineProvider } from "@mantine/core";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { ApiError } from "../../../shared/utils/api";
 import CoursePlayer from "./CoursePlayer";
 import { parsePresentation } from "./presentation";
 import type { CourseDefinition } from "../genetics/types/types";
@@ -48,7 +49,13 @@ vi.mock("./Simulation", () => ({
     ),
 }));
 vi.mock("../../../shared/utils/api", () => ({
-    ApiError: class ApiError extends Error {},
+    ApiError: class ApiError extends Error {
+        status: number;
+        constructor(message: string, status: number) {
+            super(message);
+            this.status = status;
+        }
+    },
     api: async (path: string) => {
         const q = path.match(/\/api\/questions\/q(\d)/);
         if (q)
@@ -64,7 +71,7 @@ vi.mock("../../../shared/utils/api", () => ({
 vi.mock("../genetics/services/submitAnswer", () => ({
     submitAnswer: async (id: string, type: string, answer: string) => {
         mocks.submits(id, type, answer);
-        if (mocks.fail) throw Error("測試失敗");
+        if (mocks.fail) throw new ApiError("測試拒絕", 400);
         return {
             id: "a" + id,
             questionId: id,
@@ -103,6 +110,7 @@ const definition: CourseDefinition = {
 let client: QueryClient;
 beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     mocks.chat.mockClear();
     mocks.submits.mockClear();
     mocks.fail = false;

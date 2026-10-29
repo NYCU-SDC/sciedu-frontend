@@ -44,12 +44,19 @@ export function useCourseChatController(
 
     useEffect(() => {
         if (chat.error instanceof ApiError && chat.error.status === 404) {
-            saveCourseChat(scope, null);
+            let storageError: string | undefined;
+            try {
+                saveCourseChat(scope, null);
+            } catch (error) {
+                storageError = (error as Error).message;
+            }
             let current = true;
             queueMicrotask(() => {
                 if (!current) return;
                 setChatID(null);
-                setErrorMessage("原對話已不存在，請重新開始對話。");
+                setErrorMessage(
+                    storageError ?? "原對話已不存在，請重新開始對話。"
+                );
             });
             return () => {
                 current = false;
@@ -104,8 +111,8 @@ export function useCourseChatController(
                             if (generation !== chatGenerationRef.current)
                                 return;
                             createdIdRef.current = id;
-                            saveCourseChat(scope, id);
                             setChatID(id);
+                            saveCourseChat(scope, id);
                         },
                     }
                 );
@@ -126,7 +133,7 @@ export function useCourseChatController(
                 setStartupUncertain(Boolean(unknown));
                 setErrorMessage(
                     unknown
-                        ? "無法確認首次訊息是否已送出，請先重新載入結果。"
+                        ? `${message}。無法確認首次訊息是否已送出，請先重新載入結果。`
                         : message
                 );
                 setDraft(trimmed);
@@ -198,7 +205,12 @@ export function useCourseChatController(
     const handleRefresh = () => {
         chatGenerationRef.current += 1;
         chat.abort();
-        saveCourseChat(scope, null);
+        try {
+            saveCourseChat(scope, null);
+        } catch (error) {
+            setErrorMessage((error as Error).message);
+            return;
+        }
         setChatID(null);
         createdIdRef.current = null;
         setStartupUncertain(false);
@@ -210,6 +222,12 @@ export function useCourseChatController(
     };
 
     const handleRecover = async () => {
+        try {
+            if (chatID) saveCourseChat(scope, chatID);
+        } catch (error) {
+            setErrorMessage((error as Error).message);
+            return;
+        }
         if (await chat.reloadResult()) {
             setStartupUncertain(false);
             setErrorMessage(null);

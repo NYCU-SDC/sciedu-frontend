@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Outlet, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -10,7 +10,11 @@ import { AuthContext } from "./AuthContext";
 import { clearPlayerSessions } from "../../features/courses/player/playerSession";
 import { clearCourseChatStorage } from "./courseChatStorage";
 import { loginReturnTo } from "./loginReturnTo";
-import { clearCourseAttemptStorage } from "./courseAttemptStorage";
+import {
+    clearCourseAttemptStorage,
+    attemptSessionKey,
+    getAttemptSessionId,
+} from "./courseAttemptStorage";
 import { getSession, refreshAuthToken, requestLogout } from "./requests";
 import type {
     AuthContextValue,
@@ -30,6 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const posthog = usePostHog();
+    const [endingSession, setEndingSession] = useState(false);
     const refreshTimerRef = useRef<number | null>(null);
 
     const sessionQuery = useQuery({
@@ -48,7 +53,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     }, []);
 
+    useEffect(() => {
+        const onLogout = (event: StorageEvent) => {
+            if (
+                event.key === attemptSessionKey() &&
+                event.oldValue &&
+                event.oldValue !== event.newValue
+            ) {
+                setEndingSession(true);
+                clearRefreshTimer();
+                queryClient.clear();
+                navigate("/login", { replace: true });
+            }
+        };
+        window.addEventListener("storage", onLogout);
+        return () => window.removeEventListener("storage", onLogout);
+    }, [clearRefreshTimer, queryClient, navigate]);
     const logout = useCallback(async () => {
+        setEndingSession(true);
         clearCourseAttemptStorage();
         clearRefreshTimer();
         clearCourseChatStorage();
@@ -136,6 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     useEffect(() => {
         if (sessionQuery.data) {
+            getAttemptSessionId();
             posthog.identify(sessionQuery.data.email, {
                 email: sessionQuery.data.email,
                 name: sessionQuery.data.username,
@@ -145,14 +168,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const value = useMemo<AuthContextValue>(
         () => ({
-            session: sessionQuery.data ?? null,
-            isAuthenticated: sessionQuery.isSuccess,
+            session: endingSession ? null : (sessionQuery.data ?? null),
+            isAuthenticated: sessionQuery.isSuccess && !endingSession,
             isLoading: sessionQuery.isPending,
             login,
             logout,
             refresh,
         }),
         [
+            endingSession,
             sessionQuery.data,
             sessionQuery.isSuccess,
             sessionQuery.isPending,

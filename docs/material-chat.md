@@ -1,6 +1,6 @@
 # 科學論證教材 Chat（僅前端）
 
-教材 code `scientific-argumentation-dark-room` 固定使用 `augmentation_teacher_and_peer`。其他教材保留全域 preset／既有預設行為。這是過渡綁定，不提供管理者設定表單或服務端鎖定；以後有第二份教材再擴充。
+教材 code `scientific-argumentation-dark-room` 固定使用 `augmentation_teacher_and_peer`。CCM 教材 code `ccm-heart-and-blood` 使用 `ccm-agent-rag-test`。其他教材保留全域 preset／既有預設行為。這是過渡綁定，不提供管理者設定表單或服務端鎖定。
 
 ## 現有 API 契約
 
@@ -29,3 +29,9 @@ Teacher 可從既有訊息取得快照。Bunny 僅接受現有 LLM 轉交的任�
 快照是前端參考資料，不是服務端驗證的正式學習紀錄，也不是機密欄位。舊版前端或直接讀取 API 仍可能看見封裝；LLM 也可能引用圖說。沒有修改任何 LLM 提示、RAG 或後端設定。
 
 驗證與畫面：[CHAT_VERIFICATION.md](../tools/argumentation/CHAT_VERIFICATION.md)。
+
+## CCM preset 更新（2026-11-05）
+
+CCM 新訊息改用 `ccm-agent-rag-test`。聊天室關聯已包含 preset，因此更新後第 3／6 頁會建立新的對話，不混用先前 `ccm-agent-test-tw` 的聊天歷史；答案、頁面與 simulation 進度不重置。舊對話保留於聊天列表，仍可讀取；編輯／重產生舊訊息保留原輪快照及舊 preset。新教材討論請由 CCM 頁面進入。
+
+國網執行中 LLM 服務已唯讀核對新 preset 存在，老師提示為 `agents/ccm-system-tw-20261013`，RAG 開啟且 `force=false`，選用 `corpus/knowledge/rag_CCM_heart_circulation_Q1_v1`。索引查詢回傳 `is_built=true`、`build.status=completed`。RAG 開啟不代表每一輪必定搜尋。未修改 LLM 設定或既有聊天／學生資料；前端合併部署後才在線上生效。Dev 的同名 preset 尚未核對，不能以國網結果代替 Dev 驗收。

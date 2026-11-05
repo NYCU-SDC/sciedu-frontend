@@ -208,7 +208,7 @@ it("CCM uses its preset and separate simulations without leaking dark-room contr
     const parsed = decodeMaterialMessage(
         await prepareMaterialMessage("比較我的觀察", extended)
     )!;
-    expect(parsed.context.preset).toBe("ccm-agent-test-tw");
+    expect(parsed.context.preset).toBe("ccm-agent-rag-test");
     expect(parsed.context.snapshot.simulations).toEqual(extended.simulations);
     expect(parsed.context.snapshot.simulation).toBeUndefined();
     expect(parsed.context.snapshot.page.descriptions).toEqual([

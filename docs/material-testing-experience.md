@@ -8,7 +8,7 @@
 2. 管理者新增專用測試實驗，在基本設定選「無限練習」。設定有效時段、指派教材與學生，再啟用。一般實驗仍是預設；ACTIVE 後不可切換模式。
 3. 練習仍需目前有效的實驗與教材指派。教材頁顯示「本機練習，不計正式成績」。題目必填驗證保留，答案不送正式答案 API、不產生假答案 ID、不呼叫評分 API。
 4. 教材列表、播放器及完成頁可「繼續練習／重新練習」。重新練習先確認，重置本輪答案、進度、simulation、Mental Set 通知及頁面聊天室。遠端舊對話不刪除。
-5. 練習 Chat 仍使用真實 Chat API 與教材 preset；本機驗收工具僅以模型替身檢查串流與請求。CCM 的 preset 為 `ccm-agent-test-tw`，SciArgu 為 `augmentation_teacher_and_peer`，快照明確標示 `practice`、輪次與本機答案。
+5. 練習 Chat 仍使用真實 Chat API 與教材 preset；本機驗收工具僅以模型替身檢查串流與請求。CCM 的 preset 為 `ccm-agent-rag-test`，SciArgu 為 `augmentation_teacher_and_peer`，快照明確標示 `practice`、輪次與本機答案。
 6. 同一瀏覽器刷新、離頁、關閉分頁後重新進入，可恢復目前輪次。登出會清除本機學習資料；其他分頁收到登出通知後也停止操作。這不是跨裝置／跨瀏覽器同步。
 
 ## 狀態與保存契約

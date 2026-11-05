@@ -3,7 +3,9 @@ import type { CCMSimulationStates } from "../../features/courses/player/presenta
 export const ARGUMENTATION_CODE = "scientific-argumentation-dark-room";
 export const ARGUMENTATION_PRESET = "augmentation_teacher_and_peer";
 export const CCM_CODE = "ccm-heart-and-blood";
-export const CCM_PRESET = "ccm-agent-test-tw";
+export const CCM_PRESET = "ccm-agent-rag-test";
+// Historical messages keep their original snapshot and preset when edited/retried.
+const LEGACY_CCM_PRESET = "ccm-agent-test-tw";
 export function materialPreset(code?: string) {
     return code === ARGUMENTATION_CODE
         ? ARGUMENTATION_PRESET
@@ -15,7 +17,10 @@ const MARKER = "[SCIEDU_MATERIAL_CONTEXT_V1]";
 const END = "[/SCIEDU_MATERIAL_CONTEXT_V1]";
 export type MaterialContext = {
     version: 1;
-    preset: typeof ARGUMENTATION_PRESET | typeof CCM_PRESET;
+    preset:
+        | typeof ARGUMENTATION_PRESET
+        | typeof CCM_PRESET
+        | typeof LEGACY_CCM_PRESET;
     snapshot: {
         mode?: "practice";
         roundId?: string;
@@ -85,7 +90,11 @@ export function decodeMaterialMessage(
         if (
             context?.version !== 1 ||
             !materialPreset(s?.course?.code) ||
-            context.preset !== materialPreset(s?.course?.code) ||
+            (context.preset !== materialPreset(s?.course?.code) &&
+                !(
+                    s?.course?.code === CCM_CODE &&
+                    context.preset === LEGACY_CCM_PRESET
+                )) ||
             typeof s.course.id !== "string" ||
             typeof s.course.title !== "string" ||
             typeof s.experimentId !== "string" ||

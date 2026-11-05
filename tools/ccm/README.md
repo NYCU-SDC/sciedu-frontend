@@ -51,7 +51,7 @@ VITE_APP_MODE=dev npm run build
 
 ## CCM Chat
 
-只在頁 3、6 掛載，聊天室依頁面隔離。教材 code 綁定 `ccm-agent-test-tw`，不使用 UUID 或新增管理 API。每輪沿用 `content` 的版本化快照，包含教材階段、圖說、答案狀態及兩個模擬設定；編輯／重產生保留原輪快照。一般教材及 `dark-room-v1` 維持原行為。
+只在頁 3、6 掛載，聊天室依頁面隔離。教材 code 綁定 `ccm-agent-rag-test`，不使用 UUID 或新增管理 API。每輪沿用 `content` 的版本化快照，包含教材階段、圖說、答案狀態及兩個模擬設定；編輯／重產生保留原輪快照。一般教材及 `dark-room-v1` 維持原行為。
 
 2026-10-27 讀取既有 Dev preset 時，其 teacher prompt 為 `agents/ccm-system-tw-20261013`，RAG 與 subagents 關閉。沒有變更服務或私有 prompt。Langfuse 未登入，未查核 prompt 版本號或最新草稿；模型診斷品質需指派有效測試實驗後人工驗收。
 

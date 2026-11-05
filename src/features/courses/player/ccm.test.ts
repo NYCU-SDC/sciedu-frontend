@@ -158,6 +158,14 @@ it("CCM envelope round trips for history and edits, mismatched preset is not tru
     };
     const wire = encodeMaterialMessage("hello", context);
     expect(decodeMaterialMessage(wire)?.text).toBe("hello");
+    const legacyWire = wire.replace(CCM_PRESET, "ccm-agent-test-tw");
+    const legacy = decodeMaterialMessage(legacyWire)!;
+    expect(legacy.text).toBe("hello");
+    expect(legacy.context.preset).toBe("ccm-agent-test-tw");
+    expect(legacy.context.snapshot).toEqual(context.snapshot);
+    expect(
+        decodeMaterialMessage(encodeMaterialMessage("edit", legacy.context))
+    ).toEqual({ text: "edit", context: legacy.context });
     expect(
         decodeMaterialMessage(encodeMaterialMessage("edit", context))?.context
     ).toEqual(context);

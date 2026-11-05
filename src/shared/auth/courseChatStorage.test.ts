@@ -11,6 +11,7 @@ import {
     rememberLoginReturnTo,
     safeReturnTo,
 } from "./loginReturnTo";
+import { CCM_PRESET } from "../network/materialChat";
 const scope: CourseChatScope = {
     account: "a@example.test",
     experimentId: "e",
@@ -75,4 +76,14 @@ it("starts CCM context chats separately from previously created default-preset c
     expect(readCourseChat(scope)).toBe(id);
     clearCourseChatStorage();
     expect(readCourseChat(ccm)).toBeNull();
+});
+it("starts RAG CCM chats without removing the previous preset's chat", () => {
+    const previous = {
+        ...scope,
+        profile: "ccm-agent-test-tw:material-context-v2",
+    };
+    const current = { ...scope, profile: `${CCM_PRESET}:material-context-v2` };
+    saveCourseChat(previous, id);
+    expect(readCourseChat(current)).toBeNull();
+    expect(readCourseChat(previous)).toBe(id);
 });

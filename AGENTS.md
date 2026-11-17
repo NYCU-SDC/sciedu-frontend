@@ -69,6 +69,30 @@ New code goes in the owning feature; move to `shared/` only when a second
 feature needs it. Read the related `docs/*.md` before changing material chat,
 experiment termination or the testing experience.
 
+**Feature details live in nested AGENTS.md files** — read the one for the
+folder you're changing: `src/features/{admin,chat,courses,experience}/AGENTS.md`.
+
+## Routes
+
+Defined in `src/routes.tsx`. All pages except `/login` require auth.
+
+| Route                           | Page                                | Feature        | Modes                       |
+| ------------------------------- | ----------------------------------- | -------------- | --------------------------- |
+| `/`                             | PortalHome (cards by mode and role) | experience     | all                         |
+| `/login`                        | LoginPage                           | auth           | all                         |
+| `/courses`                      | Homepage                            | courses        | edu, dev                    |
+| `/courses/library`              | MaterialLibrary                     | courses        | edu, dev                    |
+| `/course/:courseId`             | GeneticsCourse → CourseRun → player | courses        | edu, dev                    |
+| `/courses/summary`              | Summary                             | courses        | edu, dev                    |
+| `/admin`                        | AdminDashboardPage                  | admin (+ role) | edu, dev                    |
+| `/admin/experiments[/new]`      | ExperimentList / CreateExperiment   | admin (+ role) | edu, dev                    |
+| `/admin/experiments/:id[/edit]` | ExperimentDetail / CreateExperiment | admin (+ role) | edu, dev                    |
+| `/chat`, `/chat/:chatID`        | NewChatPage / ChatConversationPage  | chat           | llm, dev                    |
+| `/chat-preview[/course]`        | ChatPreview (mock data)             | chat           | DEV + `VITE_CHAT_MODE=mock` |
+
+With `VITE_ADMIN_DEMO_MODE=true` in DEV, the admin routes skip auth and use
+demo data.
+
 ## Conventions
 
 - **Formatting**: Prettier — 4-space indent, double quotes, semicolons, ES5

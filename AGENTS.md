@@ -143,8 +143,12 @@ demo data.
 - Commits: Conventional Commits, lowercase, imperative —
   `feat: add course summary page`. Types: feat, fix, refactor, docs, chore, ci,
   test. Put `Refs: SCIEDU-<n>` in the body.
-- PRs follow `.github/PULL_REQUEST_TEMPLATE.md` and link the Jira ticket. One
-  ticket per PR.
+- PR title: `[SCIEDU-<n>] <Summary in Title Case>` — e.g.
+  `[SCIEDU-93] Submit Student Answers to the Backend`. Keep the hyphen in the
+  key (`SCIEDU-93`, not `SCIEDU93`). (Commit messages stay Conventional
+  Commits; only the PR title uses this format.)
+- PR body follows `.github/PULL_REQUEST_TEMPLATE.md` and links the Jira ticket.
+  One ticket per PR.
 - Don't commit `dist/`, `output/`, `tmp/`, `.env`, `tools/ccm/build/` or
   `__pycache__/`.
 

@@ -138,8 +138,9 @@ demo data.
 
 ## Git & PRs
 
-- Branch from `main`: `feat/SCIEDU-<n>-short-slug` or `fix/SCIEDU-<n>-short-slug`
-  (`SCIEDU-<n>` is the Jira key; keep it uppercase so Jira links it).
+- Branch from `main`: `<type>/<short-description>`, all lowercase, words joined
+  with `-`, **no ticket key** — e.g. `feat/submit-student-answers`,
+  `fix/auth-session-race`. The Jira key goes in the PR title instead.
 - Commits: Conventional Commits, lowercase, imperative —
   `feat: add course summary page`. Types: feat, fix, refactor, docs, chore, ci,
   test. Put `Refs: SCIEDU-<n>` in the body.

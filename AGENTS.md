@@ -162,3 +162,34 @@ demo data.
 - Don't hard-code backend URLs or chat presets outside the documented bindings.
 - Don't send answer keys, grades, other students' data, emails or cookies to
   the LLM in chat context (see `docs/material-chat.md`).
+
+## Review guidelines
+
+For code reviewers (including Codex PR review). Flag these as **P1**:
+
+- **Data leaks between users/rounds**: any localStorage/sessionStorage key for
+  learning data, chat IDs or attempts that doesn't include
+  `backendEnvironment()`, account and experiment (plus course/page/round where
+  relevant); learning data not cleared on logout.
+- **LLM context leaks**: answer keys, grades, other students' data, emails or
+  cookies added to the material-chat snapshot.
+- **Practice mode sending official data**: any answer POST, fake answer ID or
+  grading call when the experiment is in practice mode.
+- **Unsafe retries**: auto-resending an answer submission or archive request
+  after 409, timeout, network error or 5xx (these are "unknown", not failures).
+- **Access bypass**: pages or flows (e.g. `?mode=review`) that unlock content
+  without the eligibility / attempt checks; admin routes without
+  `RequireAdminRole`.
+- **Demo/mock reaching production**: `VITE_ADMIN_DEMO_MODE` or
+  `VITE_CHAT_MODE=mock` paths not guarded by `import.meta.env.DEV`; a demo
+  repository function that calls the network.
+- **Reserved block orders**: TEXT `displayOrder` 200 (hidden LLM context) being
+  rendered or treated as a question title; 201 presentation config mishandled.
+
+Flag as **P2**: polling or refetch-on-focus for grading results; computing
+experiment status without `displayStatus` / `useExperimentClock`; editing
+fields that should be locked for the backend status; times not in
+`Asia/Taipei`; hard-coded course titles or presets; missing tests for changed
+behavior in services, hooks, auth, routing or the experiment flow.
+
+Don't flag pure formatting (Prettier/ESLint in CI handle it).
